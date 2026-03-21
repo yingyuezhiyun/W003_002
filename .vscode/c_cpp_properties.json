@@ -1,0 +1,25 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/*",
+                "D:\\software\\ti\\ccs1281\\ccs\\tools\\compiler\\ti-cgt-c2000_22.6.1.LTS\\include",
+                "D:\\software\\ti\\ccs1281\\ccs\\tools\\compiler\\ti-cgt-c2000_22.6.1.LTS\\include\\*"
+            ],
+            "defines": [
+                "CPU1",               
+                "__TI_COMPILER_VERSION__=22006001",
+                "__attribute__(x)=",
+                "__interrupt="
+            ],
+            "windowsSdkVersion": "10.0.22621.0",
+            "compilerPath": "cl.exe",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "windows-msvc-x64"
+        }
+    ],
+    "version": 4
+}

@@ -1,0 +1,97 @@
+# Prerequisites
+*.d
+
+# Object files
+*.o
+*.ko
+*.obj
+#*.elf
+
+# Linker output
+*.ilk
+#*.map
+*.exp
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Libraries
+#*.lib
+*.a
+*.la
+*.lo
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# CCS: 保留工程配置文件，忽略编译产物和临时文件
+# 保留 Code Composer Studio / Eclipse 项目配置
+!.project
+!.cproject
+!.ccsproject
+!.settings/
+!targetConfigs/
+!*.cmd
+!*.xml
+
+# Eclipse/CCS 工作区与远程系统临时目录（不建议纳入版本管理）
+**/.metadata/
+**/.metadata/**
+**/RemoteSystemsTempFiles/
+**/.jxbrowser.userdata/
+
+# 忽略常见的编译输出目录与二进制产物
+/Debug/
+/Release/
+**/Debug/
+**/Release/
+*.out
+*.elf
+*.hex
+*.map
+*.bin
+*.lst
+*.tiobj
+
+# 中间文件与临时文件
+*.o
+*.obj
+*.a
+*.lib
+*.log
+*.dSYM/
+*.su
+*.pdb
+.tmp/
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+#*.hex
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# 保留 Elec_Valve/drive 目录及其内容
+!/Elec_Valve/drive/
+!/Elec_Valve/drive/**
+
+# Kernel Module Compile Results
+*.mod*
+#*.cmd
+.tmp_versions/
+modules.order
+Module.symvers
+Mkfile.old
+dkms.conf
+#User

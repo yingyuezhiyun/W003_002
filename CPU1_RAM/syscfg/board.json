@@ -1,0 +1,20 @@
+{
+    "interruptInfo" : [
+        {
+            "interruptName": "INT_myCPUTIMER1",
+            "interruptHandler": "INT_myCPUTIMER1_ISR"
+        },
+        {
+            "interruptName": "INT_ECAT_ISR_XINT",
+            "interruptHandler": "ECAT_Lan9252IrqIsr"
+        },
+        {
+            "interruptName": "INT_ECAT_SYNC0_ISR_XINT",
+            "interruptHandler": "ECAT_Sync0Isr"
+        },
+        {
+            "interruptName": "INT_ECAT_SYNC1_ISR_XINT",
+            "interruptHandler": "ECAT_Sync1Isr"
+        }
+    ]
+}
