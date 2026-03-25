@@ -9,16 +9,16 @@
 
   Description:
     This file  cContains the functional implementation of LAN9252 Hardware Abtraction Layer
-	
+
   Change History:
     Version		Changes
-	0.1			Initial version.
-	0.2			-
-	0.3			-
-	0.4			*Disabled Sync Manager & Application Layer Event Requests.
-				*Commented out the ISR call backs related to Sync Manager & AL Event Request.
-	1.0			*Enabled Sync Manager & Application Layer Event Requests.
-				*Added ISR call backs related to Sync Manager & AL Event Request.
+  0.1			Initial version.
+  0.2			-
+  0.3			-
+  0.4			*Disabled Sync Manager & Application Layer Event Requests.
+        *Commented out the ISR call backs related to Sync Manager & AL Event Request.
+  1.0			*Enabled Sync Manager & Application Layer Event Requests.
+        *Added ISR call backs related to Sync Manager & AL Event Request.
 *******************************************************************************/
 
 /*******************************************************************************
@@ -53,9 +53,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 #include "device.h"
 #include "board.h"
 
-// PIE ACK bit masks (avoid dependency on Interrupt ACK group macros in all indexer setups)
-#define ECAT_PIE_ACK_GROUP1   (0x1U)
-#define ECAT_PIE_ACK_GROUP12  (0x800U)
+
 
 // #include "F28x_Project.h"
 // #include "F2837xD_input_xbar.h"
@@ -63,21 +61,17 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 
 #include "./src/ecatslv.h"
 
-#define  _9252_HW_ 1
+#define _9252_HW_ 1
 #include "9252_HW.h"
 
-#undef    _9252_HW_
-#define    _9252_HW_ 0
+#undef _9252_HW_
+#define _9252_HW_ 0
 
 #include "./src/ecatappl.h"
 
-#define SYNC0_ACTIVE_LOW         0x01
-#define SYNC1_ACTIVE_LOW         0x01
+
 
 #include "SPIDriver.h"
-
-/* Minimal live diagnostics counters */
-VARVOLATILE UINT32 gEcatLanIrqIsrCount = 0;
 
 // NOTE: This project ports SSC LAN9252 SPI PDI to TI C2000.
 // Do NOT define PIC32_HW here; that would pull PIC32 headers and ISR attributes.
@@ -87,16 +81,15 @@ VARVOLATILE UINT32 gEcatLanIrqIsrCount = 0;
 
 typedef union
 {
-    unsigned short    Word;
-    unsigned char    Byte[2];
+  unsigned short Word;
+  unsigned char Byte[2];
 } UBYTETOWORD;
 
-typedef union 
+typedef union
 {
-    UINT8           Byte[2];
-    UINT16          Word;
-}
-UALEVENT;
+  UINT8 Byte[2];
+  UINT16 Word;
+} UALEVENT;
 
 /*-----------------------------------------------------------------------------------------
 ------
@@ -105,7 +98,6 @@ UALEVENT;
 -----------------------------------------------------------------------------------------*/
 // This project does not map SSC RUN/ERR LEDs to a specific GPIO here.
 // If you have board LEDs, implement them in HW_SetLed().
-
 
 // -----------------------------------------------------------------------------
 // TI C2000 interrupt glue (LAN9252 IRQ -> XINT1 on GPIO67)
@@ -122,15 +114,15 @@ __interrupt void ECAT_Sync1Isr(void);
 void ECAT_DisableEscInt(void);
 void ECAT_EnableEscInt(void);
 
-#define DISABLE_AL_EVENT_INT        ECAT_DisableEscInt()
-#define ENABLE_AL_EVENT_INT         ECAT_EnableEscInt()
+#define DISABLE_AL_EVENT_INT ECAT_DisableEscInt()
+#define ENABLE_AL_EVENT_INT ECAT_EnableEscInt()
 
 ///////////////////////////////////////////////////////////////////////////////
 // Internal Variables
 
-UALEVENT      EscALEvent;     // contains the content of the ALEvent register (0x220), this variable is updated on each Access to the Esc
-UINT16        nAlEventMask;   // current ALEventMask (content of register 0x204:0x205)
-TSYNCMAN      TmpSyncMan;
+UALEVENT EscALEvent; // contains the content of the ALEvent register (0x220), this variable is updated on each Access to the Esc
+UINT16 nAlEventMask; // current ALEventMask (content of register 0x204:0x205)
+TSYNCMAN TmpSyncMan;
 
 /* C28x stores logical bytes in 16-bit addressable units.
  * Access payload buffers with explicit byte packing to avoid pointer drift.
@@ -183,12 +175,10 @@ static inline void ECAT_StoreMemByte(MEM_ADDR *base, UINT16 byteOffset, UINT8 va
 
 static void GetInterruptRegister(void)
 {
-      DISABLE_AL_EVENT_INT;
+  DISABLE_AL_EVENT_INT;
   HW_EscReadWordIsr(EscALEvent.Word, 0x220);
-      ENABLE_AL_EVENT_INT;
-
+  ENABLE_AL_EVENT_INT;
 }
-
 
 /*******************************************************************************
   Function:
@@ -205,7 +195,7 @@ static void GetInterruptRegister(void)
 
 static void ISR_GetInterruptRegister(void)
 {
-     HW_EscReadIsr((MEM_ADDR *)&EscALEvent.Word, 0x220, 2);
+  HW_EscReadIsr((MEM_ADDR *)&EscALEvent.Word, 0x220, 2);
 }
 
 UINT32 PDI_GetTimer()
@@ -221,21 +211,18 @@ void PDI_ClearTimer()
   CPUTimer_reloadTimerCounter(CPUTIMER2_BASE);
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////
 // Exported HW Access functions
 
 void Lan9252_ResetPulse(void)
 {
-    // LAN_RST# is active low
-    GPIO_writePin((uint32_t)ECAT_EN, 1U);// default high
-    DEVICE_DELAY_US(1000000);
-    GPIO_writePin((uint32_t)ECAT_EN, 0U); // assert reset
-    DEVICE_DELAY_US(1000000);
-    GPIO_writePin((uint32_t)ECAT_EN, 1U);   // deassert reset
-    DEVICE_DELAY_US(1000000);
-
-
+  // LAN_RST# is active low
+  GPIO_writePin((uint32_t)ECAT_EN, 1U); // default high
+  DEVICE_DELAY_US(1000000);
+  GPIO_writePin((uint32_t)ECAT_EN, 0U); // assert reset
+  DEVICE_DELAY_US(1000000);
+  GPIO_writePin((uint32_t)ECAT_EN, 1U); // deassert reset
+  DEVICE_DELAY_US(1000000);
 }
 /*******************************************************************************
   Function:
@@ -245,7 +232,7 @@ void Lan9252_ResetPulse(void)
     This function intialize the Process Data Interface (PDI) and the host controller.
 
   Description:
-    
+
   *****************************************************************************/
 
 UINT8 HW_Init(void)
@@ -254,7 +241,6 @@ UINT8 HW_Init(void)
   Lan9252_ResetPulse();
   UINT16 intMask;
   UINT32 data;
-
 
   do
   {
@@ -286,17 +272,14 @@ UINT8 HW_Init(void)
   // Read Interrupt Status register (clear any pending)
   (void)SPIReadDWord(0x58);
 
-
-
   // XINT/PIE routing and edge polarity are configured by SysCfg (Board_init).
 
-    // Do NOT enable global interrupts here; main() controls EINT.
-    // Do NOT start a dedicated 1ms timer here; call ECAT_CheckTimer() every 1ms
-    // from your existing 100us CpuTimer0 ISR (every 10 ticks).
+  // Do NOT enable global interrupts here; main() controls EINT.
+  // Do NOT start a dedicated 1ms timer here; call ECAT_CheckTimer() every 1ms
+  // from your existing 100us CpuTimer0 ISR (every 10 ticks).
 
-    return 0;
+  return 0;
 }
-
 
 /*******************************************************************************
   Function:
@@ -311,9 +294,7 @@ UINT8 HW_Init(void)
 
 void HW_Release(void)
 {
-
 }
-
 
 /*******************************************************************************
   Function:
@@ -328,10 +309,9 @@ void HW_Release(void)
 
 UINT16 HW_GetALEventRegister(void)
 {
-    GetInterruptRegister();
-    return EscALEvent.Word;
+  GetInterruptRegister();
+  return EscALEvent.Word;
 }
-
 
 /*******************************************************************************
   Function:
@@ -347,10 +327,9 @@ UINT16 HW_GetALEventRegister(void)
 
 UINT16 HW_GetALEventRegister_Isr(void)
 {
-     ISR_GetInterruptRegister();
-    return EscALEvent.Word;
+  ISR_GetInterruptRegister();
+  return EscALEvent.Word;
 }
-
 
 /*******************************************************************************
   Function:
@@ -365,17 +344,16 @@ UINT16 HW_GetALEventRegister_Isr(void)
 
 void HW_ResetALEventMask(UINT16 intMask)
 {
-    UINT16 mask;
+  UINT16 mask;
 
-    HW_EscReadWord(mask, ESC_AL_EVENTMASK_OFFSET);
+  HW_EscReadWord(mask, ESC_AL_EVENTMASK_OFFSET);
 
-    mask &= intMask;
-    DISABLE_AL_EVENT_INT;
-    HW_EscWriteWord(mask, ESC_AL_EVENTMASK_OFFSET);
-    HW_EscReadWord(nAlEventMask, ESC_AL_EVENTMASK_OFFSET);
-    ENABLE_AL_EVENT_INT;
+  mask &= intMask;
+  DISABLE_AL_EVENT_INT;
+  HW_EscWriteWord(mask, ESC_AL_EVENTMASK_OFFSET);
+  HW_EscReadWord(nAlEventMask, ESC_AL_EVENTMASK_OFFSET);
+  ENABLE_AL_EVENT_INT;
 }
-
 
 /*******************************************************************************
   Function:
@@ -390,17 +368,16 @@ void HW_ResetALEventMask(UINT16 intMask)
 
 void HW_SetALEventMask(UINT16 intMask)
 {
-    UINT16 mask;
+  UINT16 mask;
 
-    HW_EscReadWord(mask, ESC_AL_EVENTMASK_OFFSET);
+  HW_EscReadWord(mask, ESC_AL_EVENTMASK_OFFSET);
 
-    mask |= intMask;
-    DISABLE_AL_EVENT_INT;
-    HW_EscWriteWord(mask, ESC_AL_EVENTMASK_OFFSET);
-    HW_EscReadWord(nAlEventMask, ESC_AL_EVENTMASK_OFFSET);
-    ENABLE_AL_EVENT_INT;
+  mask |= intMask;
+  DISABLE_AL_EVENT_INT;
+  HW_EscWriteWord(mask, ESC_AL_EVENTMASK_OFFSET);
+  HW_EscReadWord(nAlEventMask, ESC_AL_EVENTMASK_OFFSET);
+  ENABLE_AL_EVENT_INT;
 }
-
 
 /*******************************************************************************
   Function:
@@ -416,68 +393,66 @@ void HW_SetALEventMask(UINT16 intMask)
      Len      - Access size in Bytes.
   *****************************************************************************/
 
-void HW_EscRead( MEM_ADDR *pData, UINT16 Address, UINT16 Len )
+void HW_EscRead(MEM_ADDR *pData, UINT16 Address, UINT16 Len)
 {
-    UINT16 i;
+  UINT16 i;
   UINT16 byteOffset = 0;
 
-    /* loop for all bytes to be read */
-    while ( Len > 0 )
+  /* loop for all bytes to be read */
+  while (Len > 0)
+  {
+    if (Address >= 0x1000)
     {
-        if (Address >= 0x1000)
-        {
-        i = (Len > 4U) ? 4U : Len;
-        }
-        else
-        {
-            i= (Len > 4) ? 4 : Len;
+      i = (Len > 4U) ? 4U : Len;
+    }
+    else
+    {
+      i = (Len > 4) ? 4 : Len;
 
-            if(Address & 01)
-            {
-               i=1;
-            }
-            else if (Address & 02)
-            {
-               i= (i&1) ? 1:2;
-            }
-            else if (i == 03)
-            {
-                i=1;
-            }
-        }
-
-        DISABLE_AL_EVENT_INT;
-
-#ifndef USE_SPI
-         {
-           UINT8 escBytes[4] = {0};
-           UINT16 b;
-           PMPReadDRegister(escBytes,Address,i);
-           for (b = 0; b < i; b++)
-           {
-             ECAT_StoreMemByte(pData, (UINT16)(byteOffset + b), escBytes[b]);
-           }
-         }
-#else
-         {
-           UINT8 escBytes[4] = {0};
-           UINT16 b;
-           SPIReadDRegister(escBytes,Address,i);
-           for (b = 0; b < i; b++)
-           {
-             ECAT_StoreMemByte(pData, (UINT16)(byteOffset + b), escBytes[b]);
-           }
-         }
-#endif
-      
-       ENABLE_AL_EVENT_INT;
-
-        Len -= i;
-        byteOffset = (UINT16)(byteOffset + i);
-        Address += i;
+      if (Address & 01)
+      {
+        i = 1;
+      }
+      else if (Address & 02)
+      {
+        i = (i & 1) ? 1 : 2;
+      }
+      else if (i == 03)
+      {
+        i = 1;
+      }
     }
 
+    DISABLE_AL_EVENT_INT;
 
+#ifndef USE_SPI
+    {
+      UINT8 escBytes[4] = {0};
+      UINT16 b;
+      PMPReadDRegister(escBytes, Address, i);
+      for (b = 0; b < i; b++)
+      {
+        ECAT_StoreMemByte(pData, (UINT16)(byteOffset + b), escBytes[b]);
+      }
+    }
+#else
+    {
+      UINT8 escBytes[4] = {0};
+      UINT16 b;
+      SPIReadDRegister(escBytes, Address, i);
+      for (b = 0; b < i; b++)
+      {
+        ECAT_StoreMemByte(pData, (UINT16)(byteOffset + b), escBytes[b]);
+      }
+    }
+#endif
+
+    ENABLE_AL_EVENT_INT;
+
+    Len -= i;
+    byteOffset = (UINT16)(byteOffset + i);
+    Address += i;
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -488,7 +463,8 @@ void HW_EscRead( MEM_ADDR *pData, UINT16 Address, UINT16 Len )
 
 \brief  The SPI PDI requires an extra ESC read access functions from interrupts service routines.
         The behaviour is equal to "HW_EscRead()"
-*////////////////////////////////////////////////////////////////////////////////////////
+*/
+///////////////////////////////////////////////////////////////////////////////////////
 
 /*******************************************************************************
   Function:
@@ -505,69 +481,67 @@ void HW_EscRead( MEM_ADDR *pData, UINT16 Address, UINT16 Len )
     param Len      - Access size in Bytes.
   *****************************************************************************/
 
-void HW_EscReadIsr( MEM_ADDR *pData, UINT16 Address, UINT16 Len )
+void HW_EscReadIsr(MEM_ADDR *pData, UINT16 Address, UINT16 Len)
 {
 
-   UINT16 i;
+  UINT16 i;
   UINT16 byteOffset = 0;
 
-    /* send the address and command to the ESC */
+  /* send the address and command to the ESC */
 
-    /* loop for all bytes to be read */
-   while ( Len > 0 )
-   {
+  /* loop for all bytes to be read */
+  while (Len > 0)
+  {
 
-        if (Address >= 0x1000)
-        {
-          i = (Len > 4U) ? 4U : Len;
-        }
-        else
-        {
-            i= (Len > 4) ? 4 : Len;
+    if (Address >= 0x1000)
+    {
+      i = (Len > 4U) ? 4U : Len;
+    }
+    else
+    {
+      i = (Len > 4) ? 4 : Len;
 
-            if(Address & 01)
-            {
-               i=1;
-            }
-            else if (Address & 02)
-            {
-               i= (i&1) ? 1:2;
-            }
-            else if (i == 03)
-            {
-                i=1;
-            }
-        }
+      if (Address & 01)
+      {
+        i = 1;
+      }
+      else if (Address & 02)
+      {
+        i = (i & 1) ? 1 : 2;
+      }
+      else if (i == 03)
+      {
+        i = 1;
+      }
+    }
 
-    #ifndef USE_SPI
+#ifndef USE_SPI
     {
       UINT8 escBytes[4] = {0};
       UINT16 b;
-      PMPReadDRegister(escBytes, Address,i);
+      PMPReadDRegister(escBytes, Address, i);
       for (b = 0; b < i; b++)
       {
         ECAT_StoreMemByte(pData, (UINT16)(byteOffset + b), escBytes[b]);
       }
     }
-    #else
+#else
     {
       UINT8 escBytes[4] = {0};
       UINT16 b;
-      SPIReadDRegister(escBytes, Address,i);
+      SPIReadDRegister(escBytes, Address, i);
       for (b = 0; b < i; b++)
       {
         ECAT_StoreMemByte(pData, (UINT16)(byteOffset + b), escBytes[b]);
       }
     }
-    #endif
+#endif
 
-        Len -= i;
+    Len -= i;
     byteOffset = (UINT16)(byteOffset + i);
-        Address += i;
-    }
-   
+    Address += i;
+  }
 }
-
 
 /*******************************************************************************
   Function:
@@ -583,76 +557,71 @@ void HW_EscReadIsr( MEM_ADDR *pData, UINT16 Address, UINT16 Len )
     param Len      - Access size in Bytes.
   *****************************************************************************/
 
-void HW_EscWrite( MEM_ADDR *pData, UINT16 Address, UINT16 Len )
+void HW_EscWrite(MEM_ADDR *pData, UINT16 Address, UINT16 Len)
 {
 
-    UINT16 i;
+  UINT16 i;
   UINT16 byteOffset = 0;
 
-    /* loop for all bytes to be written */
-    while ( Len )
+  /* loop for all bytes to be written */
+  while (Len)
+  {
+
+    if (Address >= 0x1000)
     {
+      i = (Len > 4U) ? 4U : Len;
+    }
+    else
+    {
+      i = (Len > 4) ? 4 : Len;
 
-        if (Address >= 0x1000)
-        {
-          i = (Len > 4U) ? 4U : Len;
-        }
-        else
-        {
-            i= (Len > 4) ? 4 : Len;
-
-            if(Address & 01)
-            {
-               i=1;
-            }
-            else if (Address & 02)
-            {
-               i= (i&1) ? 1:2;
-            }
-            else if (i == 03)
-            {
-                i=1;
-            }
-        }
-
-        DISABLE_AL_EVENT_INT;
-       
-        /* start transmission */
-#ifndef USE_SPI
-        {
-          UINT8 escBytes[4] = {0};
-          UINT16 b;
-          for (b = 0; b < i; b++)
-          {
-            escBytes[b] = ECAT_LoadMemByte(pData, (UINT16)(byteOffset + b));
-          }
-          PMPWriteRegister(escBytes, Address, i);
-        }
-#else
-        {
-          UINT8 escBytes[4] = {0};
-          UINT16 b;
-          for (b = 0; b < i; b++)
-          {
-            escBytes[b] = ECAT_LoadMemByte(pData, (UINT16)(byteOffset + b));
-          }
-          SPIWriteRegister(escBytes, Address, i);
-        }
-#endif
-
-        ENABLE_AL_EVENT_INT;
-
-       
-   
-        /* next address */
-        Len -= i;
-        byteOffset = (UINT16)(byteOffset + i);
-        Address += i;
-
+      if (Address & 01)
+      {
+        i = 1;
+      }
+      else if (Address & 02)
+      {
+        i = (i & 1) ? 1 : 2;
+      }
+      else if (i == 03)
+      {
+        i = 1;
+      }
     }
 
-}
+    DISABLE_AL_EVENT_INT;
 
+    /* start transmission */
+#ifndef USE_SPI
+    {
+      UINT8 escBytes[4] = {0};
+      UINT16 b;
+      for (b = 0; b < i; b++)
+      {
+        escBytes[b] = ECAT_LoadMemByte(pData, (UINT16)(byteOffset + b));
+      }
+      PMPWriteRegister(escBytes, Address, i);
+    }
+#else
+    {
+      UINT8 escBytes[4] = {0};
+      UINT16 b;
+      for (b = 0; b < i; b++)
+      {
+        escBytes[b] = ECAT_LoadMemByte(pData, (UINT16)(byteOffset + b));
+      }
+      SPIWriteRegister(escBytes, Address, i);
+    }
+#endif
+
+    ENABLE_AL_EVENT_INT;
+
+    /* next address */
+    Len -= i;
+    byteOffset = (UINT16)(byteOffset + i);
+    Address += i;
+  }
+}
 
 /*******************************************************************************
   Function:
@@ -669,70 +638,67 @@ void HW_EscWrite( MEM_ADDR *pData, UINT16 Address, UINT16 Len )
     param Len      - Access size in Bytes.
   *****************************************************************************/
 
-void HW_EscWriteIsr( MEM_ADDR *pData, UINT16 Address, UINT16 Len )
+void HW_EscWriteIsr(MEM_ADDR *pData, UINT16 Address, UINT16 Len)
 {
 
-    UINT16 i ;
+  UINT16 i;
   UINT16 byteOffset = 0;
 
-  
-    /* loop for all bytes to be written */
-    while ( Len )
+  /* loop for all bytes to be written */
+  while (Len)
+  {
+
+    if (Address >= 0x1000)
     {
+      i = (Len > 4U) ? 4U : Len;
+    }
+    else
+    {
+      i = (Len > 4) ? 4 : Len;
 
-        if (Address >= 0x1000)
-        {
-          i = (Len > 4U) ? 4U : Len;
-        }
-        else
-        {
-            i= (Len > 4) ? 4 : Len;
-
-            if(Address & 01)
-            {
-               i=1;
-            }
-            else if (Address & 02)
-            {
-               i= (i&1) ? 1:2;
-            }
-            else if (i == 03)
-            {
-                i=1;
-            }
-        }
-        
-       /* start transmission */
-     #ifndef USE_SPI
-         {
-           UINT8 escBytes[4] = {0};
-           UINT16 b;
-           for (b = 0; b < i; b++)
-           {
-             escBytes[b] = ECAT_LoadMemByte(pData, (UINT16)(byteOffset + b));
-           }
-           PMPWriteRegister(escBytes, Address, i);
-         }
-     #else
-         {
-           UINT8 escBytes[4] = {0};
-           UINT16 b;
-           for (b = 0; b < i; b++)
-           {
-             escBytes[b] = ECAT_LoadMemByte(pData, (UINT16)(byteOffset + b));
-           }
-           SPIWriteRegister(escBytes, Address, i);
-         }
-    #endif
-       
-       /* next address */
-        Len -= i;
-        byteOffset = (UINT16)(byteOffset + i);
-        Address += i;
+      if (Address & 01)
+      {
+        i = 1;
+      }
+      else if (Address & 02)
+      {
+        i = (i & 1) ? 1 : 2;
+      }
+      else if (i == 03)
+      {
+        i = 1;
+      }
     }
 
-}
+    /* start transmission */
+#ifndef USE_SPI
+    {
+      UINT8 escBytes[4] = {0};
+      UINT16 b;
+      for (b = 0; b < i; b++)
+      {
+        escBytes[b] = ECAT_LoadMemByte(pData, (UINT16)(byteOffset + b));
+      }
+      PMPWriteRegister(escBytes, Address, i);
+    }
+#else
+    {
+      UINT8 escBytes[4] = {0};
+      UINT16 b;
+      for (b = 0; b < i; b++)
+      {
+        escBytes[b] = ECAT_LoadMemByte(pData, (UINT16)(byteOffset + b));
+      }
+      SPIWriteRegister(escBytes, Address, i);
+    }
+#endif
 
+    /* next address */
+    Len -= i;
+    byteOffset = (UINT16)(byteOffset + i);
+    Address += i;
+  }
+}
 
 /*******************************************************************************
   Function:
@@ -747,26 +713,24 @@ void HW_EscWriteIsr( MEM_ADDR *pData, UINT16 Address, UINT16 Len )
 
 void HW_DisableSyncManChannel(UINT8 channel)
 {
-    UINT16 Offset;
+  UINT16 Offset;
 
+  volatile UINT32 smStatus = SM_SETTING_PDI_DISABLE;
+  smStatus = SWAPDWORD(smStatus);
 
-    volatile UINT32 smStatus = SM_SETTING_PDI_DISABLE;
+  Offset = (ESC_SYNCMAN_CONTROL_OFFSET + (SIZEOF_SM_REGISTER * channel));
+
+  HW_EscWriteDWord(smStatus, Offset);
+
+  /*wait until SyncManager is disabled*/
+  do
+  {
+    HW_EscReadDWord(smStatus, Offset);
+
     smStatus = SWAPDWORD(smStatus);
 
-    Offset = (ESC_SYNCMAN_CONTROL_OFFSET + (SIZEOF_SM_REGISTER*channel));
-
-    HW_EscWriteDWord(smStatus,Offset);
-
-    /*wait until SyncManager is disabled*/
-    do
-    {
-        HW_EscReadDWord(smStatus, Offset);
-
-        smStatus = SWAPDWORD(smStatus);
-
-    }while(!(smStatus & SM_SETTING_PDI_DISABLE));
+  } while (!(smStatus & SM_SETTING_PDI_DISABLE));
 }
-
 
 /*******************************************************************************
   Function:
@@ -781,24 +745,23 @@ void HW_DisableSyncManChannel(UINT8 channel)
 
 void HW_EnableSyncManChannel(UINT8 channel)
 {
-    UINT16 Offset;
+  UINT16 Offset;
 
-    volatile UINT32 smStatus = 0x00000000;
+  volatile UINT32 smStatus = 0x00000000;
 
-    Offset = (ESC_SYNCMAN_CONTROL_OFFSET + (SIZEOF_SM_REGISTER*channel));
+  Offset = (ESC_SYNCMAN_CONTROL_OFFSET + (SIZEOF_SM_REGISTER * channel));
 
-    HW_EscWriteDWord(smStatus,Offset);
+  HW_EscWriteDWord(smStatus, Offset);
 
-    /*wait until SyncManager is enabled*/
-    do
-    {
-        HW_EscReadDWord(smStatus,Offset);
+  /*wait until SyncManager is enabled*/
+  do
+  {
+    HW_EscReadDWord(smStatus, Offset);
 
-        smStatus = SWAPDWORD(smStatus);
+    smStatus = SWAPDWORD(smStatus);
 
-    }while((smStatus & SM_SETTING_PDI_DISABLE));
+  } while ((smStatus & SM_SETTING_PDI_DISABLE));
 }
-
 
 /*******************************************************************************
   Function:
@@ -810,16 +773,15 @@ void HW_EnableSyncManChannel(UINT8 channel)
 
   Description:
     Input param: channel - Sync Manager channel information requested
-	Returns: Pointer to the SYNC Manager channel description
+  Returns: Pointer to the SYNC Manager channel description
   *****************************************************************************/
 
-
-TSYNCMAN ESCMEM * HW_GetSyncMan(UINT8 channel)
+TSYNCMAN ESCMEM *HW_GetSyncMan(UINT8 channel)
 {
-    // get a temporary structure of the Sync Manager
-    HW_EscRead( (MEM_ADDR *)&TmpSyncMan, ESC_SYNCMAN_REG_OFFSET + (channel * SIZEOF_SM_REGISTER), SIZEOF_SM_REGISTER );
+  // get a temporary structure of the Sync Manager
+  HW_EscRead((MEM_ADDR *)&TmpSyncMan, ESC_SYNCMAN_REG_OFFSET + (channel * SIZEOF_SM_REGISTER), SIZEOF_SM_REGISTER);
 
-    return &TmpSyncMan;
+  return &TmpSyncMan;
 }
 
 /*******************************************************************************
@@ -829,7 +791,7 @@ TSYNCMAN ESCMEM * HW_GetSyncMan(UINT8 channel)
 
   \brief    This function updates the EtherCAT run and error led
   *****************************************************************************/
-void HW_SetLed(UINT8 RunLed,UINT8 ErrLed)
+void HW_SetLed(UINT8 RunLed, UINT8 ErrLed)
 {
   (void)RunLed;
   (void)ErrLed;
@@ -840,9 +802,9 @@ void HW_SetLed(UINT8 RunLed,UINT8 ErrLed)
 
 __interrupt void ECAT_Lan9252IrqIsr(void)
 {
-  gEcatLanIrqIsrCount++;
-    // LAN9252 IRQ is level/edge depending on config; we use falling edge.
-    PDI_Isr();
+
+  // LAN9252 IRQ is level/edge depending on config; we use falling edge.
+  PDI_Isr();
 
   /* Defensive: read LAN9252 host interrupt status to clear sticky host IRQ conditions.
      This helps if the IRQ output behaves level-like and would otherwise not generate
@@ -853,35 +815,35 @@ __interrupt void ECAT_Lan9252IrqIsr(void)
 
 __interrupt void ECAT_Sync0Isr(void)
 {
-#if defined (INTERRUPTS_SUPPORTED) && defined(DC_SUPPORTED)
-    Sync0_Isr();
+#if defined(INTERRUPTS_SUPPORTED) && defined(DC_SUPPORTED)
+  Sync0_Isr();
 #endif
   Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP1);
 }
 
 __interrupt void ECAT_Sync1Isr(void)
 {
-#if defined (INTERRUPTS_SUPPORTED) && defined(DC_SUPPORTED)
-    Sync1_Isr();
+#if defined(INTERRUPTS_SUPPORTED) && defined(DC_SUPPORTED)
+  Sync1_Isr();
 #endif
   Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP12);
 }
 
-  void ECAT_DisableEscInt(void)
-  {
-    /* Mask all IRQ sources that can touch the SPI PDI to avoid re-entrancy.
-       ESC accesses are performed in the LAN9252 IRQ ISR and also in SYNC0/SYNC1 ISRs (DC).
-       If SYNC interrupts preempt an SPI transaction, ESC reads (e.g. SM settings) can be corrupted,
-       leading to transient AL status codes like 0x0016 and ESM bouncing.
-    */
-    Interrupt_disable(INT_ECAT_ISR_XINT);
-    Interrupt_disable(INT_ECAT_SYNC0_ISR_XINT);
-    Interrupt_disable(INT_ECAT_SYNC1_ISR_XINT);
-  }
+void ECAT_DisableEscInt(void)
+{
+  /* Mask all IRQ sources that can touch the SPI PDI to avoid re-entrancy.
+     ESC accesses are performed in the LAN9252 IRQ ISR and also in SYNC0/SYNC1 ISRs (DC).
+     If SYNC interrupts preempt an SPI transaction, ESC reads (e.g. SM settings) can be corrupted,
+     leading to transient AL status codes like 0x0016 and ESM bouncing.
+  */
+  Interrupt_disable(INT_ECAT_ISR_XINT);
+  Interrupt_disable(INT_ECAT_SYNC0_ISR_XINT);
+  Interrupt_disable(INT_ECAT_SYNC1_ISR_XINT);
+}
 
-  void ECAT_EnableEscInt(void)
-  {
-    Interrupt_enable(INT_ECAT_ISR_XINT);
-    Interrupt_enable(INT_ECAT_SYNC0_ISR_XINT);
-    Interrupt_enable(INT_ECAT_SYNC1_ISR_XINT);
-  }
+void ECAT_EnableEscInt(void)
+{
+  Interrupt_enable(INT_ECAT_ISR_XINT);
+  Interrupt_enable(INT_ECAT_SYNC0_ISR_XINT);
+  Interrupt_enable(INT_ECAT_SYNC1_ISR_XINT);
+}

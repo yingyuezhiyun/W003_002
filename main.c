@@ -95,7 +95,7 @@ void main(void)
 
     while (1)
     {
-         MainLoop();
+        MainLoop();
         asm(" NOP");
     }
 }
