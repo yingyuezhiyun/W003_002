@@ -51,6 +51,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 
 #include "driverlib.h"
 #include "device.h"
+#include "board.h"
 
 // PIE ACK bit masks (avoid dependency on Interrupt ACK group macros in all indexer setups)
 #define ECAT_PIE_ACK_GROUP1   (0x1U)
@@ -425,7 +426,7 @@ void HW_EscRead( MEM_ADDR *pData, UINT16 Address, UINT16 Len )
     {
         if (Address >= 0x1000)
         {
-            i = Len;
+        i = (Len > 4U) ? 4U : Len;
         }
         else
         {
@@ -518,7 +519,7 @@ void HW_EscReadIsr( MEM_ADDR *pData, UINT16 Address, UINT16 Len )
 
         if (Address >= 0x1000)
         {
-            i = Len;
+          i = (Len > 4U) ? 4U : Len;
         }
         else
         {
@@ -594,7 +595,7 @@ void HW_EscWrite( MEM_ADDR *pData, UINT16 Address, UINT16 Len )
 
         if (Address >= 0x1000)
         {
-            i = Len;
+          i = (Len > 4U) ? 4U : Len;
         }
         else
         {
@@ -681,7 +682,7 @@ void HW_EscWriteIsr( MEM_ADDR *pData, UINT16 Address, UINT16 Len )
 
         if (Address >= 0x1000)
         {
-            i = Len;
+          i = (Len > 4U) ? 4U : Len;
         }
         else
         {
@@ -846,8 +847,8 @@ __interrupt void ECAT_Lan9252IrqIsr(void)
   /* Defensive: read LAN9252 host interrupt status to clear sticky host IRQ conditions.
      This helps if the IRQ output behaves level-like and would otherwise not generate
      subsequent falling edges on XINT1. */
-  (void)SPIReadDWord(0x58);
-  Interrupt_clearACKGroup(ECAT_PIE_ACK_GROUP1);
+  // (void)SPIReadDWord(0x58);
+  Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP1);
 }
 
 __interrupt void ECAT_Sync0Isr(void)
@@ -855,7 +856,7 @@ __interrupt void ECAT_Sync0Isr(void)
 #if defined (INTERRUPTS_SUPPORTED) && defined(DC_SUPPORTED)
     Sync0_Isr();
 #endif
-  Interrupt_clearACKGroup(ECAT_PIE_ACK_GROUP1);
+  Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP1);
 }
 
 __interrupt void ECAT_Sync1Isr(void)
@@ -863,7 +864,7 @@ __interrupt void ECAT_Sync1Isr(void)
 #if defined (INTERRUPTS_SUPPORTED) && defined(DC_SUPPORTED)
     Sync1_Isr();
 #endif
-  Interrupt_clearACKGroup(ECAT_PIE_ACK_GROUP12);
+  Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP12);
 }
 
   void ECAT_DisableEscInt(void)
@@ -873,14 +874,14 @@ __interrupt void ECAT_Sync1Isr(void)
        If SYNC interrupts preempt an SPI transaction, ESC reads (e.g. SM settings) can be corrupted,
        leading to transient AL status codes like 0x0016 and ESM bouncing.
     */
-    Interrupt_disable(INT_XINT1);
-    Interrupt_disable(INT_XINT2);
-    Interrupt_disable(INT_XINT3);
+    Interrupt_disable(INT_ECAT_ISR_XINT);
+    Interrupt_disable(INT_ECAT_SYNC0_ISR_XINT);
+    Interrupt_disable(INT_ECAT_SYNC1_ISR_XINT);
   }
 
   void ECAT_EnableEscInt(void)
   {
-    Interrupt_enable(INT_XINT1);
-    Interrupt_enable(INT_XINT2);
-    Interrupt_enable(INT_XINT3);
+    Interrupt_enable(INT_ECAT_ISR_XINT);
+    Interrupt_enable(INT_ECAT_SYNC0_ISR_XINT);
+    Interrupt_enable(INT_ECAT_SYNC1_ISR_XINT);
   }

@@ -893,9 +893,15 @@ UINT8 MBX_CopyToSendMailbox( TMBX MBXMEM *pMbx )
 
                 /*Get the valid 32Bit address*/
                 UINT32 LastDataAddress = ((mbxSize + MBX_HEADER_SIZE)/4)*4;
-            
-                /*Copy the buffer to overwrite*/
-                MEMCPY((UINT32 *)&u32dummy,(((UINT8 *)pMbx) + LastDataAddress),(4 - BytesLeft));
+                UINT8 overlap = (UINT8)(4 - BytesLeft);
+                UINT8 b = 0;
+
+                /*Copy logical bytes explicitly to avoid C28x char-width side effects.*/
+                for (b = 0; b < overlap; b++)
+                {
+                    UINT8 mbxByte = ((UINT8 *)pMbx)[LastDataAddress + b];
+                    u32dummy |= ((UINT32)(mbxByte & 0x00FFU)) << (8U * b);
+                }
             }
             
             HW_EscWriteDWord(u32dummy,(u16EscAddrSendMbx + u16SendMbxSize - 4));

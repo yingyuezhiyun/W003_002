@@ -504,6 +504,16 @@ UINT8    CheckSmSettings(UINT8 maxChannel)
     UINT16 SMLength = 0;
     UINT16 SMAddress = 0;
 
+    /* Debug snapshots (watch in CCS when AL Status Code = 0x001E/0x001D). */
+    VARVOLATILE static UINT16 gEcatSmLastChannel = 0;
+    VARVOLATILE static UINT16 gEcatSmLastResult = 0;
+    VARVOLATILE static UINT16 gEcatSmLastLen = 0;
+    VARVOLATILE static UINT16 gEcatSmLastAddr = 0;
+    VARVOLATILE static UINT16 gEcatSmLastExpectedLen = 0;
+    VARVOLATILE static UINT16 gEcatSmLastExpectedAddr = 0;
+    VARVOLATILE static UINT16 gEcatSmLastCtrl = 0;
+    VARVOLATILE static UINT16 gEcatSmLastAct = 0;
+
     //Check if max address defines are within the available ESC address range
     if((nMaxEscAddress < MAX_PD_WRITE_ADDRESS)
         ||(nMaxEscAddress < MAX_PD_READ_ADDRESS)
@@ -613,6 +623,14 @@ UINT8    CheckSmSettings(UINT8 maxChannel)
     SMLength = (UINT16)((pSyncMan->AddressLength & SM_LENGTH_MASK) >> SM_LENGTH_SHIFT);
     SMAddress = (UINT16)(pSyncMan->AddressLength & SM_ADDRESS_MASK);
 
+        gEcatSmLastChannel = PROCESS_DATA_IN;
+        gEcatSmLastLen = SMLength;
+        gEcatSmLastAddr = SMAddress;
+        gEcatSmLastExpectedLen = nPdInputSize;
+        gEcatSmLastExpectedAddr = (nAlStatus == STATE_PREOP) ? (UINT16)0U : nEscAddrInputData;
+        gEcatSmLastCtrl = pSyncMan->Settings[SM_SETTING_CONTROL_OFFSET];
+        gEcatSmLastAct = pSyncMan->Settings[SM_SETTING_ACTIVATE_OFFSET];
+
 /* ECATCHANGE_START(V5.11) HW2*/
     //Check if the start address and length are even 32Bit addresses
     if ((SMLength & 0x3) > 0)
@@ -666,6 +684,8 @@ UINT8    CheckSmSettings(UINT8 maxChannel)
             /* state transition refused, send an Emergency with the error and the correct settings */
             SendSmFailedEmergency(PROCESS_DATA_IN, result);
             result = ALSTATUSCODE_INVALIDSMINCFG;
+
+            gEcatSmLastResult = result;
         }
     }
 
@@ -1863,7 +1883,7 @@ void AL_ControlInd(UINT8 alControl, UINT16 alStatusCode)
                 nAlStatus = STATE_PREOP;
         }
     }
-
+#if 1
     if ( result == NOERROR_INWORK )
     {
         /* state transition is still in work
@@ -1960,7 +1980,7 @@ void AL_ControlInd(UINT8 alControl, UINT16 alStatusCode)
            if the the error bit was acknowledged */
         SetALStatus(nAlStatus, 0);
     }
-
+#endif
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

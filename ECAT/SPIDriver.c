@@ -18,7 +18,7 @@
 #endif
 
 #ifndef ECAT_SPI_FIFO_TIMEOUT_CYCLES
-#define ECAT_SPI_FIFO_TIMEOUT_CYCLES 200000UL
+#define ECAT_SPI_FIFO_TIMEOUT_CYCLES (2000UL)
 #endif
 
 /* SPI stall diagnostics (watch these in CCS expressions). */
@@ -28,14 +28,14 @@ VARVOLATILE UINT32 gEcatSpiLastTimeoutStage = 0;
 
 static bool ecat_spi_write_fifo_with_timeout(uint16_t txWord)
 {
-  uint32_t timeout = ECAT_SPI_FIFO_TIMEOUT_CYCLES;
+  int32_t timeout = ECAT_SPI_FIFO_TIMEOUT_CYCLES;
 
-  while((SPI_getTxFIFOStatus(ECAT_SPI_BASE) == SPI_FIFO_TXFULL) && (timeout-- != 0UL))
+  while((SPI_getTxFIFOStatus(ECAT_SPI_BASE) == SPI_FIFO_TXFULL) && (timeout-- != 0))
   {
     ;
   }
 
-  if(timeout == 0UL)
+  if(timeout <= 0)
   {
     gEcatSpiTxTimeoutCount++;
     gEcatSpiLastTimeoutStage = 1U;
@@ -48,14 +48,14 @@ static bool ecat_spi_write_fifo_with_timeout(uint16_t txWord)
 
 static bool ecat_spi_read_fifo_with_timeout(uint16_t *rxWord)
 {
-  uint32_t timeout = ECAT_SPI_FIFO_TIMEOUT_CYCLES;
+  int32_t timeout = ECAT_SPI_FIFO_TIMEOUT_CYCLES;
 
-  while((SPI_getRxFIFOStatus(ECAT_SPI_BASE) == SPI_FIFO_RXEMPTY) && (timeout-- != 0UL))
+  while((SPI_getRxFIFOStatus(ECAT_SPI_BASE) == SPI_FIFO_RXEMPTY) && (timeout-- != 0))
   {
     ;
   }
 
-  if(timeout == 0UL)
+  if(timeout <= 0)
   {
     gEcatSpiRxTimeoutCount++;
     gEcatSpiLastTimeoutStage = 2U;
@@ -410,45 +410,111 @@ void SPIWriteRegUsingCSR( UINT8 *WriteBuffer, UINT16 Address, UINT8 Count)
     This function reads the PDRAM using LAN9252 FIFO.        
   
 *****************************************************************************/
+
 void SPIReadPDRamRegister(UINT8 *ReadBuffer, UINT16 Address, UINT16 Count)
 {
-  UINT8 cmdBuf[8];
-  UINT32 timeout = 200000UL;
-  UINT32 st;
 
-  // Program PRAM read address/length and set busy (write 8 bytes starting at PRAM_READ_ADDR_LEN_REG)
-  cmdBuf[0] = ecat_u8(Address & 0xFFU);
-  cmdBuf[1] = ecat_u8((Address >> 8) & 0xFFU);
-  cmdBuf[2] = ecat_u8(Count & 0xFFU);
-  cmdBuf[3] = ecat_u8((Count >> 8) & 0xFFU);
-  cmdBuf[4] = 0;
-  cmdBuf[5] = 0;
-  cmdBuf[6] = 0;
-  cmdBuf[7] = ecat_u8(0x80U); // busy bit (bit31)
+  /*
+   * C28x-safe PRAM FIFO read:
+   * - UINT8 is 16-bit (logical byte in low 8 bits)
+   * - Do NOT use byte-overlay unions or memcpy() with byte counts
+   * - Read in chunks based on PRAM space-available count
+   */
+  UINT8 cmdBuf[8];
+  UINT32 st;
+  UINT16 remaining = Count;
+  UINT16 offset = 0U;
+
+  if((ReadBuffer == (UINT8 *)0) || (Count == 0U))
+  {
+    return;
+  }
+
+  /* Reset/abort any previous command and wait until not busy. */
+  SPIWriteDWord(PRAM_READ_CMD_REG, (UINT32)PRAM_RW_ABORT_MASK);
+  {
+    UINT32 timeout = 200000UL;
+    do
+    {
+      st = SPIReadDWord(PRAM_READ_CMD_REG);
+    } while(((st & (UINT32)PRAM_RW_BUSY_32B) != 0U) && (timeout-- != 0U));
+
+    if((st & (UINT32)PRAM_RW_BUSY_32B) != 0U)
+    {
+      UINT16 j;
+      for(j = 0U; j < Count; j++)
+      {
+        ReadBuffer[j] = (UINT8)0xFFU;
+      }
+      return;
+    }
+  }
+
+  /* Program PRAM read address/length and set busy (write 8 bytes starting at PRAM_READ_ADDR_LEN_REG). */
+  cmdBuf[0] = ecat_u8(Address & 0x00FFU);
+  cmdBuf[1] = ecat_u8((Address >> 8) & 0x00FFU);
+  cmdBuf[2] = ecat_u8(Count & 0x00FFU);
+  cmdBuf[3] = ecat_u8((Count >> 8) & 0x00FFU);
+  cmdBuf[4] = ecat_u8(0U);
+  cmdBuf[5] = ecat_u8(0U);
+  cmdBuf[6] = ecat_u8(0U);
+  cmdBuf[7] = ecat_u8(0x80U); /* busy bit (bit31) */
   SPIWriteBytes(PRAM_READ_ADDR_LEN_REG, cmdBuf, 8U);
 
-  // Wait until data is available
-  do
+  while(remaining != 0U)
   {
-    st = SPIReadDWord(PRAM_READ_CMD_REG);
-  } while(((st & (UINT32)IS_PRAM_SPACE_AVBL_MASK) == 0U) && (timeout-- != 0U));
+    UINT16 availDwords;
+    UINT16 chunkBytes;
+    UINT32 timeout = 200000UL;
 
-  // Stream bytes from PRAM read FIFO
-  CSLOW();
-  {
-    UINT8 hdr[4];
-    hdr[0] = (UINT8)CMD_FAST_READ;
-    hdr[1] = (UINT8)((PRAM_READ_FIFO_REG >> 8) & 0xFFU);
-    hdr[2] = (UINT8)(PRAM_READ_FIFO_REG & 0xFFU);
-    hdr[3] = (UINT8)CMD_FAST_READ_DUMMY;
-    if(!ecat_spi_transfer_fifo(hdr, (UINT8 *)0, 4U))
+    /* Wait until data is available. */
+    do
+    {
+      st = SPIReadDWord(PRAM_READ_CMD_REG);
+      availDwords = (UINT16)((st >> 8) & (UINT32)PRAM_SPACE_AVBL_COUNT_MASK);
+    } while((((st & (UINT32)IS_PRAM_SPACE_AVBL_MASK) == 0U) || (availDwords == 0U)) && (timeout-- != 0U));
+
+    if(timeout == 0U)
+    {
+      UINT16 j;
+      for(j = offset; j < (UINT16)(offset + remaining); j++)
+      {
+        ReadBuffer[j] = (UINT8)0xFFU;
+      }
+      return;
+    }
+
+    chunkBytes = (UINT16)(availDwords * 4U);
+    if(chunkBytes > remaining)
+    {
+      chunkBytes = remaining;
+    }
+
+    /* Read 'chunkBytes' bytes from PRAM read FIFO. */
+    CSLOW();
+    {
+      UINT8 hdr[4];
+      hdr[0] = (UINT8)CMD_FAST_READ;
+      hdr[1] = (UINT8)((PRAM_READ_FIFO_REG >> 8) & 0xFFU);
+      hdr[2] = (UINT8)(PRAM_READ_FIFO_REG & 0xFFU);
+      hdr[3] = (UINT8)CMD_FAST_READ_DUMMY;
+      if(!ecat_spi_transfer_fifo(hdr, (UINT8 *)0, 4U))
+      {
+        CSHIGH();
+        return;
+      }
+    }
+
+    if(!ecat_spi_read_stream_fifo(&ReadBuffer[offset], chunkBytes))
     {
       CSHIGH();
       return;
     }
+    CSHIGH();
+
+    remaining = (UINT16)(remaining - chunkBytes);
+    offset = (UINT16)(offset + chunkBytes);
   }
-  (void)ecat_spi_read_stream_fifo(ReadBuffer, Count);
-  CSHIGH();
 }
         
 /*******************************************************************************
@@ -460,41 +526,93 @@ void SPIReadPDRamRegister(UINT8 *ReadBuffer, UINT16 Address, UINT16 Count)
 *****************************************************************************/
 void SPIWritePDRamRegister(UINT8 *WriteBuffer, UINT16 Address, UINT16 Count)
 {
+
+  /*
+   * C28x-safe PRAM FIFO write:
+   * - UINT8 is 16-bit (logical byte in low 8 bits)
+   * - Do NOT use byte-overlay unions or memcpy() with byte counts
+   * - Write in chunks based on PRAM space-available count
+   */
   UINT8 cmdBuf[8];
-  UINT32 timeout = 200000UL;
   UINT32 st;
+  UINT16 remaining = Count;
+  UINT16 offset = 0U;
 
-  cmdBuf[0] = ecat_u8(Address & 0xFFU);
-  cmdBuf[1] = ecat_u8((Address >> 8) & 0xFFU);
-  cmdBuf[2] = ecat_u8(Count & 0xFFU);
-  cmdBuf[3] = ecat_u8((Count >> 8) & 0xFFU);
-  cmdBuf[4] = 0;
-  cmdBuf[5] = 0;
-  cmdBuf[6] = 0;
-  cmdBuf[7] = ecat_u8(0x80U); // busy bit (bit31)
-  SPIWriteBytes(PRAM_WRITE_ADDR_LEN_REG, cmdBuf, 8U);
-
-  // Wait until space is available
-  do
+  if((WriteBuffer == (UINT8 *)0) || (Count == 0U))
   {
-    st = SPIReadDWord(PRAM_WRITE_CMD_REG);
-  } while(((st & (UINT32)IS_PRAM_SPACE_AVBL_MASK) == 0U) && (timeout-- != 0U));
+    return;
+  }
 
-  // Stream bytes into PRAM write FIFO
-  CSLOW();
+  /* Reset/abort any previous command and wait until not busy. */
+  SPIWriteDWord(PRAM_WRITE_CMD_REG, (UINT32)PRAM_RW_ABORT_MASK);
   {
-    UINT8 hdr[3];
-    hdr[0] = (UINT8)CMD_SERIAL_WRITE;
-    hdr[1] = (UINT8)((PRAM_WRITE_FIFO_REG >> 8) & 0xFFU);
-    hdr[2] = (UINT8)(PRAM_WRITE_FIFO_REG & 0xFFU);
-    if(!ecat_spi_transfer_fifo(hdr, (UINT8 *)0, 3U))
+    UINT32 timeout = 200000UL;
+    do
     {
-      CSHIGH();
+      st = SPIReadDWord(PRAM_WRITE_CMD_REG);
+    } while(((st & (UINT32)PRAM_RW_BUSY_32B) != 0U) && (timeout-- != 0U));
+
+    if((st & (UINT32)PRAM_RW_BUSY_32B) != 0U)
+    {
       return;
     }
   }
-  (void)ecat_spi_transfer_fifo(WriteBuffer, (UINT8 *)0, Count);
-  CSHIGH();
+
+  /* Program PRAM write address/length and set busy (write 8 bytes starting at PRAM_WRITE_ADDR_LEN_REG). */
+  cmdBuf[0] = ecat_u8(Address & 0x00FFU);
+  cmdBuf[1] = ecat_u8((Address >> 8) & 0x00FFU);
+  cmdBuf[2] = ecat_u8(Count & 0x00FFU);
+  cmdBuf[3] = ecat_u8((Count >> 8) & 0x00FFU);
+  cmdBuf[4] = ecat_u8(0U);
+  cmdBuf[5] = ecat_u8(0U);
+  cmdBuf[6] = ecat_u8(0U);
+  cmdBuf[7] = ecat_u8(0x80U); /* busy bit (bit31) */
+  SPIWriteBytes(PRAM_WRITE_ADDR_LEN_REG, cmdBuf, 8U);
+
+  while(remaining != 0U)
+  {
+    UINT16 availDwords;
+    UINT16 chunkBytes;
+    UINT32 timeout = 200000UL;
+
+    /* Wait until space is available. */
+    do
+    {
+      st = SPIReadDWord(PRAM_WRITE_CMD_REG);
+      availDwords = (UINT16)((st >> 8) & (UINT32)PRAM_SPACE_AVBL_COUNT_MASK);
+    } while((((st & (UINT32)IS_PRAM_SPACE_AVBL_MASK) == 0U) || (availDwords == 0U)) && (timeout-- != 0U));
+
+    if(timeout == 0U)
+    {
+      return;
+    }
+
+    chunkBytes = (UINT16)(availDwords * 4U);
+    if(chunkBytes > remaining)
+    {
+      chunkBytes = remaining;
+    }
+
+    /* Write 'chunkBytes' bytes into PRAM write FIFO. */
+    CSLOW();
+    {
+      UINT8 hdr[3];
+      hdr[0] = (UINT8)CMD_SERIAL_WRITE;
+      hdr[1] = (UINT8)((PRAM_WRITE_FIFO_REG >> 8) & 0xFFU);
+      hdr[2] = (UINT8)(PRAM_WRITE_FIFO_REG & 0xFFU);
+      if(!ecat_spi_transfer_fifo(hdr, (UINT8 *)0, 3U))
+      {
+        CSHIGH();
+        return;
+      }
+    }
+
+    (void)ecat_spi_transfer_fifo(&WriteBuffer[offset], (UINT8 *)0, chunkBytes);
+    CSHIGH();
+
+    remaining = (UINT16)(remaining - chunkBytes);
+    offset = (UINT16)(offset + chunkBytes);
+  }
 }
 
 // -----------------------------------------------------------------------------

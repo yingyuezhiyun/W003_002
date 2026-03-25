@@ -116,7 +116,7 @@ UINT16 EOEAPPL_CalcCheckSum (UINT16 MBXMEM *pWord, UINT16 nLen)
           nLen -= 2;
     }
     if ( nLen == 1 )                          // if nLen odd
-          crc += *((UINT8*)pWord);
+            crc += (UINT32)((UINT8)(*pWord & 0x00FFU));
     CrcLo = LOWORD(crc);
     CrcHi = HIWORD(crc);
     crc = CrcLo + CrcHi;
@@ -257,10 +257,10 @@ UINT16 EOEAPPL_GetSettingsInd(ETHERCAT_EOE_INIT MBXMEM *pEoeInit,UINT16 *pMbxLen
     *pMbxLength += 6;
 
     // set IP Address
-    ((UINT8 MBXMEM *) &pEoeInit->IpAddr)[3] = aIpAdd[0];
-    ((UINT8 MBXMEM *) &pEoeInit->IpAddr)[2] = aIpAdd[1];
-    ((UINT8 MBXMEM *) &pEoeInit->IpAddr)[1] = aIpAdd[2];
-    ((UINT8 MBXMEM *) &pEoeInit->IpAddr)[0] = aIpAdd[3];
+    pEoeInit->IpAddr = (((UINT32)aIpAdd[0] & 0xFFUL) << 24)
+                     | (((UINT32)aIpAdd[1] & 0xFFUL) << 16)
+                     | (((UINT32)aIpAdd[2] & 0xFFUL) << 8)
+                     | (((UINT32)aIpAdd[3] & 0xFFUL));
     pEoeInit->Flags1 |= EOEINIT_CONTAINSIPADDR;
     *pMbxLength += 4;
 
@@ -297,10 +297,10 @@ UINT16 EOEAPPL_SettingsInd(ETHERCAT_EOE_INIT MBXMEM *pEoeInit)
     else
     {
         // set IP Address
-        aIpAdd[0] = ((UINT8 MBXMEM *) &pEoeInit->IpAddr)[3];
-        aIpAdd[1] = ((UINT8 MBXMEM *) &pEoeInit->IpAddr)[2];
-        aIpAdd[2] = ((UINT8 MBXMEM *) &pEoeInit->IpAddr)[1];
-        aIpAdd[3] = ((UINT8 MBXMEM *) &pEoeInit->IpAddr)[0];
+        aIpAdd[0] = (UINT8)((pEoeInit->IpAddr >> 24) & 0xFFUL);
+        aIpAdd[1] = (UINT8)((pEoeInit->IpAddr >> 16) & 0xFFUL);
+        aIpAdd[2] = (UINT8)((pEoeInit->IpAddr >> 8) & 0xFFUL);
+        aIpAdd[3] = (UINT8)(pEoeInit->IpAddr & 0xFFUL);
     }
 
     return result;

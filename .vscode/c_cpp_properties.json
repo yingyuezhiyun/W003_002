@@ -12,7 +12,8 @@
                 "CPU1",               
                 "__TI_COMPILER_VERSION__=22006001",
                 "__attribute__(x)=",
-                "__interrupt="
+                "__interrupt=",
+                "__TMS320C28XX__"
             ],
             "windowsSdkVersion": "10.0.22621.0",
             "compilerPath": "cl.exe",

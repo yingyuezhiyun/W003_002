@@ -169,6 +169,34 @@ UINT16 APPL_StopOutputHandler(void)
     return ALSTATUSCODE_NOERROR;
 }
 
+/*
+ * NOTE (C28x): SSC typedefs map UINT8 to 'unsigned char'. On TI C28x,
+ * 'char' is 16-bit, so UINT8 is 16-bit addressable.
+ * Therefore pointer arithmetic on (UINT8*) is NOT byte-accurate and
+ * unaligned UINT32 accesses can trap. Read mapping entries byte-wise.
+ */
+static inline UINT8 APPL_LoadByte(const void *base, UINT16 byteOffset)
+{
+    const UINT16 *w = (const UINT16 *)base;
+    UINT16 word = w[byteOffset >> 1];
+
+    if ((byteOffset & 1U) != 0U)
+    {
+        return (UINT8)((word >> 8) & 0x00FFU);
+    }
+
+    return (UINT8)(word & 0x00FFU);
+}
+
+static inline UINT32 APPL_LoadU32LE(const void *base, UINT16 byteOffset)
+{
+    UINT32 b0 = (UINT32)(APPL_LoadByte(base, byteOffset + 0U) & 0x00FFU);
+    UINT32 b1 = (UINT32)(APPL_LoadByte(base, byteOffset + 1U) & 0x00FFU);
+    UINT32 b2 = (UINT32)(APPL_LoadByte(base, byteOffset + 2U) & 0x00FFU);
+    UINT32 b3 = (UINT32)(APPL_LoadByte(base, byteOffset + 3U) & 0x00FFU);
+    return (b0) | (b1 << 8) | (b2 << 16) | (b3 << 24);
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////
 /**
 \return     0(ALSTATUSCODE_NOERROR), NOERROR_INWORK
@@ -188,7 +216,6 @@ UINT16 APPL_GenerateMapping(UINT16 *pInputSize,UINT16 *pOutputSize)
     UINT16 PDOAssignEntryCnt = 0;
     OBJCONST TOBJECT OBJMEM * pPDO = NULL;
     UINT16 PDOSubindex0 = 0;
-    UINT32 *pPDOEntry = NULL;
     UINT16 PDOEntryCnt = 0;
    
     /*Scan object 0x1C12 RXPDO assign*/
@@ -200,9 +227,10 @@ UINT16 APPL_GenerateMapping(UINT16 *pInputSize,UINT16 *pOutputSize)
             PDOSubindex0 = *((UINT16 *)pPDO->pVarPtr);
             for(PDOEntryCnt = 0; PDOEntryCnt < PDOSubindex0; PDOEntryCnt++)
             {
-                pPDOEntry = (UINT32 *)((UINT8 *)pPDO->pVarPtr + (OBJ_GetEntryOffset((PDOEntryCnt+1),pPDO)>>3));    //goto PDO entry
-                // we increment the expected output size depending on the mapped Entry
-                OutputSize += (UINT16) ((*pPDOEntry) & 0xFF);
+                UINT16 byteOffset = (UINT16)(OBJ_GetEntryOffset((PDOEntryCnt + 1U), pPDO) >> 3);
+                UINT32 entry = APPL_LoadU32LE(pPDO->pVarPtr, byteOffset);
+                /* bitlength is stored in low 8 bits of mapping entry */
+                OutputSize += (UINT16)(entry & 0x00FFU);
             }
         }
         else
@@ -227,9 +255,10 @@ UINT16 APPL_GenerateMapping(UINT16 *pInputSize,UINT16 *pOutputSize)
                 PDOSubindex0 = *((UINT16 *)pPDO->pVarPtr);
                 for(PDOEntryCnt = 0; PDOEntryCnt < PDOSubindex0; PDOEntryCnt++)
                 {
-                    pPDOEntry = (UINT32 *)((UINT8 *)pPDO->pVarPtr + (OBJ_GetEntryOffset((PDOEntryCnt+1),pPDO)>>3));    //goto PDO entry
-                    // we increment the expected output size depending on the mapped Entry
-                    InputSize += (UINT16) ((*pPDOEntry) & 0xFF);
+                    UINT16 byteOffset = (UINT16)(OBJ_GetEntryOffset((PDOEntryCnt + 1U), pPDO) >> 3);
+                    UINT32 entry = APPL_LoadU32LE(pPDO->pVarPtr, byteOffset);
+                    /* bitlength is stored in low 8 bits of mapping entry */
+                    InputSize += (UINT16)(entry & 0x00FFU);
                 }
             }
             else

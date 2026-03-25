@@ -41,9 +41,6 @@ cputimer1.timerPeriod              = 4294967295;
 cputimer1.timerPrescaler           = 199;
 cputimer1.timerInt.enableInterrupt = true;
 
-const default_warning = scripting.addModule("/driverlib/default_warning.js", {}, false);
-scripting.suppress("Add the \'Device Support\' module in order to use Clock Tree tool and generate device support files\\. This suggestion can be ignored if not using the Clock Tree tool\\.", default_warning);
-
 gpio1.$name           = "ECAT_SPI_CS";
 gpio1.direction       = "GPIO_DIR_MODE_OUT";
 gpio1.gpioPin.$assign = "GPIO61";
