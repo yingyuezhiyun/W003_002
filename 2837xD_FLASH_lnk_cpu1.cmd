@@ -75,7 +75,7 @@ PAGE 1 : /* Data Memory */
 SECTIONS
 {
    /* Allocate program areas: */
-   .cinit              : >> FLASHB | FLASHC     PAGE = 0, ALIGN(8)
+   .cinit              : >> FLASHB | FLASHC |FLASHD | FLASHE   PAGE = 0, ALIGN(8)
    .text               : >> FLASHB | FLASHC | FLASHD | FLASHE      PAGE = 0, ALIGN(8)
    codestart           : > BEGIN       PAGE = 0, ALIGN(8)
    /* Allocate uninitalized data sections: */
@@ -89,7 +89,7 @@ SECTIONS
    .bss:output         : > RAMLS3,       PAGE = 0
    .bss:cio            : > RAMLS5,       PAGE = 1
    .data               : > RAMLS5,       PAGE = 1
-   .sysmem             : > RAMLS5,       PAGE = 1
+   .sysmem             : >> RAMLS5 | RAMGS0 | RAMGS1,        PAGE = 1
    /* Initalized sections go in Flash */
    .const              : > FLASHF,       PAGE = 0,       ALIGN(8)
 #else

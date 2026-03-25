@@ -57,34 +57,26 @@ extern "C"
 // PinMux Configurations
 //
 //*****************************************************************************
-
-//*****************************************************************************
 //
-// ECAT (LAN9252) GPIO Configurations
+// GPIO61 - GPIO Settings
 //
-//*****************************************************************************
+#define ECAT_SPI_CS_GPIO_PIN_CONFIG GPIO_61_GPIO61
 //
-// NOTE: These GPIO numbers match the wiring assumptions in ECAT/SPIDriver.h
-// (SPIA on GPIO58/59/60, manual CS on GPIO61, IRQ/SYNC/EN on GPIO67..70).
+// GPIO67 - GPIO Settings
 //
-
-// GPIO61 - ECAT SPI chip select (manual)
-#define ECAT_SPI_CS 61
-// GPIO67 - LAN9252 IRQ
-#define ECAT_ISR 67
-// GPIO68 - LAN9252 SYNC0
-#define ECAT_SYNC0_ISR 68
-// GPIO69 - LAN9252 SYNC1
-#define ECAT_SYNC1_ISR 69
-// GPIO70 - LAN9252 EN/RESET (board-specific)
-#define ECAT_EN 70
-
-void ECAT_SPI_CS_init(void);
-void ECAT_ISR_init(void);
-void ECAT_SYNC0_ISR_init(void);
-void ECAT_SYNC1_ISR_init(void);
-void ECAT_EN_init(void);
-void GPIO_init(void);
+#define ECAT_ISR_GPIO_PIN_CONFIG GPIO_67_GPIO67
+//
+// GPIO68 - GPIO Settings
+//
+#define ECAT_SYNC0_ISR_GPIO_PIN_CONFIG GPIO_68_GPIO68
+//
+// GPIO69 - GPIO Settings
+//
+#define ECAT_SYNC1_ISR_GPIO_PIN_CONFIG GPIO_69_GPIO69
+//
+// GPIO70 - GPIO Settings
+//
+#define ECAT_EN_GPIO_PIN_CONFIG GPIO_70_GPIO70
 
 //
 // SPIA -> mySPI0 Pinmux
@@ -110,6 +102,74 @@ void GPIO_init(void);
 
 //*****************************************************************************
 //
+// CPUTIMER Configurations
+//
+//*****************************************************************************
+#define myCPUTIMER1_BASE CPUTIMER2_BASE
+void myCPUTIMER1_init();
+
+//*****************************************************************************
+//
+// GPIO Configurations
+//
+//*****************************************************************************
+#define ECAT_SPI_CS 61
+void ECAT_SPI_CS_init();
+#define ECAT_ISR 67
+void ECAT_ISR_init();
+#define ECAT_SYNC0_ISR 68
+void ECAT_SYNC0_ISR_init();
+#define ECAT_SYNC1_ISR 69
+void ECAT_SYNC1_ISR_init();
+#define ECAT_EN 70
+void ECAT_EN_init();
+
+//*****************************************************************************
+//
+// INPUTXBAR Configurations
+//
+//*****************************************************************************
+#define myINPUTXBARINPUT0_SOURCE 67
+#define myINPUTXBARINPUT0_INPUT XBAR_INPUT4
+void myINPUTXBARINPUT0_init();
+#define myINPUTXBARINPUT1_SOURCE 68
+#define myINPUTXBARINPUT1_INPUT XBAR_INPUT5
+void myINPUTXBARINPUT1_init();
+#define myINPUTXBARINPUT2_SOURCE 69
+#define myINPUTXBARINPUT2_INPUT XBAR_INPUT6
+void myINPUTXBARINPUT2_init();
+
+//*****************************************************************************
+//
+// INTERRUPT Configurations
+//
+//*****************************************************************************
+
+// Interrupt Settings for INT_myCPUTIMER1
+// ISR need to be defined for the registered interrupts
+#define INT_myCPUTIMER1 INT_TIMER2
+extern __interrupt void INT_myCPUTIMER1_ISR(void);
+
+// Interrupt Settings for INT_ECAT_ISR_XINT
+// ISR need to be defined for the registered interrupts
+#define INT_ECAT_ISR_XINT INT_XINT1
+#define INT_ECAT_ISR_XINT_INTERRUPT_ACK_GROUP INTERRUPT_ACK_GROUP1
+extern __interrupt void ECAT_Lan9252IrqIsr(void);
+
+// Interrupt Settings for INT_ECAT_SYNC0_ISR_XINT
+// ISR need to be defined for the registered interrupts
+#define INT_ECAT_SYNC0_ISR_XINT INT_XINT2
+#define INT_ECAT_SYNC0_ISR_XINT_INTERRUPT_ACK_GROUP INTERRUPT_ACK_GROUP1
+extern __interrupt void ECAT_Sync0Isr(void);
+
+// Interrupt Settings for INT_ECAT_SYNC1_ISR_XINT
+// ISR need to be defined for the registered interrupts
+#define INT_ECAT_SYNC1_ISR_XINT INT_XINT3
+#define INT_ECAT_SYNC1_ISR_XINT_INTERRUPT_ACK_GROUP INTERRUPT_ACK_GROUP12
+extern __interrupt void ECAT_Sync1Isr(void);
+
+//*****************************************************************************
+//
 // SPI Configurations
 //
 //*****************************************************************************
@@ -120,11 +180,31 @@ void mySPI0_init();
 
 //*****************************************************************************
 //
+// XINT Configurations
+//
+//*****************************************************************************
+#define ECAT_ISR_XINT GPIO_INT_XINT1
+#define ECAT_ISR_XINT_TYPE GPIO_INT_TYPE_FALLING_EDGE
+void ECAT_ISR_XINT_init();
+#define ECAT_SYNC0_ISR_XINT GPIO_INT_XINT2
+#define ECAT_SYNC0_ISR_XINT_TYPE GPIO_INT_TYPE_FALLING_EDGE
+void ECAT_SYNC0_ISR_XINT_init();
+#define ECAT_SYNC1_ISR_XINT GPIO_INT_XINT3
+#define ECAT_SYNC1_ISR_XINT_TYPE GPIO_INT_TYPE_FALLING_EDGE
+void ECAT_SYNC1_ISR_XINT_init();
+
+//*****************************************************************************
+//
 // Board Configurations
 //
 //*****************************************************************************
 void	Board_init();
+void	CPUTIMER_init();
+void	GPIO_init();
+void	INPUTXBAR_init();
+void	INTERRUPT_init();
 void	SPI_init();
+void	XINT_init();
 void	PinMux_init();
 
 //*****************************************************************************

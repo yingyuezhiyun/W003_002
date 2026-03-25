@@ -49,6 +49,13 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 
 #include "src/ecat_def.h"
 
+#include "driverlib.h"
+#include "device.h"
+
+// PIE ACK bit masks (avoid dependency on Interrupt ACK group macros in all indexer setups)
+#define ECAT_PIE_ACK_GROUP1   (0x1U)
+#define ECAT_PIE_ACK_GROUP12  (0x800U)
+
 // #include "F28x_Project.h"
 // #include "F2837xD_input_xbar.h"
 // #include "F2837xD_xint.h"
@@ -68,8 +75,8 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 
 #include "SPIDriver.h"
 
-/* Minimal live diagnostics counters (defined in ECAT/src/ecatappl.c) */
-extern VARVOLATILE UINT32 gEcatLanIrqIsrCount;
+/* Minimal live diagnostics counters */
+VARVOLATILE UINT32 gEcatLanIrqIsrCount = 0;
 
 // NOTE: This project ports SSC LAN9252 SPI PDI to TI C2000.
 // Do NOT define PIC32_HW here; that would pull PIC32 headers and ISR attributes.
@@ -102,11 +109,9 @@ UALEVENT;
 // -----------------------------------------------------------------------------
 // TI C2000 interrupt glue (LAN9252 IRQ -> XINT1 on GPIO67)
 
-static __interrupt void ECAT_Lan9252IrqIsr(void);
-#if defined (INTERRUPTS_SUPPORTED) && defined(DC_SUPPORTED)
-static __interrupt void ECAT_Sync0Isr(void);
-static __interrupt void ECAT_Sync1Isr(void);
-#endif
+__interrupt void ECAT_Lan9252IrqIsr(void);
+__interrupt void ECAT_Sync0Isr(void);
+__interrupt void ECAT_Sync1Isr(void);
 
 /*
  * Critical section handling for SSC ESC accesses.
@@ -125,6 +130,40 @@ void ECAT_EnableEscInt(void);
 UALEVENT      EscALEvent;     // contains the content of the ALEvent register (0x220), this variable is updated on each Access to the Esc
 UINT16        nAlEventMask;   // current ALEventMask (content of register 0x204:0x205)
 TSYNCMAN      TmpSyncMan;
+
+/* C28x stores logical bytes in 16-bit addressable units.
+ * Access payload buffers with explicit byte packing to avoid pointer drift.
+ */
+static inline UINT8 ECAT_LoadMemByte(const MEM_ADDR *base, UINT16 byteOffset)
+{
+  const UINT16 *w = (const UINT16 *)base;
+  UINT16 word = w[byteOffset >> 1];
+
+  if ((byteOffset & 1U) != 0U)
+  {
+    return (UINT8)((word >> 8) & 0x00FFU);
+  }
+
+  return (UINT8)(word & 0x00FFU);
+}
+
+static inline void ECAT_StoreMemByte(MEM_ADDR *base, UINT16 byteOffset, UINT8 value)
+{
+  UINT16 *w = (UINT16 *)base;
+  UINT16 idx = (UINT16)(byteOffset >> 1);
+  UINT16 cur = w[idx];
+
+  if ((byteOffset & 1U) != 0U)
+  {
+    cur = (UINT16)((cur & 0x00FFU) | ((((UINT16)value) & 0x00FFU) << 8));
+  }
+  else
+  {
+    cur = (UINT16)((cur & 0xFF00U) | (((UINT16)value) & 0x00FFU));
+  }
+
+  w[idx] = cur;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Internal functions
@@ -170,19 +209,33 @@ static void ISR_GetInterruptRegister(void)
 
 UINT32 PDI_GetTimer()
 {
-	return(CpuTimer2Regs.TIM.all);
+  // Return an incrementing 32-bit tick derived from CPUTIMER2.
+  // CPUTIMER is a down-counter; bitwise invert makes it an up-counter.
+  return (~CPUTimer_getTimerCount(CPUTIMER2_BASE));
 }
 
 void PDI_ClearTimer()
 {
-	CpuTimer2Regs.TIM.all = 0;
+  // Reload to period -> down-counter becomes 0xFFFFFFFF -> inverted value becomes 0.
+  CPUTimer_reloadTimerCounter(CPUTIMER2_BASE);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 // Exported HW Access functions
 
+void Lan9252_ResetPulse(void)
+{
+    // LAN_RST# is active low
+    GPIO_writePin((uint32_t)ECAT_EN, 1U);// default high
+    DEVICE_DELAY_US(1000000);
+    GPIO_writePin((uint32_t)ECAT_EN, 0U); // assert reset
+    DEVICE_DELAY_US(1000000);
+    GPIO_writePin((uint32_t)ECAT_EN, 1U);   // deassert reset
+    DEVICE_DELAY_US(1000000);
 
+
+}
 /*******************************************************************************
   Function:
     UINT8 HW_Init(void)
@@ -197,6 +250,7 @@ void PDI_ClearTimer()
 UINT8 HW_Init(void)
 {
 
+  Lan9252_ResetPulse();
   UINT16 intMask;
   UINT32 data;
 
@@ -204,17 +258,17 @@ UINT8 HW_Init(void)
   do
   {
     data = SPIReadDWord(LAN9252_BYTE_TEST_REG);
-    DELAY_US(10000UL);
+    DEVICE_DELAY_US(10000UL);
   } while (0x87654321 != data);
   // Configure ESC AL event mask (requires working SPI/PDI)
   do
   {
     intMask = 0x93;
     HW_EscWriteWord(intMask, ESC_AL_EVENTMASK_OFFSET);
-    DELAY_US(10000UL);
+    DEVICE_DELAY_US(10000UL);
     intMask = 0;
     HW_EscReadWord(intMask, ESC_AL_EVENTMASK_OFFSET);
-    DELAY_US(10000UL);
+    DEVICE_DELAY_US(10000UL);
   } while (intMask != 0x93);
 
   // Configure LAN9252 host interrupt output behavior (direct LAN9252 regs)
@@ -233,33 +287,7 @@ UINT8 HW_Init(void)
 
 
 
-  #if defined (INTERRUPTS_SUPPORTED) && defined(DC_SUPPORTED)
-    // Optional: SYNC0/SYNC1 as edge interrupts
-    // SYNC0 -> XINT2 (PIE 1.5) on GPIO68
-    // NOTE: On F2837xD, XINT2 source is selected via INPUTXBAR INPUT5SELECT.
-    // (see TI provided GPIO_SetupXINT2Gpio())
-    EALLOW;
-    InputXbarRegs.INPUT5SELECT = 68; // GPIO68
-    PieVectTable.XINT2_INT = &ECAT_Sync0Isr;
-    EDIS;
-    // Configure edge based on SYNC signal polarity.
-    // C2000 XINT polarity: 0 = falling edge, 1 = rising edge.
-    XintRegs.XINT2CR.bit.POLARITY = (SYNC0_ACTIVE_LOW ? 0U : 1U);
-    XintRegs.XINT2CR.bit.ENABLE = 1;
-    PieCtrlRegs.PIEIER1.bit.INTx5 = 1;
-
-    // SYNC1 -> XINT3 (PIE 12.1) on GPIO69
-    // NOTE: On F2837xD, XINT3 source is selected via INPUTXBAR INPUT6SELECT.
-    // (see TI provided GPIO_SetupXINT3Gpio())
-    EALLOW;
-    InputXbarRegs.INPUT6SELECT = 69; // GPIO69
-    PieVectTable.XINT3_INT = &ECAT_Sync1Isr;
-    EDIS;
-    XintRegs.XINT3CR.bit.POLARITY = (SYNC1_ACTIVE_LOW ? 0U : 1U);
-    XintRegs.XINT3CR.bit.ENABLE = 1;
-    PieCtrlRegs.PIEIER12.bit.INTx1 = 1;
-    IER |= M_INT12;
-  #endif
+  // XINT/PIE routing and edge polarity are configured by SysCfg (Board_init).
 
     // Do NOT enable global interrupts here; main() controls EINT.
     // Do NOT start a dedicated 1ms timer here; call ECAT_CheckTimer() every 1ms
@@ -390,7 +418,7 @@ void HW_SetALEventMask(UINT16 intMask)
 void HW_EscRead( MEM_ADDR *pData, UINT16 Address, UINT16 Len )
 {
     UINT16 i;
-    UINT8 *pTmpData = (UINT8 *)pData;
+  UINT16 byteOffset = 0;
 
     /* loop for all bytes to be read */
     while ( Len > 0 )
@@ -420,15 +448,31 @@ void HW_EscRead( MEM_ADDR *pData, UINT16 Address, UINT16 Len )
         DISABLE_AL_EVENT_INT;
 
 #ifndef USE_SPI
-       PMPReadDRegister(pTmpData,Address,i);
+         {
+           UINT8 escBytes[4] = {0};
+           UINT16 b;
+           PMPReadDRegister(escBytes,Address,i);
+           for (b = 0; b < i; b++)
+           {
+             ECAT_StoreMemByte(pData, (UINT16)(byteOffset + b), escBytes[b]);
+           }
+         }
 #else
-       SPIReadDRegister(pTmpData,Address,i);
+         {
+           UINT8 escBytes[4] = {0};
+           UINT16 b;
+           SPIReadDRegister(escBytes,Address,i);
+           for (b = 0; b < i; b++)
+           {
+             ECAT_StoreMemByte(pData, (UINT16)(byteOffset + b), escBytes[b]);
+           }
+         }
 #endif
       
        ENABLE_AL_EVENT_INT;
 
         Len -= i;
-        pTmpData += i;
+        byteOffset = (UINT16)(byteOffset + i);
         Address += i;
     }
 
@@ -464,7 +508,7 @@ void HW_EscReadIsr( MEM_ADDR *pData, UINT16 Address, UINT16 Len )
 {
 
    UINT16 i;
-   UINT8 *pTmpData = (UINT8 *)pData;
+  UINT16 byteOffset = 0;
 
     /* send the address and command to the ESC */
 
@@ -495,13 +539,29 @@ void HW_EscReadIsr( MEM_ADDR *pData, UINT16 Address, UINT16 Len )
         }
 
     #ifndef USE_SPI
-      PMPReadDRegister(pTmpData, Address,i);
+    {
+      UINT8 escBytes[4] = {0};
+      UINT16 b;
+      PMPReadDRegister(escBytes, Address,i);
+      for (b = 0; b < i; b++)
+      {
+        ECAT_StoreMemByte(pData, (UINT16)(byteOffset + b), escBytes[b]);
+      }
+    }
     #else
-      SPIReadDRegister(pTmpData, Address,i);
+    {
+      UINT8 escBytes[4] = {0};
+      UINT16 b;
+      SPIReadDRegister(escBytes, Address,i);
+      for (b = 0; b < i; b++)
+      {
+        ECAT_StoreMemByte(pData, (UINT16)(byteOffset + b), escBytes[b]);
+      }
+    }
     #endif
 
         Len -= i;
-        pTmpData += i;
+    byteOffset = (UINT16)(byteOffset + i);
         Address += i;
     }
    
@@ -526,7 +586,7 @@ void HW_EscWrite( MEM_ADDR *pData, UINT16 Address, UINT16 Len )
 {
 
     UINT16 i;
-    UINT8 *pTmpData = (UINT8 *)pData;
+  UINT16 byteOffset = 0;
 
     /* loop for all bytes to be written */
     while ( Len )
@@ -558,9 +618,25 @@ void HW_EscWrite( MEM_ADDR *pData, UINT16 Address, UINT16 Len )
        
         /* start transmission */
 #ifndef USE_SPI
-        PMPWriteRegister(pTmpData, Address, i);
+        {
+          UINT8 escBytes[4] = {0};
+          UINT16 b;
+          for (b = 0; b < i; b++)
+          {
+            escBytes[b] = ECAT_LoadMemByte(pData, (UINT16)(byteOffset + b));
+          }
+          PMPWriteRegister(escBytes, Address, i);
+        }
 #else
-        SPIWriteRegister(pTmpData, Address, i);
+        {
+          UINT8 escBytes[4] = {0};
+          UINT16 b;
+          for (b = 0; b < i; b++)
+          {
+            escBytes[b] = ECAT_LoadMemByte(pData, (UINT16)(byteOffset + b));
+          }
+          SPIWriteRegister(escBytes, Address, i);
+        }
 #endif
 
         ENABLE_AL_EVENT_INT;
@@ -569,7 +645,7 @@ void HW_EscWrite( MEM_ADDR *pData, UINT16 Address, UINT16 Len )
    
         /* next address */
         Len -= i;
-        pTmpData += i;
+        byteOffset = (UINT16)(byteOffset + i);
         Address += i;
 
     }
@@ -596,7 +672,7 @@ void HW_EscWriteIsr( MEM_ADDR *pData, UINT16 Address, UINT16 Len )
 {
 
     UINT16 i ;
-    UINT8 *pTmpData = (UINT8 *)pData;
+  UINT16 byteOffset = 0;
 
   
     /* loop for all bytes to be written */
@@ -627,14 +703,30 @@ void HW_EscWriteIsr( MEM_ADDR *pData, UINT16 Address, UINT16 Len )
         
        /* start transmission */
      #ifndef USE_SPI
-       PMPWriteRegister(pTmpData, Address, i);
+         {
+           UINT8 escBytes[4] = {0};
+           UINT16 b;
+           for (b = 0; b < i; b++)
+           {
+             escBytes[b] = ECAT_LoadMemByte(pData, (UINT16)(byteOffset + b));
+           }
+           PMPWriteRegister(escBytes, Address, i);
+         }
      #else
-       SPIWriteRegister(pTmpData, Address, i);
+         {
+           UINT8 escBytes[4] = {0};
+           UINT16 b;
+           for (b = 0; b < i; b++)
+           {
+             escBytes[b] = ECAT_LoadMemByte(pData, (UINT16)(byteOffset + b));
+           }
+           SPIWriteRegister(escBytes, Address, i);
+         }
     #endif
        
        /* next address */
         Len -= i;
-        pTmpData += i;
+        byteOffset = (UINT16)(byteOffset + i);
         Address += i;
     }
 
@@ -745,7 +837,7 @@ void HW_SetLed(UINT8 RunLed,UINT8 ErrLed)
 // -----------------------------------------------------------------------------
 // C2000 ISR implementations
 
-static __interrupt void ECAT_Lan9252IrqIsr(void)
+__interrupt void ECAT_Lan9252IrqIsr(void)
 {
   gEcatLanIrqIsrCount++;
     // LAN9252 IRQ is level/edge depending on config; we use falling edge.
@@ -755,22 +847,24 @@ static __interrupt void ECAT_Lan9252IrqIsr(void)
      This helps if the IRQ output behaves level-like and would otherwise not generate
      subsequent falling edges on XINT1. */
   (void)SPIReadDWord(0x58);
-    PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;
+  Interrupt_clearACKGroup(ECAT_PIE_ACK_GROUP1);
 }
 
+__interrupt void ECAT_Sync0Isr(void)
+{
 #if defined (INTERRUPTS_SUPPORTED) && defined(DC_SUPPORTED)
-static __interrupt void ECAT_Sync0Isr(void)
-{
     Sync0_Isr();
-  PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;
+#endif
+  Interrupt_clearACKGroup(ECAT_PIE_ACK_GROUP1);
 }
 
-static __interrupt void ECAT_Sync1Isr(void)
+__interrupt void ECAT_Sync1Isr(void)
 {
+#if defined (INTERRUPTS_SUPPORTED) && defined(DC_SUPPORTED)
     Sync1_Isr();
-  PieCtrlRegs.PIEACK.all = PIEACK_GROUP12;
-}
 #endif
+  Interrupt_clearACKGroup(ECAT_PIE_ACK_GROUP12);
+}
 
   void ECAT_DisableEscInt(void)
   {
@@ -779,18 +873,14 @@ static __interrupt void ECAT_Sync1Isr(void)
        If SYNC interrupts preempt an SPI transaction, ESC reads (e.g. SM settings) can be corrupted,
        leading to transient AL status codes like 0x0016 and ESM bouncing.
     */
-    PieCtrlRegs.PIEIER1.bit.INTx4 = 0; /* XINT1: LAN9252 IRQ */
-#if defined (INTERRUPTS_SUPPORTED) && defined(DC_SUPPORTED)
-    PieCtrlRegs.PIEIER1.bit.INTx5 = 0; /* XINT2: SYNC0 */
-    PieCtrlRegs.PIEIER12.bit.INTx1 = 0; /* XINT3: SYNC1 */
-#endif
+    Interrupt_disable(INT_XINT1);
+    Interrupt_disable(INT_XINT2);
+    Interrupt_disable(INT_XINT3);
   }
 
   void ECAT_EnableEscInt(void)
   {
-    PieCtrlRegs.PIEIER1.bit.INTx4 = 1; /* XINT1: LAN9252 IRQ */
-#if defined (INTERRUPTS_SUPPORTED) && defined(DC_SUPPORTED)
-    PieCtrlRegs.PIEIER1.bit.INTx5 = 1; /* XINT2: SYNC0 */
-    PieCtrlRegs.PIEIER12.bit.INTx1 = 1; /* XINT3: SYNC1 */
-#endif
+    Interrupt_enable(INT_XINT1);
+    Interrupt_enable(INT_XINT2);
+    Interrupt_enable(INT_XINT3);
   }

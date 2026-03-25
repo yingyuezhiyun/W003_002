@@ -48,8 +48,12 @@ void Board_init()
 	EALLOW;
 
 	PinMux_init();
+	INPUTXBAR_init();
+	CPUTIMER_init();
 	GPIO_init();
 	SPI_init();
+	XINT_init();
+	INTERRUPT_init();
 
 	EDIS;
 }
@@ -65,15 +69,16 @@ void PinMux_init()
 	// PinMux for modules assigned to CPU1
 	//
 	
-	//
-	// ECAT GPIOs (manual CS + IRQ/SYNC/EN)
-	//
+	// GPIO61 -> ECAT_SPI_CS Pinmux
 	GPIO_setPinConfig(GPIO_61_GPIO61);
+	// GPIO67 -> ECAT_ISR Pinmux
 	GPIO_setPinConfig(GPIO_67_GPIO67);
+	// GPIO68 -> ECAT_SYNC0_ISR Pinmux
 	GPIO_setPinConfig(GPIO_68_GPIO68);
+	// GPIO69 -> ECAT_SYNC1_ISR Pinmux
 	GPIO_setPinConfig(GPIO_69_GPIO69);
+	// GPIO70 -> ECAT_EN Pinmux
 	GPIO_setPinConfig(GPIO_70_GPIO70);
-
 	//
 	// SPIA -> mySPI0 Pinmux
 	//
@@ -94,11 +99,30 @@ void PinMux_init()
 
 //*****************************************************************************
 //
+// CPUTIMER Configurations
+//
+//*****************************************************************************
+void CPUTIMER_init(){
+	myCPUTIMER1_init();
+}
+
+void myCPUTIMER1_init(){
+	CPUTimer_setEmulationMode(myCPUTIMER1_BASE, CPUTIMER_EMULATIONMODE_RUNFREE);
+	CPUTimer_selectClockSource(myCPUTIMER1_BASE, CPUTIMER_CLOCK_SOURCE_SYS, CPUTIMER_CLOCK_PRESCALER_1);
+	CPUTimer_setPreScaler(myCPUTIMER1_BASE, 199U);
+	CPUTimer_setPeriod(myCPUTIMER1_BASE, 4294967295U);
+	CPUTimer_enableInterrupt(myCPUTIMER1_BASE);
+	CPUTimer_stopTimer(myCPUTIMER1_BASE);
+
+	CPUTimer_reloadTimerCounter(myCPUTIMER1_BASE);
+}
+
+//*****************************************************************************
+//
 // GPIO Configurations
 //
 //*****************************************************************************
-void GPIO_init()
-{
+void GPIO_init(){
 	ECAT_SPI_CS_init();
 	ECAT_ISR_init();
 	ECAT_SYNC0_ISR_init();
@@ -106,48 +130,85 @@ void GPIO_init()
 	ECAT_EN_init();
 }
 
-void ECAT_SPI_CS_init()
-{
+void ECAT_SPI_CS_init(){
 	GPIO_setPadConfig(ECAT_SPI_CS, GPIO_PIN_TYPE_STD);
 	GPIO_setQualificationMode(ECAT_SPI_CS, GPIO_QUAL_SYNC);
 	GPIO_setDirectionMode(ECAT_SPI_CS, GPIO_DIR_MODE_OUT);
 	GPIO_setControllerCore(ECAT_SPI_CS, GPIO_CORE_CPU1);
-	GPIO_writePin(ECAT_SPI_CS, 1U); // deassert CS
 }
-
-void ECAT_ISR_init()
-{
+void ECAT_ISR_init(){
 	GPIO_setPadConfig(ECAT_ISR, GPIO_PIN_TYPE_STD);
 	GPIO_setQualificationMode(ECAT_ISR, GPIO_QUAL_SYNC);
 	GPIO_setDirectionMode(ECAT_ISR, GPIO_DIR_MODE_IN);
 	GPIO_setControllerCore(ECAT_ISR, GPIO_CORE_CPU1);
 }
-
-void ECAT_SYNC0_ISR_init()
-{
+void ECAT_SYNC0_ISR_init(){
 	GPIO_setPadConfig(ECAT_SYNC0_ISR, GPIO_PIN_TYPE_STD);
 	GPIO_setQualificationMode(ECAT_SYNC0_ISR, GPIO_QUAL_SYNC);
 	GPIO_setDirectionMode(ECAT_SYNC0_ISR, GPIO_DIR_MODE_IN);
 	GPIO_setControllerCore(ECAT_SYNC0_ISR, GPIO_CORE_CPU1);
 }
-
-void ECAT_SYNC1_ISR_init()
-{
+void ECAT_SYNC1_ISR_init(){
 	GPIO_setPadConfig(ECAT_SYNC1_ISR, GPIO_PIN_TYPE_STD);
 	GPIO_setQualificationMode(ECAT_SYNC1_ISR, GPIO_QUAL_SYNC);
 	GPIO_setDirectionMode(ECAT_SYNC1_ISR, GPIO_DIR_MODE_IN);
 	GPIO_setControllerCore(ECAT_SYNC1_ISR, GPIO_CORE_CPU1);
 }
-
-void ECAT_EN_init()
-{
+void ECAT_EN_init(){
 	GPIO_setPadConfig(ECAT_EN, GPIO_PIN_TYPE_STD);
 	GPIO_setQualificationMode(ECAT_EN, GPIO_QUAL_SYNC);
 	GPIO_setDirectionMode(ECAT_EN, GPIO_DIR_MODE_OUT);
 	GPIO_setControllerCore(ECAT_EN, GPIO_CORE_CPU1);
-	GPIO_writePin(ECAT_EN, 1U);
 }
 
+//*****************************************************************************
+//
+// INPUTXBAR Configurations
+//
+//*****************************************************************************
+void INPUTXBAR_init(){
+	myINPUTXBARINPUT0_init();
+	myINPUTXBARINPUT1_init();
+	myINPUTXBARINPUT2_init();
+}
+
+void myINPUTXBARINPUT0_init(){
+	XBAR_setInputPin(myINPUTXBARINPUT0_INPUT, myINPUTXBARINPUT0_SOURCE);
+}
+void myINPUTXBARINPUT1_init(){
+	XBAR_setInputPin(myINPUTXBARINPUT1_INPUT, myINPUTXBARINPUT1_SOURCE);
+}
+void myINPUTXBARINPUT2_init(){
+	XBAR_setInputPin(myINPUTXBARINPUT2_INPUT, myINPUTXBARINPUT2_SOURCE);
+}
+
+//*****************************************************************************
+//
+// INTERRUPT Configurations
+//
+//*****************************************************************************
+void INTERRUPT_init(){
+	
+	// Interrupt Settings for INT_myCPUTIMER1
+	// ISR need to be defined for the registered interrupts
+	Interrupt_register(INT_myCPUTIMER1, &INT_myCPUTIMER1_ISR);
+	Interrupt_enable(INT_myCPUTIMER1);
+	
+	// Interrupt Settings for INT_ECAT_ISR_XINT
+	// ISR need to be defined for the registered interrupts
+	Interrupt_register(INT_ECAT_ISR_XINT, &ECAT_Lan9252IrqIsr);
+	Interrupt_enable(INT_ECAT_ISR_XINT);
+	
+	// Interrupt Settings for INT_ECAT_SYNC0_ISR_XINT
+	// ISR need to be defined for the registered interrupts
+	Interrupt_register(INT_ECAT_SYNC0_ISR_XINT, &ECAT_Sync0Isr);
+	Interrupt_enable(INT_ECAT_SYNC0_ISR_XINT);
+	
+	// Interrupt Settings for INT_ECAT_SYNC1_ISR_XINT
+	// ISR need to be defined for the registered interrupts
+	Interrupt_register(INT_ECAT_SYNC1_ISR_XINT, &ECAT_Sync1Isr);
+	Interrupt_enable(INT_ECAT_SYNC1_ISR_XINT);
+}
 //*****************************************************************************
 //
 // SPI Configurations
@@ -159,12 +220,39 @@ void SPI_init(){
 
 void mySPI0_init(){
 	SPI_disableModule(mySPI0_BASE);
-	// LAN9252 supports SPI mode 0 or 3. Use mode 3 here (CPOL=1, CPHA=1).
-	SPI_setConfig(mySPI0_BASE, DEVICE_LSPCLK_FREQ, SPI_PROT_POL1PHA1,
-				  SPI_MODE_MASTER, mySPI0_BITRATE, mySPI0_DATAWIDTH);
-	SPI_disableFIFO(mySPI0_BASE);
+	SPI_setConfig(mySPI0_BASE, DEVICE_LSPCLK_FREQ, SPI_PROT_POL1PHA0,
+				  SPI_MODE_CONTROLLER, mySPI0_BITRATE, mySPI0_DATAWIDTH);
+	SPI_setPTESignalPolarity(mySPI0_BASE, SPI_PTE_ACTIVE_LOW);
+	SPI_enableFIFO(mySPI0_BASE);
 	SPI_disableLoopback(mySPI0_BASE);
 	SPI_setEmulationMode(mySPI0_BASE, SPI_EMULATION_STOP_MIDWAY);
 	SPI_enableModule(mySPI0_BASE);
+}
+
+//*****************************************************************************
+//
+// XINT Configurations
+//
+//*****************************************************************************
+void XINT_init(){
+	ECAT_ISR_XINT_init();
+	ECAT_SYNC0_ISR_XINT_init();
+	ECAT_SYNC1_ISR_XINT_init();
+}
+
+void ECAT_ISR_XINT_init(){
+	GPIO_setInterruptType(ECAT_ISR_XINT, GPIO_INT_TYPE_FALLING_EDGE);
+	GPIO_setInterruptPin(ECAT_ISR, ECAT_ISR_XINT);
+	GPIO_enableInterrupt(ECAT_ISR_XINT);
+}
+void ECAT_SYNC0_ISR_XINT_init(){
+	GPIO_setInterruptType(ECAT_SYNC0_ISR_XINT, GPIO_INT_TYPE_FALLING_EDGE);
+	GPIO_setInterruptPin(ECAT_SYNC0_ISR, ECAT_SYNC0_ISR_XINT);
+	GPIO_enableInterrupt(ECAT_SYNC0_ISR_XINT);
+}
+void ECAT_SYNC1_ISR_XINT_init(){
+	GPIO_setInterruptType(ECAT_SYNC1_ISR_XINT, GPIO_INT_TYPE_FALLING_EDGE);
+	GPIO_setInterruptPin(ECAT_SYNC1_ISR, ECAT_SYNC1_ISR_XINT);
+	GPIO_enableInterrupt(ECAT_SYNC1_ISR_XINT);
 }
 

@@ -57,6 +57,10 @@
 #include "board.h"
 #include "stdio.h"
 
+#include "ECAT/9252_HW.h"
+#include "ECAT/src/ecatappl.h"
+#include "ECAT/src/applInterface.h"
+
 
 void main(void)
 {
@@ -73,6 +77,18 @@ void main(void)
 
 	Board_init();
 
+    // Enable global interrupts so CPUTIMER1/XINT ISRs can run
+    // Interrupt_enableMaster();
+    //Interrupt_enableRealtime();
+
+    printf("size char = %lu\n", sizeof(char));
+
+    HW_Init();
+    MainInit();
+
+    EINT; // 开启全局中断
+    ERTM; // Enable Global realtime interrupt DBGM
+
     //initTILE1(myCLBTILE1_BASE);
     //CLB_enableCLB(myCLBTILE1_BASE);
 	printf("hello\n");
@@ -86,23 +102,23 @@ void main(void)
     }
 }
 
- __interrupt void ECAT_Lan9252IrqIsr(void)
-{
-
-}
-
- __interrupt void ECAT_Sync0Isr(void)
-{
-
-}
-
- __interrupt void ECAT_Sync1Isr(void)
-{
-
-}
-
-
- __interrupt void INT_myCPUTIMER1_ISR(void)
-{
-
-}
+// __interrupt void ECAT_Lan9252IrqIsr(void)
+//{
+//
+//}
+//
+// __interrupt void ECAT_Sync0Isr(void)
+//{
+//
+//}
+//
+// __interrupt void ECAT_Sync1Isr(void)
+//{
+//
+//}
+//
+//
+// __interrupt void INT_myCPUTIMER1_ISR(void)
+//{
+//
+//}

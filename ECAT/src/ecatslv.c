@@ -268,7 +268,6 @@ void SetALEventMask(UINT16 intMask)
 *////////////////////////////////////////////////////////////////////////////////////////
 void UpdateEEPROMLoadedState(void)
 {
-{
    UINT32 TmpVar = 0;
    //read EEPROM loaded information
    HW_EscReadDWord(TmpVar, ESC_EEPROM_CONFIG_OFFSET);
@@ -283,7 +282,6 @@ void UpdateEEPROMLoadedState(void)
    {
       EepromLoaded = TRUE;
    }
-}
 }
 
 

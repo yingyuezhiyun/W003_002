@@ -67,5 +67,14 @@
         "bit": "c",
         "cstddef": "c"
     },
-    "chat.agent.maxRequests": 200
+    "chat.agent.maxRequests": 200,
+    "files.exclude": {
+        "**/CPU1_RAM/": true
+    },
+    "search.exclude": {
+        "**/CPU1_RAM/": true
+    },
+    "files.watcherExclude": {
+        "**/CPU1_RAM/**": true
+    }
 }
