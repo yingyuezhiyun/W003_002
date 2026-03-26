@@ -800,34 +800,34 @@ void HW_SetLed(UINT8 RunLed, UINT8 ErrLed)
 // -----------------------------------------------------------------------------
 // C2000 ISR implementations
 
-__interrupt void ECAT_Lan9252IrqIsr(void)
-{
+// __interrupt void ECAT_Lan9252IrqIsr(void)
+// {
 
-  // LAN9252 IRQ is level/edge depending on config; we use falling edge.
-  PDI_Isr();
+//   // LAN9252 IRQ is level/edge depending on config; we use falling edge.
+//   PDI_Isr();
 
-  /* Defensive: read LAN9252 host interrupt status to clear sticky host IRQ conditions.
-     This helps if the IRQ output behaves level-like and would otherwise not generate
-     subsequent falling edges on XINT1. */
-  // (void)SPIReadDWord(0x58);
-  Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP1);
-}
+//   /* Defensive: read LAN9252 host interrupt status to clear sticky host IRQ conditions.
+//      This helps if the IRQ output behaves level-like and would otherwise not generate
+//      subsequent falling edges on XINT1. */
+//   // (void)SPIReadDWord(0x58);
+//   Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP1);
+// }
 
-__interrupt void ECAT_Sync0Isr(void)
-{
-#if defined(INTERRUPTS_SUPPORTED) && defined(DC_SUPPORTED)
-  Sync0_Isr();
-#endif
-  Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP1);
-}
+// __interrupt void ECAT_Sync0Isr(void)
+// {
+// #if defined(INTERRUPTS_SUPPORTED) && defined(DC_SUPPORTED)
+//   Sync0_Isr();
+// #endif
+//   Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP1);
+// }
 
-__interrupt void ECAT_Sync1Isr(void)
-{
-#if defined(INTERRUPTS_SUPPORTED) && defined(DC_SUPPORTED)
-  Sync1_Isr();
-#endif
-  Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP12);
-}
+// __interrupt void ECAT_Sync1Isr(void)
+// {
+// #if defined(INTERRUPTS_SUPPORTED) && defined(DC_SUPPORTED)
+//   Sync1_Isr();
+// #endif
+//   Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP12);
+// }
 
 void ECAT_DisableEscInt(void)
 {

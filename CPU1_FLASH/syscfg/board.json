@@ -1,8 +1,20 @@
 {
     "interruptInfo" : [
         {
-            "interruptName": "INT_myCPUTIMER1",
-            "interruptHandler": "INT_myCPUTIMER1_ISR"
+            "interruptName": "INT_CPU_TIMER2",
+            "interruptHandler": "INT_CPU_TIMER2_ISR"
+        },
+        {
+            "interruptName": "INT_CPU_TIMER0",
+            "interruptHandler": "INT_CPU_TIMER0_ISR"
+        },
+        {
+            "interruptName": "INT_myEPWM0",
+            "interruptHandler": "INT_myEPWM0_ISR"
+        },
+        {
+            "interruptName": "INT_myEPWM1",
+            "interruptHandler": "INT_myEPWM1_ISR"
         },
         {
             "interruptName": "INT_ECAT_ISR_XINT",
@@ -15,6 +27,18 @@
         {
             "interruptName": "INT_ECAT_SYNC1_ISR_XINT",
             "interruptHandler": "ECAT_Sync1Isr"
+        },
+        {
+            "interruptName": "INT_RS232_SCI_TX",
+            "interruptHandler": "INT_RS232_SCI_TX_ISR"
+        },
+        {
+            "interruptName": "INT_Elmo_SCI_TX",
+            "interruptHandler": "INT_Elmo_SCI_TX_ISR"
+        },
+        {
+            "interruptName": "INT_ServicePort_SCI_TX",
+            "interruptHandler": "INT_ServicePort_SCI_TX_ISR"
         }
     ]
 }

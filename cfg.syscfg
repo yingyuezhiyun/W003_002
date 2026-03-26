@@ -9,41 +9,162 @@
 /**
  * Import the modules used in this configuration.
  */
+const adc              = scripting.addModule("/driverlib/adc.js", {}, false);
+const adc1             = adc.addInstance();
+const adc2             = adc.addInstance();
+const adc3             = adc.addInstance();
+const can              = scripting.addModule("/driverlib/can.js", {}, false);
+const can1             = can.addInstance();
 const cputimer         = scripting.addModule("/driverlib/cputimer.js", {}, false);
 const cputimer1        = cputimer.addInstance();
+const cputimer2        = cputimer.addInstance();
+const epwm             = scripting.addModule("/driverlib/epwm.js", {}, false);
+const epwm1            = epwm.addInstance();
+const epwm2            = epwm.addInstance();
 const gpio             = scripting.addModule("/driverlib/gpio.js", {}, false);
 const gpio1            = gpio.addInstance();
 const gpio2            = gpio.addInstance();
 const gpio3            = gpio.addInstance();
 const gpio4            = gpio.addInstance();
 const gpio5            = gpio.addInstance();
+const gpio6            = gpio.addInstance();
+const gpio7            = gpio.addInstance();
+const gpio8            = gpio.addInstance();
+const gpio9            = gpio.addInstance();
+const gpio10           = gpio.addInstance();
+const gpio11           = gpio.addInstance();
+const gpio12           = gpio.addInstance();
+const gpio13           = gpio.addInstance();
+const gpio14           = gpio.addInstance();
+const gpio15           = gpio.addInstance();
+const gpio16           = gpio.addInstance();
+const gpio17           = gpio.addInstance();
+const gpio18           = gpio.addInstance();
+const gpio19           = gpio.addInstance();
+const gpio20           = gpio.addInstance();
+const gpio21           = gpio.addInstance();
+const i2c              = scripting.addModule("/driverlib/i2c.js", {}, false);
+const i2c1             = i2c.addInstance();
 const inputxbar        = scripting.addModule("/driverlib/inputxbar.js", {}, false);
 const inputxbar1       = inputxbar.addInstance();
 const inputxbar_input  = scripting.addModule("/driverlib/inputxbar_input.js", {}, false);
 const inputxbar_input1 = inputxbar_input.addInstance();
 const inputxbar_input2 = inputxbar_input.addInstance();
 const inputxbar_input3 = inputxbar_input.addInstance();
+const sci              = scripting.addModule("/driverlib/sci.js", {}, false);
+const sci1             = sci.addInstance();
+const sci2             = sci.addInstance();
+const sci3             = sci.addInstance();
 const spi              = scripting.addModule("/driverlib/spi.js", {}, false);
 const spi1             = spi.addInstance();
 
 /**
  * Write custom configuration values to the imported modules.
  */
+adc1.adcClockPrescaler = "ADC_CLK_DIV_4_0";
+adc1.adcResolutionMode = "ADC_RESOLUTION_16BIT";
+adc1.adcSignalMode     = "ADC_MODE_DIFFERENTIAL";
+adc1.enabledSOCs       = ["ADC_SOC_NUMBER0","ADC_SOC_NUMBER1"];
+adc1.soc0SampleWindow  = 64;
+adc1.soc1SampleWindow  = 64;
+adc1.$name             = "ADC_A";
+adc1.soc0Name          = "CDG2";
+adc1.soc1Name          = "BATT";
+adc1.soc0Trigger       = "ADC_TRIGGER_EPWM1_SOCA";
+adc1.soc0Channel       = "ADC_CH_ADCIN4_ADCIN5";
+adc1.soc1Channel       = "ADC_CH_ADCIN2_ADCIN3";
+adc1.soc1Trigger       = "ADC_TRIGGER_EPWM2_SOCA";
+adc1.useInterrupts     = false;
+
+adc2.adcClockPrescaler = "ADC_CLK_DIV_4_0";
+adc2.adcResolutionMode = "ADC_RESOLUTION_16BIT";
+adc2.adcSignalMode     = "ADC_MODE_DIFFERENTIAL";
+adc2.$name             = "ADC_C";
+adc2.adcBase           = "ADCC_BASE";
+adc2.enabledSOCs       = ["ADC_SOC_NUMBER0"];
+adc2.soc0Name          = "CDG1";
+adc2.soc0Channel       = "ADC_CH_ADCIN2_ADCIN3";
+adc2.soc0SampleWindow  = 64;
+adc2.soc0Trigger       = "ADC_TRIGGER_EPWM1_SOCA";
+adc2.useInterrupts     = false;
+
+adc3.adcBase           = "ADCD_BASE";
+adc3.$name             = "ADC_D";
+adc3.adcClockPrescaler = "ADC_CLK_DIV_4_0";
+adc3.adcResolutionMode = "ADC_RESOLUTION_16BIT";
+adc3.adcSignalMode     = "ADC_MODE_DIFFERENTIAL";
+adc3.soc15Channel      = "ADC_CH_ADCIN14_ADCIN15";
+adc3.soc14Channel      = "ADC_CH_ADCIN14_ADCIN15";
+adc3.soc0Channel       = "ADC_CH_ADCIN0_ADCIN1";
+adc3.soc0Trigger       = "ADC_TRIGGER_EPWM2_SOCA";
+adc3.soc0SampleWindow  = 64;
+adc3.soc1Channel       = "ADC_CH_ADCIN2_ADCIN3";
+adc3.soc1Name          = "Temp";
+adc3.soc1Trigger       = "ADC_TRIGGER_EPWM2_SOCA";
+adc3.soc1SampleWindow  = 64;
+adc3.soc2Channel       = "ADC_CH_ADCIN14_ADCIN15";
+adc3.soc2SampleWindow  = 64;
+adc3.soc2Trigger       = "ADC_TRIGGER_EPWM2_SOCA";
+adc3.enabledSOCs       = ["ADC_SOC_NUMBER1","ADC_SOC_NUMBER2"];
+adc3.soc2Name          = "PWR";
+adc3.useInterrupts     = false;
+
+can1.$name                = "Elmo_CAN";
+can1.msgObjsUsed          = [8];
+can1.can.canrxPin.$assign = "GPIO36";
+can1.can.cantxPin.$assign = "GPIO37";
+can1.msgObj8.$name        = "msgObj0";
+
 const divider3 = system.clockTree["EPWMCLKDIV"];
 scripting.suppress("ePWM TZFRC and TZCLR events will sometimes be missed when EPWMCLKDIV is divide by 2\\. Always program EPWMCLKDIV to divide by 1 if using TZFRC or TZCLR register\\. Please refer to the F2837xD Silicon Errata for more details\\.", divider3, "EPWMCLK");
 
 cputimer1.enableInterrupt          = true;
 cputimer1.emulationMode            = "CPUTIMER_EMULATIONMODE_RUNFREE";
-cputimer1.$name                    = "myCPUTIMER1";
 cputimer1.registerInterrupts       = true;
 cputimer1.cputimerBase             = "CPUTIMER2_BASE";
 cputimer1.timerPeriod              = 4294967295;
 cputimer1.timerPrescaler           = 199;
+cputimer1.$name                    = "CPU_TIMER2";
 cputimer1.timerInt.enableInterrupt = true;
 
-gpio1.$name           = "ECAT_SPI_CS";
-gpio1.direction       = "GPIO_DIR_MODE_OUT";
-gpio1.gpioPin.$assign = "GPIO61";
+cputimer2.timerPeriod              = 4294967295;
+cputimer2.enableInterrupt          = true;
+cputimer2.registerInterrupts       = true;
+cputimer2.emulationMode            = "CPUTIMER_EMULATIONMODE_RUNFREE";
+cputimer2.timerPrescaler           = 19;
+cputimer2.$name                    = "CPU_TIMER0";
+cputimer2.timerInt.enableInterrupt = true;
+
+epwm1.$name                                             = "myEPWM0";
+epwm1.epwmEventTrigger_enableInterrupt                  = true;
+epwm1.epwmEventTrigger_EPWM_SOC_A_triggerEnable         = true;
+epwm1.epwmEventTrigger_registerInterrupts               = true;
+epwm1.epwmEventTrigger_interruptEventCount              = "1";
+epwm1.epwmEventTrigger_interruptSource                  = "EPWM_INT_TBCTR_PERIOD";
+epwm1.epwmEventTrigger_EPWM_SOC_A_triggerEventPrescalar = "1";
+epwm1.epwmEventTrigger_EPWM_SOC_A_triggerSource         = "EPWM_SOC_TBCTR_PERIOD";
+epwm1.epwmTimebase_period                               = 2500;
+epwm1.epwmTimebase_counterMode                          = "EPWM_COUNTER_MODE_UP";
+
+epwm2.$name                                             = "myEPWM1";
+epwm2.epwmTimebase_hsClockDiv                           = "EPWM_HSCLOCK_DIVIDER_10";
+epwm2.epwmTimebase_period                               = 50000;
+epwm2.epwmEventTrigger_enableInterrupt                  = true;
+epwm2.epwmEventTrigger_registerInterrupts               = true;
+epwm2.epwmEventTrigger_interruptEventCount              = "1";
+epwm2.epwmEventTrigger_EPWM_SOC_A_triggerEnable         = true;
+epwm2.epwmEventTrigger_EPWM_SOC_A_triggerEventPrescalar = "1";
+epwm2.epwmEventTrigger_interruptSource                  = "EPWM_INT_TBCTR_PERIOD";
+epwm2.epwmEventTrigger_EPWM_SOC_A_triggerSource         = "EPWM_SOC_TBCTR_PERIOD";
+epwm2.epwmTimebase_counterMode                          = "EPWM_COUNTER_MODE_UP";
+epwm2.epwmTimebase_clockDiv                             = "EPWM_CLOCK_DIVIDER_4";
+epwm2.epwm.$assign                                      = "EPWM2";
+
+gpio1.$name             = "ECAT_SPI_CS";
+gpio1.direction         = "GPIO_DIR_MODE_OUT";
+gpio1.writeInitialValue = true;
+gpio1.initialValue      = 1;
+gpio1.gpioPin.$assign   = "GPIO61";
 
 gpio2.useInterrupt               = true;
 gpio2.$name                      = "ECAT_ISR";
@@ -75,6 +196,92 @@ gpio5.$name           = "ECAT_EN";
 gpio5.direction       = "GPIO_DIR_MODE_OUT";
 gpio5.gpioPin.$assign = "GPIO70";
 
+gpio6.$name             = "LED1";
+gpio6.direction         = "GPIO_DIR_MODE_OUT";
+gpio6.writeInitialValue = true;
+gpio6.initialValue      = 1;
+gpio6.gpioPin.$assign   = "GPIO63";
+
+gpio7.$name             = "LED2";
+gpio7.writeInitialValue = true;
+gpio7.direction         = "GPIO_DIR_MODE_OUT";
+gpio7.initialValue      = 1;
+gpio7.gpioPin.$assign   = "GPIO64";
+
+gpio8.$name             = "POS_CLOSE_LED";
+gpio8.direction         = "GPIO_DIR_MODE_OUT";
+gpio8.writeInitialValue = true;
+gpio8.gpioPin.$assign   = "GPIO73";
+
+gpio9.$name             = "POS_OPEN_LED";
+gpio9.writeInitialValue = true;
+gpio9.direction         = "GPIO_DIR_MODE_OUT";
+gpio9.gpioPin.$assign   = "GPIO74";
+
+gpio10.$name             = "POS_LED";
+gpio10.direction         = "GPIO_DIR_MODE_OUT";
+gpio10.writeInitialValue = true;
+gpio10.gpioPin.$assign   = "GPIO75";
+
+gpio11.$name             = "PRE_LED";
+gpio11.direction         = "GPIO_DIR_MODE_OUT";
+gpio11.writeInitialValue = true;
+gpio11.gpioPin.$assign   = "GPIO76";
+
+gpio12.$name             = "RS232_LED";
+gpio12.writeInitialValue = true;
+gpio12.gpioPin.$assign   = "GPIO77";
+
+gpio13.$name             = "BATT_LED";
+gpio13.direction         = "GPIO_DIR_MODE_OUT";
+gpio13.writeInitialValue = true;
+gpio13.gpioPin.$assign   = "GPIO78";
+
+gpio14.$name             = "RUN_LED";
+gpio14.direction         = "GPIO_DIR_MODE_OUT";
+gpio14.writeInitialValue = true;
+gpio14.gpioPin.$assign   = "GPIO79";
+
+gpio15.$name             = "FAULT_LED";
+gpio15.writeInitialValue = true;
+gpio15.direction         = "GPIO_DIR_MODE_OUT";
+gpio15.gpioPin.$assign   = "GPIO80";
+
+gpio16.$name           = "POS_OPEN_KEY";
+gpio16.padConfig       = "PULLUP";
+gpio16.gpioPin.$assign = "GPIO81";
+
+gpio17.padConfig       = "PULLUP";
+gpio17.$name           = "POS_CLOSE_PIN";
+gpio17.gpioPin.$assign = "GPIO82";
+
+gpio18.$name             = "POS_OPEN_TTL_OUT";
+gpio18.direction         = "GPIO_DIR_MODE_OUT";
+gpio18.writeInitialValue = true;
+gpio18.initialValue      = 1;
+gpio18.gpioPin.$assign   = "GPIO87";
+
+gpio19.$name             = "POS_CLOSE_TTL_OUT";
+gpio19.direction         = "GPIO_DIR_MODE_OUT";
+gpio19.writeInitialValue = true;
+gpio19.initialValue      = 1;
+gpio19.gpioPin.$assign   = "GPIO86";
+
+gpio20.$name           = "POS_OPEN_TTL_IN";
+gpio20.padConfig       = "PULLUP";
+gpio20.gpioPin.$assign = "GPIO88";
+
+gpio21.$name           = "POS_CLOSE_TTL_IN";
+gpio21.padConfig       = "PULLUP";
+gpio21.gpioPin.$assign = "GPIO89";
+
+i2c1.useInterrupts      = false;
+i2c1.bitCount           = "I2C_BITCOUNT_8";
+i2c1.bitRate            = 20000;
+i2c1.$name              = "e2_i2c";
+i2c1.i2c.sdaPin.$assign = "GPIO42";
+i2c1.i2c.sclPin.$assign = "GPIO43";
+
 inputxbar1.$name = "myINPUTXBAR";
 
 inputxbar_input1.$name         = "myINPUTXBARINPUT0";
@@ -88,6 +295,29 @@ inputxbar_input2.inputxbarGpio = "GPIO68";
 inputxbar_input3.$name         = "myINPUTXBARINPUT2";
 gpio4.xint.inputxbar           = inputxbar_input3;
 inputxbar_input3.inputxbarGpio = "GPIO69";
+
+sci1.baudRates                  = 9600;
+sci1.$name                      = "RS232_SCI";
+sci1.selectRegisteredInterrupts = ["registerTxInt"];
+sci1.sci.scirxdPin.$assign      = "GPIO55";
+sci1.sci.scitxdPin.$assign      = "GPIO54";
+sci1.rxQual.$name               = "myGPIOQUAL3";
+sci1.txQual.$name               = "myGPIOQUAL4";
+sci1.sciTXInt.enableInterrupt   = true;
+
+sci2.$name                      = "Elmo_SCI";
+sci2.selectRegisteredInterrupts = ["registerTxInt"];
+sci2.sci.scirxdPin.$assign      = "GPIO46";
+sci2.sci.scitxdPin.$assign      = "GPIO47";
+sci2.rxQual.$name               = "myGPIOQUAL5";
+sci2.txQual.$name               = "myGPIOQUAL6";
+
+sci3.$name                      = "ServicePort_SCI";
+sci3.selectRegisteredInterrupts = ["registerTxInt"];
+sci3.sci.scirxdPin.$assign      = "GPIO57";
+sci3.sci.scitxdPin.$assign      = "GPIO56";
+sci3.rxQual.$name               = "myGPIOQUAL7";
+sci3.txQual.$name               = "myGPIOQUAL8";
 
 spi1.$name                   = "mySPI0";
 spi1.transferProtocol        = "SPI_PROT_POL1PHA0";
@@ -103,3 +333,19 @@ spi1.spi.spi_clkPin.$assign  = "GPIO60";
 spi1.clkQual.$name           = "myGPIOQUAL2";
 spi1.picoQual.$name          = "myGPIOQUAL0";
 spi1.pociQual.$name          = "myGPIOQUAL1";
+
+/**
+ * Pinmux solution for unlocked pins/peripherals. This ensures that minor changes to the automatic solver in a future
+ * version of the tool will not impact the pinmux you originally saw.  These lines can be completely deleted in order to
+ * re-solve from scratch.
+ */
+can1.can.$suggestSolution             = "CANA";
+epwm1.epwm.$suggestSolution           = "EPWM1";
+epwm1.epwm.epwm_aPin.$suggestSolution = "GPIO0";
+epwm1.epwm.epwm_bPin.$suggestSolution = "GPIO1";
+epwm2.epwm.epwm_aPin.$suggestSolution = "GPIO2";
+epwm2.epwm.epwm_bPin.$suggestSolution = "GPIO3";
+i2c1.i2c.$suggestSolution             = "I2CA";
+sci1.sci.$suggestSolution             = "SCIB";
+sci2.sci.$suggestSolution             = "SCID";
+sci3.sci.$suggestSolution             = "SCIC";

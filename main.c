@@ -54,11 +54,14 @@
 #include "clb.h"
 #include "board.h"
 #include "stdio.h"
+#include "glob_value.h"
+#include "glob_cfg.h"
 
+#if ECAT_EN
 #include "ECAT/9252_HW.h"
 #include "ECAT/src/ecatappl.h"
 #include "ECAT/src/applInterface.h"
-
+#endif
 void main(void)
 {
     Device_init();
@@ -67,9 +70,6 @@ void main(void)
     Interrupt_initModule();
     Interrupt_initVectorTable();
 
-    //
-    // Enabling EPWM1 to enable CLB1
-    //
     //	SysCtl_enablePeripheral(SYSCTL_PERIPH_CLK_EPWM1);
 
     Board_init();
@@ -82,8 +82,10 @@ void main(void)
     // Interrupt_disable(INT_ECAT_ISR_XINT);
     // Interrupt_disable(INT_ECAT_SYNC0_ISR_XINT);
     // Interrupt_disable(INT_ECAT_SYNC1_ISR_XINT);
+#if ECAT_EN
     HW_Init();
     MainInit();
+#endif
 
     EINT; // 开启全局中断
     ERTM; // Enable Global realtime interrupt DBGM
@@ -95,28 +97,10 @@ void main(void)
 
     while (1)
     {
+#if ECAT_EN
         MainLoop();
+#endif
+
         asm(" NOP");
     }
 }
-
-// __interrupt void ECAT_Lan9252IrqIsr(void)
-//{
-//
-//}
-//
-// __interrupt void ECAT_Sync0Isr(void)
-//{
-//
-//}
-//
-// __interrupt void ECAT_Sync1Isr(void)
-//{
-//
-//}
-//
-//
-// __interrupt void INT_myCPUTIMER1_ISR(void)
-//{
-//
-//}

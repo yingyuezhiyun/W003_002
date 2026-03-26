@@ -12,11 +12,11 @@ GEN_CMDS__FLAG :=
 ORDERED_OBJS += \
 "./syscfg/board.obj" \
 "./syscfg/c2000ware_libraries.obj" \
+"./dsp_it.obj" \
 "./main.obj" \
 "./ECAT/9252_HW.obj" \
 "./ECAT/PIC32_EtherCAT_Slave.obj" \
 "./ECAT/SPIDriver.obj" \
-"./ECAT/c2000_timer1_isr.obj" \
 "./ECAT/src/coeappl.obj" \
 "./ECAT/src/ecatappl.obj" \
 "./ECAT/src/ecatcoe.obj" \
@@ -168,8 +168,8 @@ F28377D.out: $(OBJS) $(CMD_SRCS) $(LIB_SRCS) $(GEN_CMDS)
 # Other Targets
 clean:
 	-$(RM) $(GEN_MISC_FILES__QUOTED)$(GEN_FILES__QUOTED)$(EXE_OUTPUTS__QUOTED)
-	-$(RM) "syscfg\board.obj" "syscfg\c2000ware_libraries.obj" "main.obj" "ECAT\9252_HW.obj" "ECAT\PIC32_EtherCAT_Slave.obj" "ECAT\SPIDriver.obj" "ECAT\c2000_timer1_isr.obj" "ECAT\src\coeappl.obj" "ECAT\src\ecatappl.obj" "ECAT\src\ecatcoe.obj" "ECAT\src\ecateoe.obj" "ECAT\src\ecatfoe.obj" "ECAT\src\ecatslv.obj" "ECAT\src\emcy.obj" "ECAT\src\eoeappl.obj" "ECAT\src\foeappl.obj" "ECAT\src\mailbox.obj" "ECAT\src\objdef.obj" "ECAT\src\sdoserv.obj" "device\F2837xD_CodeStartBranch.obj" "device\device.obj" 
-	-$(RM) "syscfg\board.d" "syscfg\c2000ware_libraries.d" "main.d" "ECAT\9252_HW.d" "ECAT\PIC32_EtherCAT_Slave.d" "ECAT\SPIDriver.d" "ECAT\c2000_timer1_isr.d" "ECAT\src\coeappl.d" "ECAT\src\ecatappl.d" "ECAT\src\ecatcoe.d" "ECAT\src\ecateoe.d" "ECAT\src\ecatfoe.d" "ECAT\src\ecatslv.d" "ECAT\src\emcy.d" "ECAT\src\eoeappl.d" "ECAT\src\foeappl.d" "ECAT\src\mailbox.d" "ECAT\src\objdef.d" "ECAT\src\sdoserv.d" "device\device.d" 
+	-$(RM) "syscfg\board.obj" "syscfg\c2000ware_libraries.obj" "dsp_it.obj" "main.obj" "ECAT\9252_HW.obj" "ECAT\PIC32_EtherCAT_Slave.obj" "ECAT\SPIDriver.obj" "ECAT\src\coeappl.obj" "ECAT\src\ecatappl.obj" "ECAT\src\ecatcoe.obj" "ECAT\src\ecateoe.obj" "ECAT\src\ecatfoe.obj" "ECAT\src\ecatslv.obj" "ECAT\src\emcy.obj" "ECAT\src\eoeappl.obj" "ECAT\src\foeappl.obj" "ECAT\src\mailbox.obj" "ECAT\src\objdef.obj" "ECAT\src\sdoserv.obj" "device\F2837xD_CodeStartBranch.obj" "device\device.obj" 
+	-$(RM) "syscfg\board.d" "syscfg\c2000ware_libraries.d" "dsp_it.d" "main.d" "ECAT\9252_HW.d" "ECAT\PIC32_EtherCAT_Slave.d" "ECAT\SPIDriver.d" "ECAT\src\coeappl.d" "ECAT\src\ecatappl.d" "ECAT\src\ecatcoe.d" "ECAT\src\ecateoe.d" "ECAT\src\ecatfoe.d" "ECAT\src\ecatslv.d" "ECAT\src\emcy.d" "ECAT\src\eoeappl.d" "ECAT\src\foeappl.d" "ECAT\src\mailbox.d" "ECAT\src\objdef.d" "ECAT\src\sdoserv.d" "device\device.d" 
 	-$(RM) "device\F2837xD_CodeStartBranch.d" 
 	-$(RMDIR) $(GEN_MISC_DIRS__QUOTED)
 	-@echo 'Finished clean'
