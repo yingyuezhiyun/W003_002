@@ -89,25 +89,9 @@ void PinMux_init()
 	//
 	// EPWM1 -> myEPWM0 Pinmux
 	//
-	GPIO_setPinConfig(myEPWM0_EPWMA_PIN_CONFIG);
-	GPIO_setPadConfig(myEPWM0_EPWMA_GPIO, GPIO_PIN_TYPE_STD);
-	GPIO_setQualificationMode(myEPWM0_EPWMA_GPIO, GPIO_QUAL_SYNC);
-
-	GPIO_setPinConfig(myEPWM0_EPWMB_PIN_CONFIG);
-	GPIO_setPadConfig(myEPWM0_EPWMB_GPIO, GPIO_PIN_TYPE_STD);
-	GPIO_setQualificationMode(myEPWM0_EPWMB_GPIO, GPIO_QUAL_SYNC);
-
 	//
 	// EPWM2 -> myEPWM1 Pinmux
 	//
-	GPIO_setPinConfig(myEPWM1_EPWMA_PIN_CONFIG);
-	GPIO_setPadConfig(myEPWM1_EPWMA_GPIO, GPIO_PIN_TYPE_STD);
-	GPIO_setQualificationMode(myEPWM1_EPWMA_GPIO, GPIO_QUAL_SYNC);
-
-	GPIO_setPinConfig(myEPWM1_EPWMB_PIN_CONFIG);
-	GPIO_setPadConfig(myEPWM1_EPWMB_GPIO, GPIO_PIN_TYPE_STD);
-	GPIO_setQualificationMode(myEPWM1_EPWMB_GPIO, GPIO_QUAL_SYNC);
-
 	// GPIO61 -> ECAT_SPI_CS Pinmux
 	GPIO_setPinConfig(GPIO_61_GPIO61);
 	// GPIO67 -> ECAT_ISR Pinmux
@@ -235,7 +219,7 @@ void ADC_A_init(){
 	//
 	// Sets the timing of the end-of-conversion pulse
 	//
-	ADC_setInterruptPulseMode(ADC_A_BASE, ADC_PULSE_END_OF_ACQ_WIN);
+	ADC_setInterruptPulseMode(ADC_A_BASE, ADC_PULSE_END_OF_CONV);
 	//
 	// Powers up the analog-to-digital converter core.
 	//
@@ -280,6 +264,17 @@ void ADC_A_init(){
 	//
 	ADC_setupSOC(ADC_A_BASE, ADC_SOC_NUMBER1, ADC_TRIGGER_EPWM2_SOCA, ADC_CH_ADCIN2_ADCIN3, 64U);
 	ADC_setInterruptSOCTrigger(ADC_A_BASE, ADC_SOC_NUMBER1, ADC_INT_SOC_TRIGGER_NONE);
+	//
+	// ADC Interrupt 1 Configuration
+	// 		Source	: ADC_SOC_NUMBER0
+	// 		Interrupt Source: enabled
+	// 		Continuous Mode	: disabled
+	//
+	//
+	ADC_setInterruptSource(ADC_A_BASE, ADC_INT_NUMBER1, ADC_SOC_NUMBER0);
+	ADC_clearInterruptStatus(ADC_A_BASE, ADC_INT_NUMBER1);
+	ADC_disableContinuousMode(ADC_A_BASE, ADC_INT_NUMBER1);
+	ADC_enableInterrupt(ADC_A_BASE, ADC_INT_NUMBER1);
 }
 
 void ADC_C_init(){
@@ -408,15 +403,27 @@ void Elmo_CAN_init(){
 	//
 	// Initialize the transmit message object used for sending CAN messages.
 	// Message Object Parameters:
-	//      Message Object ID Number: 8
-	//      Message Identifier: 0
+	//      Message Object ID Number: 1
+	//      Message Identifier: 1663
 	//      Message Frame: CAN_MSG_FRAME_STD
-	//      Message Type: CAN_MSG_OBJ_TYPE_RX
+	//      Message Type: CAN_MSG_OBJ_TYPE_TX
 	//      Message ID Mask: 0
 	//      Message Object Flags: 
-	//      Message Data Length: 0 Bytes
+	//      Message Data Length: 8 Bytes
 	//
-	CAN_setupMessageObject(Elmo_CAN_BASE, 8, Elmo_CAN_MessageObj8_ID, CAN_MSG_FRAME_STD,CAN_MSG_OBJ_TYPE_RX, 0, 0,0);
+	CAN_setupMessageObject(Elmo_CAN_BASE, 1, Elmo_CAN_MessageObj1_ID, CAN_MSG_FRAME_STD,CAN_MSG_OBJ_TYPE_TX, 0, 0,8);
+	//
+	// Initialize the transmit message object used for sending CAN messages.
+	// Message Object Parameters:
+	//      Message Object ID Number: 2
+	//      Message Identifier: 1535
+	//      Message Frame: CAN_MSG_FRAME_STD
+	//      Message Type: CAN_MSG_OBJ_TYPE_RX
+	//      Message ID Mask: 2047
+	//      Message Object Flags: CAN_MSG_OBJ_USE_ID_FILTER
+	//      Message Data Length: 8 Bytes
+	//
+	CAN_setupMessageObject(Elmo_CAN_BASE, 2, Elmo_CAN_MessageObj2_ID, CAN_MSG_FRAME_STD,CAN_MSG_OBJ_TYPE_RX, 2047, CAN_MSG_OBJ_USE_ID_FILTER,8);
 	//
 	// Start CAN module operations
 	//
@@ -465,10 +472,15 @@ void EPWM_init(){
     EPWM_setTimeBaseCounterMode(myEPWM0_BASE, EPWM_COUNTER_MODE_UP);	
     EPWM_disablePhaseShiftLoad(myEPWM0_BASE);	
     EPWM_setPhaseShift(myEPWM0_BASE, 0);	
+    EPWM_setSyncOutPulseMode(myEPWM0_BASE, EPWM_SYNC_OUT_PULSE_DISABLED);	
     EPWM_setCounterCompareValue(myEPWM0_BASE, EPWM_COUNTER_COMPARE_A, 0);	
+    EPWM_disableCounterCompareShadowLoadMode(myEPWM0_BASE, EPWM_COUNTER_COMPARE_A);	
     EPWM_setCounterCompareShadowLoadMode(myEPWM0_BASE, EPWM_COUNTER_COMPARE_A, EPWM_COMP_LOAD_ON_CNTR_ZERO);	
     EPWM_setCounterCompareValue(myEPWM0_BASE, EPWM_COUNTER_COMPARE_B, 0);	
+    EPWM_disableCounterCompareShadowLoadMode(myEPWM0_BASE, EPWM_COUNTER_COMPARE_B);	
     EPWM_setCounterCompareShadowLoadMode(myEPWM0_BASE, EPWM_COUNTER_COMPARE_B, EPWM_COMP_LOAD_ON_CNTR_ZERO);	
+    EPWM_disableCounterCompareShadowLoadMode(myEPWM0_BASE, EPWM_COUNTER_COMPARE_C);	
+    EPWM_disableCounterCompareShadowLoadMode(myEPWM0_BASE, EPWM_COUNTER_COMPARE_D);	
     EPWM_disableActionQualifierShadowLoadMode(myEPWM0_BASE, EPWM_ACTION_QUALIFIER_A);	
     EPWM_setActionQualifierShadowLoadMode(myEPWM0_BASE, EPWM_ACTION_QUALIFIER_A, EPWM_AQ_LOAD_ON_CNTR_ZERO);	
     EPWM_setActionQualifierAction(myEPWM0_BASE, EPWM_AQ_OUTPUT_A, EPWM_AQ_OUTPUT_NO_CHANGE, EPWM_AQ_OUTPUT_ON_TIMEBASE_ZERO);	
@@ -489,22 +501,24 @@ void EPWM_init(){
     EPWM_disableRisingEdgeDelayCountShadowLoadMode(myEPWM0_BASE);	
     EPWM_setFallingEdgeDelayCountShadowLoadMode(myEPWM0_BASE, EPWM_FED_LOAD_ON_CNTR_ZERO);	
     EPWM_disableFallingEdgeDelayCountShadowLoadMode(myEPWM0_BASE);	
-    EPWM_enableInterrupt(myEPWM0_BASE);	
-    EPWM_setInterruptSource(myEPWM0_BASE, EPWM_INT_TBCTR_PERIOD);	
-    EPWM_setInterruptEventCount(myEPWM0_BASE, 1);	
     EPWM_enableADCTrigger(myEPWM0_BASE, EPWM_SOC_A);	
-    EPWM_setADCTriggerSource(myEPWM0_BASE, EPWM_SOC_A, EPWM_SOC_TBCTR_PERIOD);	
+    EPWM_setADCTriggerSource(myEPWM0_BASE, EPWM_SOC_A, EPWM_SOC_TBCTR_ZERO);	
     EPWM_setADCTriggerEventPrescale(myEPWM0_BASE, EPWM_SOC_A, 1);	
     EPWM_setClockPrescaler(myEPWM1_BASE, EPWM_CLOCK_DIVIDER_4, EPWM_HSCLOCK_DIVIDER_10);	
-    EPWM_setTimeBasePeriod(myEPWM1_BASE, 50000);	
+    EPWM_setTimeBasePeriod(myEPWM1_BASE, 25000);	
     EPWM_setTimeBaseCounter(myEPWM1_BASE, 0);	
     EPWM_setTimeBaseCounterMode(myEPWM1_BASE, EPWM_COUNTER_MODE_UP);	
     EPWM_disablePhaseShiftLoad(myEPWM1_BASE);	
     EPWM_setPhaseShift(myEPWM1_BASE, 0);	
+    EPWM_setSyncOutPulseMode(myEPWM1_BASE, EPWM_SYNC_OUT_PULSE_DISABLED);	
     EPWM_setCounterCompareValue(myEPWM1_BASE, EPWM_COUNTER_COMPARE_A, 0);	
+    EPWM_disableCounterCompareShadowLoadMode(myEPWM1_BASE, EPWM_COUNTER_COMPARE_A);	
     EPWM_setCounterCompareShadowLoadMode(myEPWM1_BASE, EPWM_COUNTER_COMPARE_A, EPWM_COMP_LOAD_ON_CNTR_ZERO);	
     EPWM_setCounterCompareValue(myEPWM1_BASE, EPWM_COUNTER_COMPARE_B, 0);	
+    EPWM_disableCounterCompareShadowLoadMode(myEPWM1_BASE, EPWM_COUNTER_COMPARE_B);	
     EPWM_setCounterCompareShadowLoadMode(myEPWM1_BASE, EPWM_COUNTER_COMPARE_B, EPWM_COMP_LOAD_ON_CNTR_ZERO);	
+    EPWM_disableCounterCompareShadowLoadMode(myEPWM1_BASE, EPWM_COUNTER_COMPARE_C);	
+    EPWM_disableCounterCompareShadowLoadMode(myEPWM1_BASE, EPWM_COUNTER_COMPARE_D);	
     EPWM_disableActionQualifierShadowLoadMode(myEPWM1_BASE, EPWM_ACTION_QUALIFIER_A);	
     EPWM_setActionQualifierShadowLoadMode(myEPWM1_BASE, EPWM_ACTION_QUALIFIER_A, EPWM_AQ_LOAD_ON_CNTR_ZERO);	
     EPWM_setActionQualifierAction(myEPWM1_BASE, EPWM_AQ_OUTPUT_A, EPWM_AQ_OUTPUT_NO_CHANGE, EPWM_AQ_OUTPUT_ON_TIMEBASE_ZERO);	
@@ -525,11 +539,8 @@ void EPWM_init(){
     EPWM_disableRisingEdgeDelayCountShadowLoadMode(myEPWM1_BASE);	
     EPWM_setFallingEdgeDelayCountShadowLoadMode(myEPWM1_BASE, EPWM_FED_LOAD_ON_CNTR_ZERO);	
     EPWM_disableFallingEdgeDelayCountShadowLoadMode(myEPWM1_BASE);	
-    EPWM_enableInterrupt(myEPWM1_BASE);	
-    EPWM_setInterruptSource(myEPWM1_BASE, EPWM_INT_TBCTR_PERIOD);	
-    EPWM_setInterruptEventCount(myEPWM1_BASE, 1);	
     EPWM_enableADCTrigger(myEPWM1_BASE, EPWM_SOC_A);	
-    EPWM_setADCTriggerSource(myEPWM1_BASE, EPWM_SOC_A, EPWM_SOC_TBCTR_PERIOD);	
+    EPWM_setADCTriggerSource(myEPWM1_BASE, EPWM_SOC_A, EPWM_SOC_TBCTR_ZERO);	
     EPWM_setADCTriggerEventPrescale(myEPWM1_BASE, EPWM_SOC_A, 1);	
 }
 
@@ -639,7 +650,7 @@ void RS232_LED_init(){
 	GPIO_writePin(RS232_LED, 0);
 	GPIO_setPadConfig(RS232_LED, GPIO_PIN_TYPE_STD);
 	GPIO_setQualificationMode(RS232_LED, GPIO_QUAL_SYNC);
-	GPIO_setDirectionMode(RS232_LED, GPIO_DIR_MODE_IN);
+	GPIO_setDirectionMode(RS232_LED, GPIO_DIR_MODE_OUT);
 	GPIO_setControllerCore(RS232_LED, GPIO_CORE_CPU1);
 }
 void BATT_LED_init(){
@@ -754,6 +765,11 @@ void myINPUTXBARINPUT2_init(){
 //*****************************************************************************
 void INTERRUPT_init(){
 	
+	// Interrupt Settings for INT_ADC_A_1
+	// ISR need to be defined for the registered interrupts
+	Interrupt_register(INT_ADC_A_1, &INT_ADC_A_1_ISR);
+	Interrupt_enable(INT_ADC_A_1);
+	
 	// Interrupt Settings for INT_CPU_TIMER2
 	// ISR need to be defined for the registered interrupts
 	Interrupt_register(INT_CPU_TIMER2, &INT_CPU_TIMER2_ISR);
@@ -763,16 +779,6 @@ void INTERRUPT_init(){
 	// ISR need to be defined for the registered interrupts
 	Interrupt_register(INT_CPU_TIMER0, &INT_CPU_TIMER0_ISR);
 	Interrupt_enable(INT_CPU_TIMER0);
-	
-	// Interrupt Settings for INT_myEPWM0
-	// ISR need to be defined for the registered interrupts
-	Interrupt_register(INT_myEPWM0, &INT_myEPWM0_ISR);
-	Interrupt_disable(INT_myEPWM0);
-	
-	// Interrupt Settings for INT_myEPWM1
-	// ISR need to be defined for the registered interrupts
-	Interrupt_register(INT_myEPWM1, &INT_myEPWM1_ISR);
-	Interrupt_disable(INT_myEPWM1);
 	
 	// Interrupt Settings for INT_ECAT_ISR_XINT
 	// ISR need to be defined for the registered interrupts
@@ -788,21 +794,6 @@ void INTERRUPT_init(){
 	// ISR need to be defined for the registered interrupts
 	Interrupt_register(INT_ECAT_SYNC1_ISR_XINT, &ECAT_Sync1Isr);
 	Interrupt_enable(INT_ECAT_SYNC1_ISR_XINT);
-	
-	// Interrupt Settings for INT_RS232_SCI_TX
-	// ISR need to be defined for the registered interrupts
-	Interrupt_register(INT_RS232_SCI_TX, &INT_RS232_SCI_TX_ISR);
-	Interrupt_enable(INT_RS232_SCI_TX);
-	
-	// Interrupt Settings for INT_Elmo_SCI_TX
-	// ISR need to be defined for the registered interrupts
-	Interrupt_register(INT_Elmo_SCI_TX, &INT_Elmo_SCI_TX_ISR);
-	Interrupt_disable(INT_Elmo_SCI_TX);
-	
-	// Interrupt Settings for INT_ServicePort_SCI_TX
-	// ISR need to be defined for the registered interrupts
-	Interrupt_register(INT_ServicePort_SCI_TX, &INT_ServicePort_SCI_TX_ISR);
-	Interrupt_disable(INT_ServicePort_SCI_TX);
 }
 //*****************************************************************************
 //
@@ -824,7 +815,6 @@ void RS232_SCI_init(){
 	SCI_setConfig(RS232_SCI_BASE, DEVICE_LSPCLK_FREQ, RS232_SCI_BAUDRATE, (SCI_CONFIG_WLEN_8|SCI_CONFIG_STOP_ONE|SCI_CONFIG_PAR_NONE));
 	SCI_disableLoopback(RS232_SCI_BASE);
 	SCI_performSoftwareReset(RS232_SCI_BASE);
-	SCI_setFIFOInterruptLevel(RS232_SCI_BASE, SCI_FIFO_TX0, SCI_FIFO_RX0);
 	SCI_enableFIFO(RS232_SCI_BASE);
 	SCI_enableModule(RS232_SCI_BASE);
 }
@@ -837,7 +827,6 @@ void Elmo_SCI_init(){
 	SCI_setConfig(Elmo_SCI_BASE, DEVICE_LSPCLK_FREQ, Elmo_SCI_BAUDRATE, (SCI_CONFIG_WLEN_8|SCI_CONFIG_STOP_ONE|SCI_CONFIG_PAR_NONE));
 	SCI_disableLoopback(Elmo_SCI_BASE);
 	SCI_performSoftwareReset(Elmo_SCI_BASE);
-	SCI_setFIFOInterruptLevel(Elmo_SCI_BASE, SCI_FIFO_TX0, SCI_FIFO_RX0);
 	SCI_enableFIFO(Elmo_SCI_BASE);
 	SCI_enableModule(Elmo_SCI_BASE);
 }
@@ -850,7 +839,6 @@ void ServicePort_SCI_init(){
 	SCI_setConfig(ServicePort_SCI_BASE, DEVICE_LSPCLK_FREQ, ServicePort_SCI_BAUDRATE, (SCI_CONFIG_WLEN_8|SCI_CONFIG_STOP_ONE|SCI_CONFIG_PAR_NONE));
 	SCI_disableLoopback(ServicePort_SCI_BASE);
 	SCI_performSoftwareReset(ServicePort_SCI_BASE);
-	SCI_setFIFOInterruptLevel(ServicePort_SCI_BASE, SCI_FIFO_TX0, SCI_FIFO_RX0);
 	SCI_enableFIFO(ServicePort_SCI_BASE);
 	SCI_enableModule(ServicePort_SCI_BASE);
 }

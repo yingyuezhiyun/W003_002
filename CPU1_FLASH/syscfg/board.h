@@ -77,34 +77,10 @@ extern "C"
 //
 // EPWM1 -> myEPWM0 Pinmux
 //
-//
-// EPWM1A - GPIO Settings
-//
-#define GPIO_PIN_EPWM1A 0
-#define myEPWM0_EPWMA_GPIO 0
-#define myEPWM0_EPWMA_PIN_CONFIG GPIO_0_EPWM1A
-//
-// EPWM1B - GPIO Settings
-//
-#define GPIO_PIN_EPWM1B 1
-#define myEPWM0_EPWMB_GPIO 1
-#define myEPWM0_EPWMB_PIN_CONFIG GPIO_1_EPWM1B
 
 //
 // EPWM2 -> myEPWM1 Pinmux
 //
-//
-// EPWM2A - GPIO Settings
-//
-#define GPIO_PIN_EPWM2A 2
-#define myEPWM1_EPWMA_GPIO 2
-#define myEPWM1_EPWMA_PIN_CONFIG GPIO_2_EPWM2A
-//
-// EPWM2B - GPIO Settings
-//
-#define GPIO_PIN_EPWM2B 3
-#define myEPWM1_EPWMB_GPIO 3
-#define myEPWM1_EPWMB_PIN_CONFIG GPIO_3_EPWM2B
 //
 // GPIO61 - GPIO Settings
 //
@@ -326,7 +302,8 @@ void ADC_D_init();
 //*****************************************************************************
 #define Elmo_CAN_BASE CANA_BASE
 
-#define Elmo_CAN_MessageObj8_ID 0
+#define Elmo_CAN_MessageObj1_ID 1663
+#define Elmo_CAN_MessageObj2_ID 1535
 void Elmo_CAN_init();
 
 
@@ -357,9 +334,9 @@ void CPU_TIMER0_init();
 #define myEPWM0_DBFED 0
 #define myEPWM0_TZA_ACTION EPWM_TZ_ACTION_HIGH_Z
 #define myEPWM0_TZB_ACTION EPWM_TZ_ACTION_HIGH_Z
-#define myEPWM0_INTERRUPT_SOURCE EPWM_INT_TBCTR_PERIOD
+#define myEPWM0_INTERRUPT_SOURCE EPWM_INT_TBCTR_DISABLED
 #define myEPWM1_BASE EPWM2_BASE
-#define myEPWM1_TBPRD 50000
+#define myEPWM1_TBPRD 25000
 #define myEPWM1_COUNTER_MODE EPWM_COUNTER_MODE_UP
 #define myEPWM1_TBPHS 0
 #define myEPWM1_CMPA 0
@@ -370,7 +347,7 @@ void CPU_TIMER0_init();
 #define myEPWM1_DBFED 0
 #define myEPWM1_TZA_ACTION EPWM_TZ_ACTION_HIGH_Z
 #define myEPWM1_TZB_ACTION EPWM_TZ_ACTION_HIGH_Z
-#define myEPWM1_INTERRUPT_SOURCE EPWM_INT_TBCTR_PERIOD
+#define myEPWM1_INTERRUPT_SOURCE EPWM_INT_TBCTR_DISABLED
 
 //*****************************************************************************
 //
@@ -426,7 +403,7 @@ void POS_CLOSE_TTL_IN_init();
 //
 //*****************************************************************************
 #define e2_i2c_BASE I2CA_BASE
-#define e2_i2c_BITRATE 20000
+#define e2_i2c_BITRATE 50000
 #define e2_i2c_TARGET_ADDRESS 0
 #define e2_i2c_OWN_ADDRESS 0
 #define e2_i2c_MODULE_CLOCK_FREQUENCY 10000000
@@ -453,6 +430,12 @@ void myINPUTXBARINPUT2_init();
 //
 //*****************************************************************************
 
+// Interrupt Settings for INT_ADC_A_1
+// ISR need to be defined for the registered interrupts
+#define INT_ADC_A_1 INT_ADCA1
+#define INT_ADC_A_1_INTERRUPT_ACK_GROUP INTERRUPT_ACK_GROUP1
+extern __interrupt void INT_ADC_A_1_ISR(void);
+
 // Interrupt Settings for INT_CPU_TIMER2
 // ISR need to be defined for the registered interrupts
 #define INT_CPU_TIMER2 INT_TIMER2
@@ -463,18 +446,6 @@ extern __interrupt void INT_CPU_TIMER2_ISR(void);
 #define INT_CPU_TIMER0 INT_TIMER0
 #define INT_CPU_TIMER0_INTERRUPT_ACK_GROUP INTERRUPT_ACK_GROUP1
 extern __interrupt void INT_CPU_TIMER0_ISR(void);
-
-// Interrupt Settings for INT_myEPWM0
-// ISR need to be defined for the registered interrupts
-#define INT_myEPWM0 INT_EPWM1
-#define INT_myEPWM0_INTERRUPT_ACK_GROUP INTERRUPT_ACK_GROUP3
-extern __interrupt void INT_myEPWM0_ISR(void);
-
-// Interrupt Settings for INT_myEPWM1
-// ISR need to be defined for the registered interrupts
-#define INT_myEPWM1 INT_EPWM2
-#define INT_myEPWM1_INTERRUPT_ACK_GROUP INTERRUPT_ACK_GROUP3
-extern __interrupt void INT_myEPWM1_ISR(void);
 
 // Interrupt Settings for INT_ECAT_ISR_XINT
 // ISR need to be defined for the registered interrupts
@@ -494,24 +465,6 @@ extern __interrupt void ECAT_Sync0Isr(void);
 #define INT_ECAT_SYNC1_ISR_XINT_INTERRUPT_ACK_GROUP INTERRUPT_ACK_GROUP12
 extern __interrupt void ECAT_Sync1Isr(void);
 
-// Interrupt Settings for INT_RS232_SCI_TX
-// ISR need to be defined for the registered interrupts
-#define INT_RS232_SCI_TX INT_SCIB_TX
-#define INT_RS232_SCI_TX_INTERRUPT_ACK_GROUP INTERRUPT_ACK_GROUP9
-extern __interrupt void INT_RS232_SCI_TX_ISR(void);
-
-// Interrupt Settings for INT_Elmo_SCI_TX
-// ISR need to be defined for the registered interrupts
-#define INT_Elmo_SCI_TX INT_SCID_TX
-#define INT_Elmo_SCI_TX_INTERRUPT_ACK_GROUP INTERRUPT_ACK_GROUP8
-extern __interrupt void INT_Elmo_SCI_TX_ISR(void);
-
-// Interrupt Settings for INT_ServicePort_SCI_TX
-// ISR need to be defined for the registered interrupts
-#define INT_ServicePort_SCI_TX INT_SCIC_TX
-#define INT_ServicePort_SCI_TX_INTERRUPT_ACK_GROUP INTERRUPT_ACK_GROUP8
-extern __interrupt void INT_ServicePort_SCI_TX_ISR(void);
-
 //*****************************************************************************
 //
 // SCI Configurations
@@ -522,24 +475,18 @@ extern __interrupt void INT_ServicePort_SCI_TX_ISR(void);
 #define RS232_SCI_CONFIG_WLEN SCI_CONFIG_WLEN_8
 #define RS232_SCI_CONFIG_STOP SCI_CONFIG_STOP_ONE
 #define RS232_SCI_CONFIG_PAR SCI_CONFIG_PAR_NONE
-#define RS232_SCI_FIFO_TX_LVL SCI_FIFO_TX0
-#define RS232_SCI_FIFO_RX_LVL SCI_FIFO_RX0
 void RS232_SCI_init();
 #define Elmo_SCI_BASE SCID_BASE
 #define Elmo_SCI_BAUDRATE 115200
 #define Elmo_SCI_CONFIG_WLEN SCI_CONFIG_WLEN_8
 #define Elmo_SCI_CONFIG_STOP SCI_CONFIG_STOP_ONE
 #define Elmo_SCI_CONFIG_PAR SCI_CONFIG_PAR_NONE
-#define Elmo_SCI_FIFO_TX_LVL SCI_FIFO_TX0
-#define Elmo_SCI_FIFO_RX_LVL SCI_FIFO_RX0
 void Elmo_SCI_init();
 #define ServicePort_SCI_BASE SCIC_BASE
 #define ServicePort_SCI_BAUDRATE 115200
 #define ServicePort_SCI_CONFIG_WLEN SCI_CONFIG_WLEN_8
 #define ServicePort_SCI_CONFIG_STOP SCI_CONFIG_STOP_ONE
 #define ServicePort_SCI_CONFIG_PAR SCI_CONFIG_PAR_NONE
-#define ServicePort_SCI_FIFO_TX_LVL SCI_FIFO_TX0
-#define ServicePort_SCI_FIFO_RX_LVL SCI_FIFO_RX0
 void ServicePort_SCI_init();
 
 //*****************************************************************************
