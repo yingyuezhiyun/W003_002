@@ -436,6 +436,18 @@ void myINPUTXBARINPUT2_init();
 #define INT_ADC_A_1_INTERRUPT_ACK_GROUP INTERRUPT_ACK_GROUP1
 extern __interrupt void INT_ADC_A_1_ISR(void);
 
+// Interrupt Settings for INT_Elmo_CAN_0
+// ISR need to be defined for the registered interrupts
+#define INT_Elmo_CAN_0 INT_CANA0
+#define INT_Elmo_CAN_0_INTERRUPT_ACK_GROUP INTERRUPT_ACK_GROUP9
+extern __interrupt void INT_Elmo_CAN_0_ISR(void);
+
+// Interrupt Settings for INT_Elmo_CAN_1
+// ISR need to be defined for the registered interrupts
+#define INT_Elmo_CAN_1 INT_CANA1
+#define INT_Elmo_CAN_1_INTERRUPT_ACK_GROUP INTERRUPT_ACK_GROUP9
+extern __interrupt void INT_Elmo_CAN_1_ISR(void);
+
 // Interrupt Settings for INT_CPU_TIMER2
 // ISR need to be defined for the registered interrupts
 #define INT_CPU_TIMER2 INT_TIMER2

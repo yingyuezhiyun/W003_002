@@ -5,6 +5,14 @@
             "interruptHandler": "INT_ADC_A_1_ISR"
         },
         {
+            "interruptName": "INT_Elmo_CAN_0",
+            "interruptHandler": "INT_Elmo_CAN_0_ISR"
+        },
+        {
+            "interruptName": "INT_Elmo_CAN_1",
+            "interruptHandler": "INT_Elmo_CAN_1_ISR"
+        },
+        {
             "interruptName": "INT_CPU_TIMER2",
             "interruptHandler": "INT_CPU_TIMER2_ISR"
         },

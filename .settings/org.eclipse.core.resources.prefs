@@ -1,4 +1,12 @@
 eclipse.preferences.version=1
+encoding//CPU1_FLASH/Core/src/communication/subdir_rules.mk=UTF-8
+encoding//CPU1_FLASH/Core/src/communication/subdir_vars.mk=UTF-8
+encoding//CPU1_FLASH/Core/src/elmo/subdir_rules.mk=UTF-8
+encoding//CPU1_FLASH/Core/src/elmo/subdir_vars.mk=UTF-8
+encoding//CPU1_FLASH/Core/src/mode_ctrl/subdir_rules.mk=UTF-8
+encoding//CPU1_FLASH/Core/src/mode_ctrl/subdir_vars.mk=UTF-8
+encoding//CPU1_FLASH/Core/src/subdir_rules.mk=UTF-8
+encoding//CPU1_FLASH/Core/src/subdir_vars.mk=UTF-8
 encoding//CPU1_FLASH/ECAT/src/subdir_rules.mk=UTF-8
 encoding//CPU1_FLASH/ECAT/src/subdir_vars.mk=UTF-8
 encoding//CPU1_FLASH/ECAT/subdir_rules.mk=UTF-8

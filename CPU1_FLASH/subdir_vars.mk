@@ -17,7 +17,6 @@ D:/software/ti/c2000/C2000Ware_6_00_01_00/driverlib/f2837xd/driverlib/ccs/Debug/
 C_SRCS += \
 ./syscfg/board.c \
 ./syscfg/c2000ware_libraries.c \
-../dsp_it.c \
 ../main.c 
 
 GEN_FILES += \
@@ -32,7 +31,6 @@ GEN_MISC_DIRS += \
 C_DEPS += \
 ./syscfg/board.d \
 ./syscfg/c2000ware_libraries.d \
-./dsp_it.d \
 ./main.d 
 
 GEN_OPTS += \
@@ -42,7 +40,6 @@ GEN_OPTS += \
 OBJS += \
 ./syscfg/board.obj \
 ./syscfg/c2000ware_libraries.obj \
-./dsp_it.obj \
 ./main.obj 
 
 GEN_MISC_FILES += \
@@ -62,7 +59,6 @@ GEN_MISC_DIRS__QUOTED += \
 OBJS__QUOTED += \
 "syscfg\board.obj" \
 "syscfg\c2000ware_libraries.obj" \
-"dsp_it.obj" \
 "main.obj" 
 
 GEN_MISC_FILES__QUOTED += \
@@ -79,7 +75,6 @@ GEN_MISC_FILES__QUOTED += \
 C_DEPS__QUOTED += \
 "syscfg\board.d" \
 "syscfg\c2000ware_libraries.d" \
-"dsp_it.d" \
 "main.d" 
 
 GEN_FILES__QUOTED += \
@@ -94,7 +89,6 @@ SYSCFG_SRCS__QUOTED += \
 C_SRCS__QUOTED += \
 "./syscfg/board.c" \
 "./syscfg/c2000ware_libraries.c" \
-"../dsp_it.c" \
 "../main.c" 
 
 

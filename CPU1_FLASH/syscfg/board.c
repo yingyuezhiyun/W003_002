@@ -401,6 +401,11 @@ void Elmo_CAN_init(){
 	//
 	CAN_setBitTiming(Elmo_CAN_BASE, 15, 0, 15, 7, 3);
 	//
+	// Enable CAN Interrupts
+	//
+	CAN_enableInterrupt(Elmo_CAN_BASE, CAN_INT_IE0);
+	CAN_enableGlobalInterrupt(Elmo_CAN_BASE, CAN_GLOBAL_INT_CANINT0);
+	//
 	// Initialize the transmit message object used for sending CAN messages.
 	// Message Object Parameters:
 	//      Message Object ID Number: 1
@@ -420,10 +425,11 @@ void Elmo_CAN_init(){
 	//      Message Frame: CAN_MSG_FRAME_STD
 	//      Message Type: CAN_MSG_OBJ_TYPE_RX
 	//      Message ID Mask: 2047
-	//      Message Object Flags: CAN_MSG_OBJ_USE_ID_FILTER
+	//      Message Object Flags: CAN_MSG_OBJ_RX_INT_ENABLE,CAN_MSG_OBJ_USE_ID_FILTER
 	//      Message Data Length: 8 Bytes
 	//
-	CAN_setupMessageObject(Elmo_CAN_BASE, 2, Elmo_CAN_MessageObj2_ID, CAN_MSG_FRAME_STD,CAN_MSG_OBJ_TYPE_RX, 2047, CAN_MSG_OBJ_USE_ID_FILTER,8);
+	CAN_setupMessageObject(Elmo_CAN_BASE, 2, Elmo_CAN_MessageObj2_ID, CAN_MSG_FRAME_STD,CAN_MSG_OBJ_TYPE_RX, 2047, CAN_MSG_OBJ_RX_INT_ENABLE|CAN_MSG_OBJ_USE_ID_FILTER,8);
+	CAN_setInterruptMux(Elmo_CAN_BASE, 0);
 	//
 	// Start CAN module operations
 	//
@@ -769,6 +775,16 @@ void INTERRUPT_init(){
 	// ISR need to be defined for the registered interrupts
 	Interrupt_register(INT_ADC_A_1, &INT_ADC_A_1_ISR);
 	Interrupt_enable(INT_ADC_A_1);
+	
+	// Interrupt Settings for INT_Elmo_CAN_0
+	// ISR need to be defined for the registered interrupts
+	Interrupt_register(INT_Elmo_CAN_0, &INT_Elmo_CAN_0_ISR);
+	Interrupt_enable(INT_Elmo_CAN_0);
+	
+	// Interrupt Settings for INT_Elmo_CAN_1
+	// ISR need to be defined for the registered interrupts
+	Interrupt_register(INT_Elmo_CAN_1, &INT_Elmo_CAN_1_ISR);
+	Interrupt_disable(INT_Elmo_CAN_1);
 	
 	// Interrupt Settings for INT_CPU_TIMER2
 	// ISR need to be defined for the registered interrupts

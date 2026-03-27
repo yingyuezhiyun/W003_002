@@ -12,8 +12,16 @@ GEN_CMDS__FLAG :=
 ORDERED_OBJS += \
 "./syscfg/board.obj" \
 "./syscfg/c2000ware_libraries.obj" \
-"./dsp_it.obj" \
 "./main.obj" \
+"./Core/src/communication/host_rs232.obj" \
+"./Core/src/communication/serviceport.obj" \
+"./Core/src/dsp_it.obj" \
+"./Core/src/elmo/elmo_can.obj" \
+"./Core/src/elmo/elmo_rs232.obj" \
+"./Core/src/mode_ctrl/mode_calib.obj" \
+"./Core/src/mode_ctrl/mode_ctrl.obj" \
+"./Core/src/mode_ctrl/mode_position.obj" \
+"./Core/src/mode_ctrl/mode_press.obj" \
 "./ECAT/9252_HW.obj" \
 "./ECAT/PIC32_EtherCAT_Slave.obj" \
 "./ECAT/SPIDriver.obj" \
@@ -44,10 +52,18 @@ RMDIR := RMDIR /S/Q
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include subdir_vars.mk
+-include Core/src/communication/subdir_vars.mk
+-include Core/src/subdir_vars.mk
+-include Core/src/elmo/subdir_vars.mk
+-include Core/src/mode_ctrl/subdir_vars.mk
 -include ECAT/subdir_vars.mk
 -include ECAT/src/subdir_vars.mk
 -include device/subdir_vars.mk
 -include subdir_rules.mk
+-include Core/src/communication/subdir_rules.mk
+-include Core/src/subdir_rules.mk
+-include Core/src/elmo/subdir_rules.mk
+-include Core/src/mode_ctrl/subdir_rules.mk
 -include ECAT/subdir_rules.mk
 -include ECAT/src/subdir_rules.mk
 -include device/subdir_rules.mk
@@ -168,8 +184,8 @@ F28377D.out: $(OBJS) $(CMD_SRCS) $(LIB_SRCS) $(GEN_CMDS)
 # Other Targets
 clean:
 	-$(RM) $(GEN_MISC_FILES__QUOTED)$(GEN_FILES__QUOTED)$(EXE_OUTPUTS__QUOTED)
-	-$(RM) "syscfg\board.obj" "syscfg\c2000ware_libraries.obj" "dsp_it.obj" "main.obj" "ECAT\9252_HW.obj" "ECAT\PIC32_EtherCAT_Slave.obj" "ECAT\SPIDriver.obj" "ECAT\src\coeappl.obj" "ECAT\src\ecatappl.obj" "ECAT\src\ecatcoe.obj" "ECAT\src\ecateoe.obj" "ECAT\src\ecatfoe.obj" "ECAT\src\ecatslv.obj" "ECAT\src\emcy.obj" "ECAT\src\eoeappl.obj" "ECAT\src\foeappl.obj" "ECAT\src\mailbox.obj" "ECAT\src\objdef.obj" "ECAT\src\sdoserv.obj" "device\F2837xD_CodeStartBranch.obj" "device\device.obj" 
-	-$(RM) "syscfg\board.d" "syscfg\c2000ware_libraries.d" "dsp_it.d" "main.d" "ECAT\9252_HW.d" "ECAT\PIC32_EtherCAT_Slave.d" "ECAT\SPIDriver.d" "ECAT\src\coeappl.d" "ECAT\src\ecatappl.d" "ECAT\src\ecatcoe.d" "ECAT\src\ecateoe.d" "ECAT\src\ecatfoe.d" "ECAT\src\ecatslv.d" "ECAT\src\emcy.d" "ECAT\src\eoeappl.d" "ECAT\src\foeappl.d" "ECAT\src\mailbox.d" "ECAT\src\objdef.d" "ECAT\src\sdoserv.d" "device\device.d" 
+	-$(RM) "syscfg\board.obj" "syscfg\c2000ware_libraries.obj" "main.obj" "Core\src\communication\host_rs232.obj" "Core\src\communication\serviceport.obj" "Core\src\dsp_it.obj" "Core\src\elmo\elmo_can.obj" "Core\src\elmo\elmo_rs232.obj" "Core\src\mode_ctrl\mode_calib.obj" "Core\src\mode_ctrl\mode_ctrl.obj" "Core\src\mode_ctrl\mode_position.obj" "Core\src\mode_ctrl\mode_press.obj" "ECAT\9252_HW.obj" "ECAT\PIC32_EtherCAT_Slave.obj" "ECAT\SPIDriver.obj" "ECAT\src\coeappl.obj" "ECAT\src\ecatappl.obj" "ECAT\src\ecatcoe.obj" "ECAT\src\ecateoe.obj" "ECAT\src\ecatfoe.obj" "ECAT\src\ecatslv.obj" "ECAT\src\emcy.obj" "ECAT\src\eoeappl.obj" "ECAT\src\foeappl.obj" "ECAT\src\mailbox.obj" "ECAT\src\objdef.obj" "ECAT\src\sdoserv.obj" "device\F2837xD_CodeStartBranch.obj" "device\device.obj" 
+	-$(RM) "syscfg\board.d" "syscfg\c2000ware_libraries.d" "main.d" "Core\src\communication\host_rs232.d" "Core\src\communication\serviceport.d" "Core\src\dsp_it.d" "Core\src\elmo\elmo_can.d" "Core\src\elmo\elmo_rs232.d" "Core\src\mode_ctrl\mode_calib.d" "Core\src\mode_ctrl\mode_ctrl.d" "Core\src\mode_ctrl\mode_position.d" "Core\src\mode_ctrl\mode_press.d" "ECAT\9252_HW.d" "ECAT\PIC32_EtherCAT_Slave.d" "ECAT\SPIDriver.d" "ECAT\src\coeappl.d" "ECAT\src\ecatappl.d" "ECAT\src\ecatcoe.d" "ECAT\src\ecateoe.d" "ECAT\src\ecatfoe.d" "ECAT\src\ecatslv.d" "ECAT\src\emcy.d" "ECAT\src\eoeappl.d" "ECAT\src\foeappl.d" "ECAT\src\mailbox.d" "ECAT\src\objdef.d" "ECAT\src\sdoserv.d" "device\device.d" 
 	-$(RM) "device\F2837xD_CodeStartBranch.d" 
 	-$(RMDIR) $(GEN_MISC_DIRS__QUOTED)
 	-@echo 'Finished clean'

@@ -12,24 +12,7 @@
 #include "ECAT/src/applInterface.h"
 #endif
 
-// __weak __interrupt void INT_RS232_SCI_TX_ISR(void)
-// {
-// }
-// __weak __interrupt void INT_Elmo_SCI_TX_ISR(void)
-// {
-// }
 
-// __weak __interrupt void INT_ServicePort_SCI_TX_ISR(void)
-// {
-// }
-
-// __weak __interrupt void INT_myEPWM0_ISR(void)
-// {
-// }
-
-// __weak __interrupt void INT_myEPWM1_ISR(void)
-// {
-// }
 
 __weak __interrupt void ECAT_Lan9252IrqIsr(void)
 {
@@ -82,6 +65,17 @@ __weak __interrupt void INT_CPU_TIMER0_ISR(void)
 
 
 __weak __interrupt void INT_ADC_A_1_ISR(void)
+{
+
+}
+
+
+__weak __interrupt void INT_Elmo_CAN_0_ISR(void)
+{
+
+}
+
+__weak __interrupt void INT_Elmo_CAN_1_ISR(void)
 {
 
 }
