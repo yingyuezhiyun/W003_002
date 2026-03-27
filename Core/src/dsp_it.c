@@ -5,6 +5,8 @@
 #include "stdio.h"
 #include "glob_cfg.h"
 #include "glob_value.h"
+#include "Core/inc/elmo_ctrl.h"
+#include "Core/inc/mode_ctrl.h"
 
 #if ECAT_EN
 #include "ECAT/9252_HW.h"
@@ -60,6 +62,7 @@ __weak __interrupt void INT_CPU_TIMER2_ISR(void)
 /// @return
 __weak __interrupt void INT_CPU_TIMER0_ISR(void)
 {
+
     CPUTimer_clearOverflowFlag(CPUTIMER0_BASE);
 }
 
@@ -72,7 +75,11 @@ __weak __interrupt void INT_ADC_A_1_ISR(void)
 
 __weak __interrupt void INT_Elmo_CAN_0_ISR(void)
 {
-
+    if((ElmoOps != NULL) && (ElmoOps->onCanRxIsr != NULL))
+    {
+        ElmoOps->onCanRxIsr();
+    }
+    Interrupt_clearACKGroup(INT_Elmo_CAN_0_INTERRUPT_ACK_GROUP);
 }
 
 __weak __interrupt void INT_Elmo_CAN_1_ISR(void)

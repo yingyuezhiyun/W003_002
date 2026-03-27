@@ -56,6 +56,8 @@
 #include "stdio.h"
 #include "glob_value.h"
 #include "glob_cfg.h"
+#include "Core/inc/elmo_ctrl.h"
+#include "Core/inc/mode_ctrl.h"
 
 #if ECAT_EN
 #include "ECAT/9252_HW.h"
@@ -87,12 +89,15 @@ void main(void)
     MainInit();
 #endif
 
-    EINT; // 开启全局中断
-    ERTM; // Enable Global realtime interrupt DBGM
-
     // initTILE1(myCLBTILE1_BASE);
     // CLB_enableCLB(myCLBTILE1_BASE);
     printf("hello\n");
+    // 选择默认 Elmo 后端，并执行后端初始化
+    ElmoCtrl_SelectDefault();
+
+
+    EINT; // 开启全局中断
+    ERTM; // Enable Global realtime interrupt DBGM
     //	printf("hello=%f\n",3.14);
 
     while (1)
@@ -100,6 +105,11 @@ void main(void)
 #if ECAT_EN
         MainLoop();
 #endif
+        // 直接通过函数指针轮询 Elmo 后端
+        if ((ElmoOps != NULL) && (ElmoOps->poll != NULL))
+        {
+            ElmoOps->poll();
+        }
 
         asm(" NOP");
     }

@@ -5,6 +5,7 @@
 "./Core/src/communication/serviceport.obj"
 "./Core/src/dsp_it.obj"
 "./Core/src/elmo/elmo_can.obj"
+"./Core/src/elmo/elmo_ctrl.obj"
 "./Core/src/elmo/elmo_rs232.obj"
 "./Core/src/mode_ctrl/mode_calib.obj"
 "./Core/src/mode_ctrl/mode_ctrl.obj"
