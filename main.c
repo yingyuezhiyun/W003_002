@@ -92,9 +92,8 @@ void main(void)
     // initTILE1(myCLBTILE1_BASE);
     // CLB_enableCLB(myCLBTILE1_BASE);
     printf("hello\n");
-    // 选择默认 Elmo 后端，并执行后端初始化
+    // 选择默认 Elmo ，并执行初始化
     ElmoCtrl_SelectDefault();
-
 
     EINT; // 开启全局中断
     ERTM; // Enable Global realtime interrupt DBGM
@@ -102,14 +101,18 @@ void main(void)
 
     while (1)
     {
+        // 处理 EtherCAT 主循环
 #if ECAT_EN
         MainLoop();
 #endif
-        // 直接通过函数指针轮询 Elmo 后端
-        if ((ElmoOps != NULL) && (ElmoOps->poll != NULL))
-        {
-            ElmoOps->poll();
-        }
+        // 处理串口数据
+        parse_SCI();
+
+        // 处理运行模式控制
+        RunModeCtrl();
+
+        // 处理故障
+        Fault_dandle();
 
         asm(" NOP");
     }

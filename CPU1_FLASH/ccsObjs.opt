@@ -4,6 +4,7 @@
 "./Core/src/communication/host_rs232.obj"
 "./Core/src/communication/serviceport.obj"
 "./Core/src/dsp_it.obj"
+"./Core/src/func_exec.obj"
 "./Core/src/elmo/elmo_can.obj"
 "./Core/src/elmo/elmo_ctrl.obj"
 "./Core/src/elmo/elmo_rs232.obj"

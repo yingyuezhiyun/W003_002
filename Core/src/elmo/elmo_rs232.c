@@ -83,14 +83,14 @@ static void elmoRs232ParseLine(char *line)
 	}
 }
 
-// RS232 后端初始化
+// RS232 初始化
 static void elmoRs232Init(void)
 {
 	g_elmoRxLen = 0U;
 	memset(g_elmoRxBuf, 0, sizeof(g_elmoRxBuf));
 }
 
-// RS232 后端主循环轮询
+// RS232 主循环轮询
 static void elmoRs232Poll(void)
 {
 	while(SCI_getRxFIFOStatus(Elmo_SCI_BASE) != SCI_FIFO_RX0)
@@ -214,7 +214,7 @@ static void elmoRs232ECRequest(void)
 	elmoRs232Send("EC;\r");
 }
 
-// RS232 后端操作函数表
+// RS232 操作函数表
 static const ElmoOpsTable g_elmoRs232Ops = {
 	.init = elmoRs232Init,
 	.poll = elmoRs232Poll,
@@ -233,13 +233,13 @@ static const ElmoOpsTable g_elmoRs232Ops = {
 	.onCanRxIsr = NULL,
 };
 
-// RS232 后端描述对象
+// RS232 描述对象
 static const ElmoBackend g_elmoRs232Backend = {
 	.name = "elmo_rs232",
 	.ops = &g_elmoRs232Ops
 };
 
-// 获取 RS232 后端描述对象
+// 获取 RS232 描述对象
 const ElmoBackend *ElmoRs232_GetBackend(void)
 {
 	return &g_elmoRs232Backend;

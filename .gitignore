@@ -43,6 +43,7 @@
 **/.metadata/**
 **/RemoteSystemsTempFiles/
 **/.jxbrowser.userdata/
+**/old_elec_valve_ref/
 
 # 忽略常见的编译输出目录与二进制产物
 /Debug/

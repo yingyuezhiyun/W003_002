@@ -136,12 +136,12 @@ static void elmoCanProcess(const uint8_t *msgData, uint8_t msgLen)
 	}
 }
 
-// CAN 后端初始化（当前由 SysConfig 完成底层初始化）
+// CAN 初始化（当前由 SysConfig 完成底层初始化）
 static void elmoCanInit(void)
 {
 }
 
-// CAN 后端主循环轮询（当前使用中断接收，轮询可留空）
+// CAN 主循环轮询（当前使用中断接收，轮询可留空）
 static void elmoCanPoll(void)
 {
 }
@@ -252,7 +252,7 @@ static void elmoCanOnRxIsr(void)
 	CAN_clearGlobalInterruptStatus(Elmo_CAN_BASE, CAN_GLOBAL_INT_CANINT0);
 }
 
-// CAN 后端操作函数表
+// CAN 操作函数表
 static const ElmoOpsTable g_elmoCanOps = {
 	.init = elmoCanInit,
 	.poll = elmoCanPoll,
@@ -271,13 +271,13 @@ static const ElmoOpsTable g_elmoCanOps = {
 	.onCanRxIsr = elmoCanOnRxIsr,
 };
 
-// CAN 后端描述对象
+// CAN 描述对象
 static const ElmoBackend g_elmoCanBackend = {
 	.name = "elmo_can",
 	.ops = &g_elmoCanOps
 };
 
-// 获取 CAN 后端描述对象
+// 获取 CAN 描述对象
 const ElmoBackend *ElmoCan_GetBackend(void)
 {
 	return &g_elmoCanBackend;
