@@ -16,6 +16,7 @@ void parse_SCI()
 
 void RunModeCtrl()
 {
+    ModeCtrl_MainLoopTask();
 }
 
 void Fault_dandle()
