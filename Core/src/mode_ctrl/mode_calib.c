@@ -27,24 +27,78 @@ typedef struct
     Calib_Action_t action;
 } Calib_Transition_t;
 
+/// @brief 进入标定模式回调。
+/// @param ctx 模式上下文。
 static void Mode_Calib_Enter(Mode_Ctx_t *ctx);
+
+/// @brief 标定模式执行回调。
+/// @param ctx 模式上下文。
 static void Mode_Calib_Execute(Mode_Ctx_t *ctx);
+
+/// @brief 退出标定模式回调。
+/// @param ctx 模式上下文。
 static void Mode_Calib_Exit(Mode_Ctx_t *ctx);
 
+/// @brief 计算 int32 绝对值。
+/// @param value 输入值。
+/// @return 绝对值。
 static int32_t Calib_AbsI32(int32_t value);
+
+/// @brief 计算 float 绝对值。
+/// @param value 输入值。
+/// @return 绝对值。
 static float Calib_AbsF32(float value);
+
+/// @brief 判断标定流程是否超时。
+/// @param ctx 模式上下文。
+/// @return true 表示超时，false 表示未超时。
 static bool Calib_IsTimeout(const Mode_Ctx_t *ctx);
+
+/// @brief 判断是否达到机械端点。
+/// @param ctx 模式上下文。
+/// @return true 表示达到端点，false 表示未达到。
 static bool Calib_IsEndReached(const Mode_Ctx_t *ctx);
+
+/// @brief 判断行程是否满足阈值。
+/// @param ctx 模式上下文。
+/// @return true 表示通过，false 表示失败。
 static bool Calib_IsRangePass(const Mode_Ctx_t *ctx);
+
+/// @brief 在 50ms 周期内查询标定反馈量。
+/// @param ctx 模式上下文。
 static void Calib_QueryFeedback_50ms(Mode_Ctx_t *ctx);
+
+/// @brief 根据当前状态与反馈生成标定事件。
+/// @param ctx 模式上下文。
+/// @return 生成的标定事件。
 static Calib_Event_t Calib_GetEvent(Mode_Ctx_t *ctx);
 
+/// @brief 处理标定开始动作。
+/// @param ctx 模式上下文。
 static void Calib_Action_Start(Mode_Ctx_t *ctx);
+
+/// @brief 处理最小端点捕获动作。
+/// @param ctx 模式上下文。
 static void Calib_Action_MinEndReached(Mode_Ctx_t *ctx);
+
+/// @brief 处理最大端点捕获动作。
+/// @param ctx 模式上下文。
 static void Calib_Action_MaxEndReached(Mode_Ctx_t *ctx);
+
+/// @brief 处理标定成功动作。
+/// @param ctx 模式上下文。
 static void Calib_Action_Success(Mode_Ctx_t *ctx);
+
+/// @brief 处理标定失败动作。
+/// @param ctx 模式上下文。
 static void Calib_Action_Failed(Mode_Ctx_t *ctx);
+
+/// @brief 处理标定超时动作。
+/// @param ctx 模式上下文。
 static void Calib_Action_Timeout(Mode_Ctx_t *ctx);
+
+/// @brief 恢复标定前速度设置。
+/// @param ctx 模式上下文。
 static void Calib_RestoreSpeed(Mode_Ctx_t *ctx);
 
 const Mode_State_t Mode_Calib = {
@@ -219,6 +273,8 @@ static void Calib_Action_Failed(Mode_Ctx_t *ctx)
     ctx->monitor.calibDone = 1U;
     ctx->monitor.calibSuccess = 0U;
     Calib_RestoreSpeed(ctx);
+    ctx->monitor.faultCount++;
+    ModeCtrl_SetErrorFlag(MODE_ERR_CALIB_FAILED);
 
     // TODO: add failure reason and failure handling details.
 }
@@ -229,6 +285,9 @@ static void Calib_Action_Timeout(Mode_Ctx_t *ctx)
     ctx->monitor.calibDone = 1U;
     ctx->monitor.calibSuccess = 0U;
     Calib_RestoreSpeed(ctx);
+    ctx->monitor.timeoutCount++;
+    ctx->monitor.faultCount++;
+    ModeCtrl_SetErrorFlag(MODE_ERR_CALIB_TIMEOUT);
 
     // TODO: add timeout alarm/report handling.
 }

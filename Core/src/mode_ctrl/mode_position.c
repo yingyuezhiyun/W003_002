@@ -4,8 +4,16 @@
 
 #include "Core/inc/elmo_ctrl.h"
 
+/// @brief 进入位置模式回调。
+/// @param ctx 模式上下文。
 static void Mode_Position_Enter(Mode_Ctx_t *ctx);
+
+/// @brief 位置模式执行回调。
+/// @param ctx 模式上下文。
 static void Mode_Position_Execute(Mode_Ctx_t *ctx);
+
+/// @brief 退出位置模式回调。
+/// @param ctx 模式上下文。
 static void Mode_Position_Exit(Mode_Ctx_t *ctx);
 
 const Mode_State_t Mode_Position = {
