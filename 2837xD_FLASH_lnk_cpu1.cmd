@@ -88,8 +88,8 @@ SECTIONS
    .bss                : > RAMLS5,       PAGE = 1
    .bss:output         : > RAMLS3,       PAGE = 0
    .bss:cio            : > RAMLS5,       PAGE = 1
-   .data               : > RAMLS5,       PAGE = 1
-   .sysmem             : >> RAMLS5 | RAMGS0 | RAMGS1,        PAGE = 1
+   .data               : >> RAMGS3|RAMGS4|RAMLS5,       PAGE = 1
+   .sysmem             : >> RAMGS3|RAMGS4|RAMLS5,        PAGE = 1
    /* Initalized sections go in Flash */
    .const              : > FLASHF,       PAGE = 0,       ALIGN(8)
 #else
@@ -162,11 +162,11 @@ SECTIONS
     }
 
    /* The following section definition are for SDFM examples */
-   Filter1_RegsFile : > RAMGS1,	PAGE = 1, fill=0x1111
-   Filter2_RegsFile : > RAMGS2,	PAGE = 1, fill=0x2222
-   Filter3_RegsFile : > RAMGS3,	PAGE = 1, fill=0x3333
-   Filter4_RegsFile : > RAMGS4,	PAGE = 1, fill=0x4444
-   Difference_RegsFile : >RAMGS5, 	PAGE = 1, fill=0x3333
+   //Filter1_RegsFile : > RAMGS1,	PAGE = 1, fill=0x1111
+   //Filter2_RegsFile : > RAMGS2,	PAGE = 1, fill=0x2222
+   //Filter3_RegsFile : > RAMGS3,	PAGE = 1, fill=0x3333
+   //Filter4_RegsFile : > RAMGS4,	PAGE = 1, fill=0x4444
+   //Difference_RegsFile : >RAMGS5, 	PAGE = 1, fill=0x3333
 }
 
 /*

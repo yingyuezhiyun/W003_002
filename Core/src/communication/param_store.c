@@ -27,12 +27,20 @@
 
 typedef struct
 {
+    uint32_t kp;
+    uint32_t ki;
+    uint32_t kd;
+    uint32_t kf;
+} Param_Config_t;
+
+typedef struct
+{
     uint32_t magic;
-    uint16_t version;
+    // uint16_t version;
     uint16_t payloadLen;
     uint32_t checksum;
-    Mode_Config_t cfg;
-} ParamStore_ModeConfigBlob_t;
+    Param_Config_t cfg;
+} ParamStore_ConfigBlob_t;
 
 /// @brief 计算轻量级 32 位校验和。
 /// @param data 数据指针。
@@ -77,10 +85,10 @@ static void At24_ClearI2CStatus(void)
 {
     I2C_clearStatus(AT24C512_I2C_BASE,
                     I2C_STS_NO_ACK |
-                    I2C_STS_ARB_LOST |
-                    I2C_STS_REG_ACCESS_RDY |
-                    I2C_STS_STOP_CONDITION |
-                    I2C_STS_NACK_SENT);
+                        I2C_STS_ARB_LOST |
+                        I2C_STS_REG_ACCESS_RDY |
+                        I2C_STS_STOP_CONDITION |
+                        I2C_STS_NACK_SENT);
 }
 
 /// @brief 等待 I2C 总线空闲。
@@ -299,12 +307,12 @@ static bool At24_ReadBurst(uint16_t address, uint8_t *data, uint16_t length)
     return true;
 }
 
-/// @brief 将结构体数据保存到 AT24C512 指定地址。
+/// @brief 将数据保存到 AT24C512 指定地址。
 /// @param address EEPROM 起始地址。
 /// @param data 需要保存的数据指针。
 /// @param length 数据长度（字节）。
 /// @return true 表示保存成功，false 表示保存失败。
-bool ParamStore_SaveStruct(uint16_t address, const void *data, uint16_t length)
+bool ParamStore_SaveData(uint16_t address, const void *data, uint16_t length)
 {
     uint16_t offset = 0U;
     const uint8_t *src = (const uint8_t *)data;
@@ -336,12 +344,12 @@ bool ParamStore_SaveStruct(uint16_t address, const void *data, uint16_t length)
     return true;
 }
 
-/// @brief 从 AT24C512 指定地址读取结构体数据。
+/// @brief 从 AT24C512 指定地址读取数据。
 /// @param address EEPROM 起始地址。
 /// @param data 数据输出指针。
 /// @param length 需要读取的数据长度（字节）。
 /// @return true 表示读取成功，false 表示读取失败。
-bool ParamStore_LoadStruct(uint16_t address, void *data, uint16_t length)
+bool ParamStore_LoadData(uint16_t address, void *data, uint16_t length)
 {
     uint16_t offset = 0U;
     uint8_t *dst = (uint8_t *)data;
@@ -375,9 +383,9 @@ bool ParamStore_LoadStruct(uint16_t address, void *data, uint16_t length)
 /// @brief 将模式配置保存到参数区（带头信息与校验）。
 /// @param cfg 待保存的模式配置指针。
 /// @return true 表示保存成功，false 表示保存失败。
-bool ParamStore_SaveModeConfig(const Mode_Config_t *cfg)
+bool ParamStore_SaveConfig(const Param_Config_t *cfg)
 {
-    ParamStore_ModeConfigBlob_t blob;
+    ParamStore_ConfigBlob_t blob;
 
     if (cfg == NULL)
     {
@@ -385,20 +393,20 @@ bool ParamStore_SaveModeConfig(const Mode_Config_t *cfg)
     }
 
     blob.magic = PARAM_STORE_CFG_MAGIC;
-    blob.version = PARAM_STORE_CFG_VERSION;
-    blob.payloadLen = (uint16_t)sizeof(Mode_Config_t);
+    // blob.version = PARAM_STORE_CFG_VERSION;
+    blob.payloadLen = (uint16_t)sizeof(Param_Config_t);
     blob.cfg = *cfg;
     blob.checksum = ParamStore_Checksum32((const uint8_t *)&blob.cfg, (uint16_t)sizeof(blob.cfg));
 
-    return ParamStore_SaveStruct(PARAM_STORE_CFG_ADDR, &blob, (uint16_t)sizeof(blob));
+    return ParamStore_SaveData(PARAM_STORE_CFG_ADDR, &blob, (uint16_t)sizeof(blob));
 }
 
 /// @brief 从参数区读取模式配置并完成完整性校验。
 /// @param cfg 配置输出指针。
 /// @return true 表示读取且校验通过，false 表示读取失败或数据无效。
-bool ParamStore_LoadModeConfig(Mode_Config_t *cfg)
+bool ParamStore_LoadConfig(Param_Config_t *cfg)
 {
-    ParamStore_ModeConfigBlob_t blob;
+    ParamStore_ConfigBlob_t blob;
     uint32_t checksum;
 
     if (cfg == NULL)
@@ -406,7 +414,7 @@ bool ParamStore_LoadModeConfig(Mode_Config_t *cfg)
         return false;
     }
 
-    if (ParamStore_LoadStruct(PARAM_STORE_CFG_ADDR, &blob, (uint16_t)sizeof(blob)) == false)
+    if (ParamStore_LoadData(PARAM_STORE_CFG_ADDR, &blob, (uint16_t)sizeof(blob)) == false)
     {
         return false;
     }
@@ -416,12 +424,12 @@ bool ParamStore_LoadModeConfig(Mode_Config_t *cfg)
         return false;
     }
 
-    if (blob.version != PARAM_STORE_CFG_VERSION)
-    {
-        return false;
-    }
+    // if (blob.version != PARAM_STORE_CFG_VERSION)
+    // {
+    //     return false;
+    // }
 
-    if (blob.payloadLen != sizeof(Mode_Config_t))
+    if (blob.payloadLen != sizeof(Param_Config_t))
     {
         return false;
     }

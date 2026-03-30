@@ -3,7 +3,6 @@
 #include "mode_ctrl.h"
 
 #include "Core/inc/elmo_ctrl.h"
-#include "Core/inc/param_store.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -43,11 +42,6 @@ static bool ModeCtrl_IsConfigValid(const Mode_Config_t *cfg);
 /// @param cfg 配置输出指针。
 static void ModeCtrl_SetDefaultConfig(Mode_Config_t *cfg);
 
-/// @brief 从参数存储加载配置并应用到指定上下文。
-/// @param ctx 模式上下文指针。
-/// @return true 表示加载成功，false 表示失败。
-static bool ModeCtrl_LoadConfigFromStoreInternal(Mode_Ctx_t *ctx);
-
 static const Mode_TransitionRule_t kTransitionRules[] = {
     {MODE_ID_CALIB, ModeGuard_AllowAlways},
     {MODE_ID_POSITION, ModeGuard_RequireCalibSuccess},
@@ -82,10 +76,6 @@ static void ModeCtrl_TracePush(Mode_Ctx_t *ctx,
                                uint8_t allowed,
                                Mode_SwitchReject_t reason);
 
-/// @brief 轮询按键/TTL 等本地命令入口。
-/// @param ctx 模式上下文。
-static void ModeCtrl_PollIngress(Mode_Ctx_t *ctx);
-
 /// @brief 分发单条命令到模式控制上下文。
 /// @param ctx 模式上下文。
 /// @param cmd 命令包。
@@ -113,27 +103,6 @@ static void ModeCtrl_UpdateStatusAndError(Mode_Ctx_t *ctx);
 /// @brief 根据当前运行状态更新 LED 指示模式。
 /// @param ctx 模式上下文。
 static void ModeCtrl_UpdateLedPattern(Mode_Ctx_t *ctx);
-
-/// @brief 按键开始标定输入钩子（弱符号默认返回无触发）。
-/// @return 非 0 表示触发。
-__weak uint8_t ModeIngress_KeyStartCalib(void)
-{
-    return 0U;
-}
-
-/// @brief TTL 全开输入钩子（弱符号默认返回无触发）。
-/// @return 非 0 表示触发。
-__weak uint8_t ModeIngress_TtlFullOpen(void)
-{
-    return 0U;
-}
-
-/// @brief TTL 全关输入钩子（弱符号默认返回无触发）。
-/// @return 非 0 表示触发。
-__weak uint8_t ModeIngress_TtlFullClose(void)
-{
-    return 0U;
-}
 
 /// @brief LED 指示钩子（弱符号默认空实现）。
 /// @param pattern LED 模式。
@@ -233,29 +202,6 @@ static void ModeCtrl_SetDefaultConfig(Mode_Config_t *cfg)
     cfg->queryPeriodTick = 500U;
     cfg->pressLoopTick = 90U;
     cfg->calibTimeoutTick = 1200000U;
-}
-
-static bool ModeCtrl_LoadConfigFromStoreInternal(Mode_Ctx_t *ctx)
-{
-    Mode_Config_t cfg;
-
-    if (ctx == NULL)
-    {
-        return false;
-    }
-
-    if (ParamStore_LoadModeConfig(&cfg) == false)
-    {
-        return false;
-    }
-
-    if (ModeCtrl_IsConfigValid(&cfg) == false)
-    {
-        return false;
-    }
-
-    ctx->cfg = cfg;
-    return true;
 }
 
 static uint8_t ModeCtrl_QueuePush(Mode_CommandQueue_t *q, const Mode_CommandPacket_t *cmd)
@@ -490,26 +436,6 @@ static bool ModeCtrl_TrySwitchMode(Mode_Ctx_t *ctx,
     return false;
 }
 
-static void ModeCtrl_PollIngress(Mode_Ctx_t *ctx)
-{
-    (void)ctx;
-
-    if (ModeIngress_KeyStartCalib() != 0U)
-    {
-        (void)ModeCtrl_PostStartCalib(MODE_CMD_SRC_KEY);
-    }
-
-    if (ModeIngress_TtlFullOpen() != 0U)
-    {
-        (void)ModeCtrl_PostFullOpen(MODE_CMD_SRC_TTL);
-    }
-
-    if (ModeIngress_TtlFullClose() != 0U)
-    {
-        (void)ModeCtrl_PostFullClose(MODE_CMD_SRC_TTL);
-    }
-}
-
 static void ModeCtrl_DispatchCommand(Mode_Ctx_t *ctx, const Mode_CommandPacket_t *cmd)
 {
     if ((ctx == NULL) || (cmd == NULL))
@@ -531,9 +457,9 @@ static void ModeCtrl_DispatchCommand(Mode_Ctx_t *ctx, const Mode_CommandPacket_t
         (void)ModeCtrl_TrySwitchMode(ctx, cmd->targetMode, MODE_CMD_SWITCH_MODE, cmd->source);
         break;
 
-    case MODE_CMD_SET_POSITION:
-        ctx->cmd.positionTarget = cmd->i32Payload;
-        ctx->cmd.reqPositionTarget = 1U;
+    case MODE_CMD_SET_POSITION_PERCENT:
+        ctx->cmd.positionPercent = cmd->f32Payload;
+        ctx->cmd.reqPositionPercent = 1U;
         break;
 
     case MODE_CMD_FULL_OPEN:
@@ -544,9 +470,9 @@ static void ModeCtrl_DispatchCommand(Mode_Ctx_t *ctx, const Mode_CommandPacket_t
         ctx->cmd.reqFullClose = 1U;
         break;
 
-    case MODE_CMD_SET_PRESSURE:
-        ctx->cmd.pressureTarget = cmd->f32Payload;
-        ctx->cmd.reqPressureTarget = 1U;
+    case MODE_CMD_SET_PRESSURE_PERCENT:
+        ctx->cmd.pressurePercent = cmd->f32Payload;
+        ctx->cmd.reqPressurePercent = 1U;
         break;
 
     default:
@@ -729,15 +655,20 @@ bool ModeCtrl_PostModeSwitch(Mode_Id_t mode, Mode_CommandSource_t source)
     return ModeCtrl_PostCommand(&cmd);
 }
 
-bool ModeCtrl_PostTargetPosition(int32_t position, Mode_CommandSource_t source)
+bool ModeCtrl_PostTargetPosition(float positionPercent, Mode_CommandSource_t source)
 {
     Mode_CommandPacket_t cmd;
 
-    cmd.cmdId = MODE_CMD_SET_POSITION;
+    if ((positionPercent < 0.0f) || (positionPercent > 100.0f))
+    {
+        return false;
+    }
+
+    cmd.cmdId = MODE_CMD_SET_POSITION_PERCENT;
     cmd.source = source;
     cmd.targetMode = MODE_ID_NONE;
-    cmd.i32Payload = position;
-    cmd.f32Payload = 0.0f;
+    cmd.i32Payload = 0;
+    cmd.f32Payload = positionPercent;
 
     return ModeCtrl_PostCommand(&cmd);
 }
@@ -768,17 +699,66 @@ bool ModeCtrl_PostFullClose(Mode_CommandSource_t source)
     return ModeCtrl_PostCommand(&cmd);
 }
 
-bool ModeCtrl_PostTargetPressure(float pressure, Mode_CommandSource_t source)
+bool ModeCtrl_PostTargetPressure(float pressurePercent, Mode_CommandSource_t source)
 {
     Mode_CommandPacket_t cmd;
 
-    cmd.cmdId = MODE_CMD_SET_PRESSURE;
+    if ((pressurePercent < 0.0f) || (pressurePercent > 100.0f))
+    {
+        return false;
+    }
+
+    cmd.cmdId = MODE_CMD_SET_PRESSURE_PERCENT;
     cmd.source = source;
     cmd.targetMode = MODE_ID_NONE;
     cmd.i32Payload = 0;
-    cmd.f32Payload = pressure;
+    cmd.f32Payload = pressurePercent;
 
     return ModeCtrl_PostCommand(&cmd);
+}
+
+static bool ModeCtrl_UserApi_StartCalib(void)
+{
+    return ModeCtrl_PostStartCalib(MODE_CMD_SRC_UNKNOWN);
+}
+
+static bool ModeCtrl_UserApi_SwitchMode(Mode_Id_t mode)
+{
+    return ModeCtrl_PostModeSwitch(mode, MODE_CMD_SRC_UNKNOWN);
+}
+
+static bool ModeCtrl_UserApi_SetPositionPercent(float positionPercent)
+{
+    return ModeCtrl_PostTargetPosition(positionPercent, MODE_CMD_SRC_UNKNOWN);
+}
+
+static bool ModeCtrl_UserApi_FullOpen(void)
+{
+    return ModeCtrl_PostFullOpen(MODE_CMD_SRC_UNKNOWN);
+}
+
+static bool ModeCtrl_UserApi_FullClose(void)
+{
+    return ModeCtrl_PostFullClose(MODE_CMD_SRC_UNKNOWN);
+}
+
+static bool ModeCtrl_UserApi_SetPressurePercent(float pressurePercent)
+{
+    return ModeCtrl_PostTargetPressure(pressurePercent, MODE_CMD_SRC_UNKNOWN);
+}
+
+static const ModeCtrl_UserApi_t kModeCtrlUserApi = {
+    .StartCalib = ModeCtrl_UserApi_StartCalib,
+    .SwitchMode = ModeCtrl_UserApi_SwitchMode,
+    .SetPositionPercent = ModeCtrl_UserApi_SetPositionPercent,
+    .FullOpen = ModeCtrl_UserApi_FullOpen,
+    .FullClose = ModeCtrl_UserApi_FullClose,
+    .SetPressurePercent = ModeCtrl_UserApi_SetPressurePercent,
+};
+
+const ModeCtrl_UserApi_t *ModeCtrl_GetUserApi(void)
+{
+    return &kModeCtrlUserApi;
 }
 
 bool ModeCtrl_GetConfigSnapshot(Mode_Config_t *outCfg)
@@ -811,24 +791,6 @@ bool ModeCtrl_SetConfig(const Mode_Config_t *cfg)
     MODE_CTRL_EXIT_CRITICAL();
 
     return true;
-}
-
-bool ModeCtrl_LoadConfigFromStore(void)
-{
-    ModeCtrl_EnsureInited();
-    return ModeCtrl_LoadConfigFromStoreInternal(&g_modeCtx);
-}
-
-bool ModeCtrl_SaveConfigToStore(void)
-{
-    Mode_Config_t cfg;
-
-    if (ModeCtrl_GetConfigSnapshot(&cfg) == false)
-    {
-        return false;
-    }
-
-    return ParamStore_SaveModeConfig(&cfg);
 }
 
 uint8_t ModeCtrl_ReadTrace(Mode_TransitionTrace_t *outBuf, uint8_t maxItems)
@@ -877,7 +839,6 @@ void ModeCtrl_Init(void)
     memset(&g_modeCtx, 0, sizeof(g_modeCtx));
 
     ModeCtrl_SetDefaultConfig(&g_modeCtx.cfg);
-    (void)ModeCtrl_LoadConfigFromStoreInternal(&g_modeCtx);
 
     g_modeCtx.monitor.currentMode = MODE_ID_NONE;
     g_modeCtx.monitor.calibSubState = CALIB_SUB_WAIT_START;
@@ -896,7 +857,6 @@ void ModeCtrl_MainLoopTask(void)
 {
     ModeCtrl_EnsureInited();
 
-    ModeCtrl_PollIngress(&g_modeCtx);
     ModeCtrl_ProcessCommandQueue(&g_modeCtx);
     ModeFSM_Run(&g_modeCtx.fsm, &g_modeCtx);
     ModeCtrl_UpdateMonitor(&g_modeCtx);
@@ -944,9 +904,9 @@ void ModeCtrl_RequestMode(Mode_Id_t mode)
     (void)ModeCtrl_PostModeSwitch(mode, MODE_CMD_SRC_UNKNOWN);
 }
 
-void ModeCtrl_RequestTargetPosition(int32_t position)
+void ModeCtrl_RequestTargetPosition(float positionPercent)
 {
-    (void)ModeCtrl_PostTargetPosition(position, MODE_CMD_SRC_UNKNOWN);
+    (void)ModeCtrl_PostTargetPosition(positionPercent, MODE_CMD_SRC_UNKNOWN);
 }
 
 void ModeCtrl_RequestFullOpen(void)
@@ -959,9 +919,9 @@ void ModeCtrl_RequestFullClose(void)
     (void)ModeCtrl_PostFullClose(MODE_CMD_SRC_UNKNOWN);
 }
 
-void ModeCtrl_RequestTargetPressure(float pressure)
+void ModeCtrl_RequestTargetPressure(float pressurePercent)
 {
-    (void)ModeCtrl_PostTargetPressure(pressure, MODE_CMD_SRC_UNKNOWN);
+    (void)ModeCtrl_PostTargetPressure(pressurePercent, MODE_CMD_SRC_UNKNOWN);
 }
 
 const Mode_Monitor_t *ModeCtrl_GetMonitor(void)

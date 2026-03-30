@@ -264,6 +264,11 @@ static void Calib_Action_Success(Mode_Ctx_t *ctx)
     ctx->rt.calibStarted = 0U;
     ctx->monitor.calibDone = 1U;
     ctx->monitor.calibSuccess = 1U;
+
+    // 标定成功后用测得端点更新全行程定义（0%->全关，100%->全开）
+    ctx->cfg.fullClosePos = ctx->rt.calibMinPos;
+    ctx->cfg.fullOpenPos = ctx->rt.calibMaxPos;
+
     Calib_RestoreSpeed(ctx);
 }
 

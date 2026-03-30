@@ -34,9 +34,9 @@ static void Mode_Press_Execute(Mode_Ctx_t *ctx)
 
     ctx->rt.pressLoopDue = 0U;
 
-    if (ctx->cmd.reqPressureTarget != 0U)
+    if (ctx->cmd.reqPressurePercent != 0U)
     {
-        ctx->cmd.reqPressureTarget = 0U;
+        ctx->cmd.reqPressurePercent = 0U;
         // TODO: update pressure controller target.
     }
 

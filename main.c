@@ -58,6 +58,7 @@
 #include "glob_cfg.h"
 #include "Core/inc/elmo_ctrl.h"
 #include "Core/inc/mode_ctrl.h"
+#include "Core/inc/func_exec.h"
 
 #if ECAT_EN
 #include "ECAT/9252_HW.h"
@@ -107,6 +108,9 @@ void main(void)
 #endif
         // 处理串口数据
         parse_SCI();
+
+        // 处理按键/TTL 本地输入
+        PollKeyTtl();
 
         // 处理运行模式控制
         RunModeCtrl();
