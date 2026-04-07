@@ -76,11 +76,12 @@ void ElmoPoll(Mode_Ctx_t *ctx)
         return;
     }
     uint32_t nowTick = ctx->rt.tick0p1ms;
-    if ((uint32_t)(nowTick - ctx->rt.lastElmoQueryTick) < ELMO_POLL_PERIOD_TICK)
+    static uint32_t lastElmoQueryTick = 0U;
+    if ((uint32_t)(nowTick - lastElmoQueryTick) < ELMO_POLL_PERIOD_TICK)
     {
         return;
     }
-    ctx->rt.lastElmoQueryTick = nowTick;
+    lastElmoQueryTick = nowTick;
     static uint8_t pollCount = 0U;
     switch (pollCount)
     {

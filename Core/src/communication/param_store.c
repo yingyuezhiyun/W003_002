@@ -3,7 +3,8 @@
 #include "board.h"
 #include "device.h"
 #include "driverlib.h"
-
+#include "glob_value.h"
+#include "glob_cfg.h"
 #include <string.h>
 
 #ifndef AT24C512_I2C_BASE
@@ -25,13 +26,7 @@
 #define PARAM_STORE_CFG_MAGIC (0x43464750UL)
 #define PARAM_STORE_CFG_VERSION (1U)
 
-typedef struct
-{
-    uint32_t kp;
-    uint32_t ki;
-    uint32_t kd;
-    uint32_t kf;
-} Param_Config_t;
+Param_Config_t glob_cfg = {.Pos_limit.I = 8, .Pos_limit.spd = 1000, };
 
 typedef struct
 {

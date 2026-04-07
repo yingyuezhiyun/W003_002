@@ -121,19 +121,26 @@ typedef enum
     CALIB_SUB_TIMEOUT = 6       ///< 标定超时
 } Calib_SubState_t;
 
+typedef enum
+{
+    MODE_EXEC_REQ_IGNORED = 0, ///< 忽略执行（未到周期/条件不满足）
+    MODE_EXEC_REQ_OK = 1,      ///< 可以执行（周期条件满足）
+    MODE_EXEC_REQ_TIMEOUT = 2  ///< 执行超时（交由状态机处理超时事件）
+}EXEC_REQ_E;
+
 /// @brief 分层状态机（ HSM ）。
 struct HsmState_s
 {
-    const char *name;         ///< 模式名称（调试/日志用）
-    const HsmState_t *parent; ///< 父状态指针（实现继承，NULL表示根状态）
-    const HsmState_t *next;   /// 下一个状态指针
-    HsmHandler enter;         ///< 进入模式回调
-    HsmHandler execute;       ///< 周期执行回调
-    HsmHandler exit;          ///< 退出模式回调
-    HsmHandler Isr_execute;   ///< 中断服务函数回调
+    const char *name;               ///< 模式名称（调试/日志用）
+    const HsmState_t *parent;       ///< 父状态指针（实现继承，NULL表示根状态）
+    const HsmState_t *next;         /// 下一个状态指针
+    HsmHandler enter;               ///< 进入模式回调
+    HsmHandler execute;             ///< 周期执行回调
+    HsmHandler execute_request;     /// 执行请求回调（用于执行周期条件检查，返回 EXEC_REQ_E）
+    HsmHandler exit;                ///< 退出模式回调
+    HsmHandler Isr_execute;         ///< 中断服务函数回调
+    HsmHandler Isr_execute_request; ///< 中断服务函数执行请求回调（用于执行周期条件检查，返回 EXEC_REQ_E）
 };
-
-
 
 /// @brief 命令影子区（主循环消费）。
 typedef struct
@@ -184,10 +191,11 @@ typedef struct
 typedef struct
 {
     volatile uint32_t tick0p1ms;             ///< 全局 tick（0.1ms）
-    volatile uint32_t lastCalibQueryTick;    ///< 上次标定查询 tick
-    volatile uint32_t lastPositionLoopTick; ///< 上次位置模式轮询 tick
-    volatile uint32_t lastPressLoopTick; ///< 上次压力模式轮询 tick
-    volatile uint32_t lastElmoQueryTick;     ///< 上次 Elmo 查询 tick
+    // volatile uint32_t lastCalibLoopTick;    ///< 上次标定轮询 tick
+    // volatile uint32_t CalibStartTick;///< 标定开始 tick
+    // volatile uint32_t lastPositionLoopTick; ///< 上次位置模式轮询 tick
+    // volatile uint32_t lastPressLoopTick; ///< 上次压力模式轮询 tick
+    // volatile uint32_t lastElmoQueryTick;     ///< 上次 Elmo 查询 tick
     // volatile uint32_t lastPressLoopTick;     ///< 上次压力快环 tick
     // volatile uint8_t pressLoopDue;           ///< 压力快环到期标志（ISR 置位，主循环清零）
 

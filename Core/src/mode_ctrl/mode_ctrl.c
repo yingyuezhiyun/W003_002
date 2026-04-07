@@ -1028,9 +1028,13 @@ void ModeHSM_Run(Mode_Ctx_t *ctx)
     }
 
     const HsmState_t *current = ctx->hsm;
-    uint8_t result = 0;
+    uint8_t result = 0, request = MODE_EXEC_REQ_OK;
+    if (current->execute_request != NULL)
+    {
+        request = current->execute_request(ctx);
+    }
     // 从当前状态向父状态遍历，直到事件被处理或到达根状态
-    while (current != NULL && result == 0)
+    while (current != NULL && result == 0 && request == MODE_EXEC_REQ_OK)
     {
         // 如果当前状态有事件处理函数，调用处理
         if (current->execute != NULL)
@@ -1040,6 +1044,12 @@ void ModeHSM_Run(Mode_Ctx_t *ctx)
         // 事件未处理，继续向父状态冒泡
         current = current->parent;
     }
+    
+    if (request == MODE_EXEC_REQ_TIMEOUT)//todo 错误处理
+    {
+        
+    }
+    
 }
 
 /// @brief 运行 0.1ms 中断服务程序。
@@ -1052,9 +1062,13 @@ void ModeHSM_Run_0p1msISR(Mode_Ctx_t *ctx)
     }
     ctx->rt.tick0p1ms++;
     const HsmState_t *current = ctx->hsm;
-    uint8_t result = 0;
+    uint8_t result = 0, request = MODE_EXEC_REQ_OK;
+    if (current->Isr_execute_request != NULL)
+    {
+        request = current->Isr_execute_request(ctx);
+    }
     // 从当前状态向父状态遍历，直到事件被处理或到达根状态
-    while (current != NULL && result == 0)
+    while (current != NULL && result == 0 && request == MODE_EXEC_REQ_OK)
     {
         // 如果当前状态有事件处理函数，调用处理
         if (current->Isr_execute != NULL)
