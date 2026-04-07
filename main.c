@@ -65,6 +65,13 @@
 #include "ECAT/src/ecatappl.h"
 #include "ECAT/src/applInterface.h"
 #endif
+
+void LED_Blink(void)
+{
+    GPIO_togglePin(LED1);
+    DEVICE_DELAY_US(500000);
+}
+
 void main(void)
 {
     Device_init();
@@ -106,6 +113,8 @@ void main(void)
 #if ECAT_EN
         MainLoop();
 #endif
+        LED_Blink();
+#if 0
         // 处理串口数据
         parse_SCI();
 
@@ -117,7 +126,7 @@ void main(void)
 
         // 处理故障
         Fault_dandle();
-
+#endif
         asm(" NOP");
     }
 }

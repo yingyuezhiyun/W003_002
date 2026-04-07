@@ -1,6 +1,6 @@
 #pragma once
 
-#define ECAT_EN (1)
+#define ECAT_EN (0)
 
 #define ELMO_IF_CAN (1)
 #define ELMO_IF_RS232 (2)
