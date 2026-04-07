@@ -8,6 +8,8 @@
 #include <stddef.h>
 #include <string.h>
 
+#if 0
+
 static Mode_Ctx_t g_modeCtx;
 static uint8_t g_modeInited = 0U;
 
@@ -369,7 +371,7 @@ static bool ModeCtrl_TrySwitchMode(Mode_Ctx_t *ctx,
 {
     uint8_t i;
     Mode_SwitchReject_t rejectReason = MODE_REJECT_INVALID_TARGET;
-    Mode_Id_t fromMode = ModeCtrl_IdByState(ctx->fsm.current);
+    Mode_Id_t fromMode = ModeCtrl_IdByState(ctx->hsm.current);
     const Mode_State_t *nextState;
 
     if ((targetMode == MODE_ID_NONE) || (targetMode == MODE_ID_FAULT))
@@ -422,7 +424,7 @@ static bool ModeCtrl_TrySwitchMode(Mode_Ctx_t *ctx,
         ctx->monitor.switchDenied = 0U;
         ctx->monitor.deniedTargetMode = MODE_ID_NONE;
         ctx->monitor.deniedReason = MODE_REJECT_NONE;
-        Mode_FSM_Request(&ctx->fsm, nextState);
+        Mode_FSM_Request(&ctx->hsm, nextState);
         ModeCtrl_TracePush(ctx, fromMode, targetMode, byCmd, source, 1U, MODE_REJECT_NONE);
         return true;
     }
@@ -513,7 +515,7 @@ static void ModeCtrl_UpdateMonitor(Mode_Ctx_t *ctx)
 {
     Mode_Id_t prevMode = ctx->monitor.currentMode;
 
-    ctx->monitor.currentMode = ModeCtrl_IdByState(ctx->fsm.current);
+    ctx->monitor.currentMode = ModeCtrl_IdByState(ctx->hsm.current);
     ctx->monitor.calibRunning = ((ctx->monitor.currentMode == MODE_ID_CALIB) && (ctx->monitor.calibDone == 0U)) ? 1U : 0U;
     ctx->monitor.tick0p1ms = ctx->rt.tick0p1ms;
 
@@ -847,8 +849,8 @@ void ModeCtrl_Init(void)
     g_modeCtx.monitor.deniedTargetMode = MODE_ID_NONE;
     g_modeCtx.monitor.deniedReason = MODE_REJECT_NONE;
 
-    g_modeCtx.fsm.current = NULL;
-    g_modeCtx.fsm.next = &Mode_Calib;
+    g_modeCtx.hsm.current = NULL;
+    g_modeCtx.hsm.next = &Mode_Calib;
 
     g_modeInited = 1U;
 }
@@ -858,7 +860,7 @@ void ModeCtrl_MainLoopTask(void)
     ModeCtrl_EnsureInited();
 
     ModeCtrl_ProcessCommandQueue(&g_modeCtx);
-    ModeFSM_Run(&g_modeCtx.fsm, &g_modeCtx);
+    ModeFSM_Run(&g_modeCtx.hsm, &g_modeCtx);
     ModeCtrl_UpdateMonitor(&g_modeCtx);
     ModeCtrl_UpdateStatusAndError(&g_modeCtx);
 }
@@ -874,7 +876,7 @@ void ModeCtrl_Timer0p1msISR(void)
 
     g_modeCtx.rt.tick0p1ms++;
 
-    if (g_modeCtx.fsm.current != &Mode_Press)
+    if (g_modeCtx.hsm.current != &Mode_Press)
     {
         return;
     }
@@ -937,51 +939,158 @@ Mode_Ctx_t *ModeCtrl_GetContext(void)
 }
 
 /// @brief 运行模式有限状态机。
-/// @param fsm 顶层状态机对象。
+/// @param hsm 顶层状态机对象。
 /// @param ctx 模式上下文对象。
-void ModeFSM_Run(Mode_FSM_t *fsm, Mode_Ctx_t *ctx)
+void ModeFSM_Run(Mode_FSM_t *hsm, Mode_Ctx_t *ctx)
 {
-    if ((fsm == NULL) || (ctx == NULL))
+    if ((hsm == NULL) || (ctx == NULL))
     {
         return;
     }
 
     // 是否切换模式
-    if (fsm->next != NULL && fsm->next != fsm->current)
+    if (hsm->next != NULL && hsm->next != hsm->current)
     {
         // 退出当前模式
-        if (fsm->current != NULL && fsm->current->exit != NULL)
+        if (hsm->current != NULL && hsm->current->exit != NULL)
         {
-            fsm->current->exit(ctx);
+            hsm->current->exit(ctx);
         }
 
         // 切换模式
-        fsm->current = fsm->next;
-        fsm->next = NULL;
+        hsm->current = hsm->next;
+        hsm->next = NULL;
 
         // 进入新模式
-        if (fsm->current != NULL && fsm->current->enter != NULL)
+        if (hsm->current != NULL && hsm->current->enter != NULL)
         {
-            fsm->current->enter(ctx);
+            hsm->current->enter(ctx);
         }
     }
 
     // 执行当前模式的循环函数
-    if (fsm->current != NULL && fsm->current->execute != NULL)
+    if (hsm->current != NULL && hsm->current->execute != NULL)
     {
-        fsm->current->execute(ctx);
+        hsm->current->execute(ctx);
     }
 }
 
 /// @brief 请求切换模式。
-/// @param fsm 顶层状态机对象。
+/// @param hsm 顶层状态机对象。
 /// @param nextMode 目标模式对象。
-void Mode_FSM_Request(Mode_FSM_t *fsm, const Mode_State_t *nextMode)
+void Mode_FSM_Request(Mode_FSM_t *hsm, const Mode_State_t *nextMode)
 {
-    if (fsm == NULL)
+    if (hsm == NULL)
     {
         return;
     }
 
-    fsm->next = nextMode;
+    hsm->next = nextMode;
+}
+
+#endif
+
+const HsmState_t Mode_Root = {
+    .name = "RootMode",
+    .parent = NULL,
+    .enter = NULL,
+    .execute = NULL,
+    .exit = NULL,
+    .Isr_execute = NULL};
+
+/// @brief 运行状态机。
+/// @param ctx 模式上下文对象。
+void ModeHSM_Run(Mode_Ctx_t *ctx)
+{
+
+    if ((ctx == NULL) || (ctx->hsm == NULL))
+    {
+        return;
+    }
+    // 是否切换模式
+    if (ctx->hsm->next != NULL && ctx->hsm->next != ctx->hsm)
+    {
+        // 退出当前模式
+        if (ctx->hsm != NULL && ctx->hsm->exit != NULL)
+        {
+            ctx->hsm->exit(ctx);
+        }
+
+        // 切换模式
+        ctx->hsm = ctx->hsm->next;
+        ctx->hsm->next = NULL;
+
+        // 进入新模式
+        if (ctx->hsm != NULL && ctx->hsm->enter != NULL)
+        {
+            ctx->hsm->enter(ctx);
+        }
+    }
+
+    const HsmState_t *current = ctx->hsm;
+    uint8_t result = 0;
+    // 从当前状态向父状态遍历，直到事件被处理或到达根状态
+    while (current != NULL && result == 0)
+    {
+        // 如果当前状态有事件处理函数，调用处理
+        if (current->execute != NULL)
+        {
+            result = current->execute(ctx);
+        }
+        // 事件未处理，继续向父状态冒泡
+        current = current->parent;
+    }
+}
+
+/// @brief 运行 0.1ms 中断服务程序。
+/// @param ctx 模式上下文对象。
+void ModeHSM_Run_0p1msISR(Mode_Ctx_t *ctx)
+{
+    if ((ctx == NULL) || (ctx->hsm == NULL))
+    {
+        return;
+    }
+    ctx->rt.tick0p1ms++;
+    const HsmState_t *current = ctx->hsm;
+    uint8_t result = 0;
+    // 从当前状态向父状态遍历，直到事件被处理或到达根状态
+    while (current != NULL && result == 0)
+    {
+        // 如果当前状态有事件处理函数，调用处理
+        if (current->Isr_execute != NULL)
+        {
+            result = current->Isr_execute(ctx);
+        }
+        // 事件未处理，继续向父状态冒泡
+        current = current->parent;
+    }
+}
+
+/// @brief 请求切换模式。todo 添加限制
+/// @param hsm 状态机对象。
+/// @param next 目标模式。
+void Mode_HSM_Request(HsmState_t *hsm, const HsmState_t *next)
+{
+    if (hsm == NULL)
+    {
+        return;
+    }
+    hsm->next = next;
+}
+
+void Set_Position_Percent(const Mode_Ctx_t *ctx, float percent)
+{
+    if (percent < 0.0f)
+    {
+        percent = 0.0f;
+    }
+    else if (percent > 100.0f)
+    {
+        percent = 100.0f;
+    }
+    int32_t posF = ((float)ctx->rt.fullClosePos + (percent * 0.01f) * ctx->rt.stroke + 0.5f);
+    if (ElmoOps != NULL && ElmoOps->setAbsPos != NULL)
+    {
+        ElmoOps->setAbsPos(posF);
+    }
 }

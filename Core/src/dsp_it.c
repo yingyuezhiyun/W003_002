@@ -62,8 +62,7 @@ __weak __interrupt void INT_CPU_TIMER2_ISR(void)
 /// @return
 __weak __interrupt void INT_CPU_TIMER0_ISR(void)
 {
-    ModeCtrl_Timer0p1msISR();
-
+    ModeHSM_Run_0p1msISR(&g_modeCtx);
     CPUTimer_clearOverflowFlag(CPUTIMER0_BASE);
 }
 

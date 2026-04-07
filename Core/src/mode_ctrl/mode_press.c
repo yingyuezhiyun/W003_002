@@ -2,48 +2,47 @@
 #include "glob_value.h"
 #include "mode_ctrl.h"
 
+#define PRESSURE_MODE_PERIOD_TICK (90U) // 9ms
+static uint8_t Mode_Press_Enter(Mode_Ctx_t *ctx);
+static uint8_t Mode_Press_ISR_Execute(Mode_Ctx_t *ctx);
+static uint8_t Mode_Press_Exit(Mode_Ctx_t *ctx);
+
+const HsmState_t Mode_Press = {
+    .name = "PressMode",
+    .parent = &Mode_Root,
+    .enter = Mode_Press_Enter,
+    .execute = NULL,
+    .exit = Mode_Press_Exit,
+    .Isr_execute = Mode_Press_ISR_Execute};
+
 /// @brief 进入压力模式回调。
 /// @param ctx 模式上下文。
-static void Mode_Press_Enter(Mode_Ctx_t *ctx);
+/// @return 1 表示执行成功，0 未执行，交由parent继续执行。
+static uint8_t Mode_Press_Enter(Mode_Ctx_t *ctx)
+{
+    ctx->rt.lastPressLoopTick = ctx->rt.tick0p1ms;
+    return 1;
+}
 
-/// @brief 压力模式执行回调。
+/// @brief 压力模式中断执行回调。
 /// @param ctx 模式上下文。
-static void Mode_Press_Execute(Mode_Ctx_t *ctx);
+/// @return 1 表示执行成功，0 未执行，交由parent继续执行。
+static uint8_t Mode_Press_ISR_Execute(Mode_Ctx_t *ctx)
+{
+    if (ctx->rt.tick0p1ms - ctx->rt.lastPressLoopTick < PRESSURE_MODE_PERIOD_TICK)
+    {
+        return 1;
+    }
+    ctx->rt.lastPressLoopTick = ctx->rt.tick0p1ms;
+    // TODO: run pressure control algorithm and send Elmo command.
+    return 1;
+}
 
 /// @brief 退出压力模式回调。
 /// @param ctx 模式上下文。
-static void Mode_Press_Exit(Mode_Ctx_t *ctx);
-
-const Mode_State_t Mode_Press = {
-    .name = "PressMode",
-    .enter = Mode_Press_Enter,
-    .execute = Mode_Press_Execute,
-    .exit = Mode_Press_Exit};
-
-static void Mode_Press_Enter(Mode_Ctx_t *ctx)
-{
-    ctx->rt.lastPressLoopTick = ctx->rt.tick0p1ms;
-}
-
-static void Mode_Press_Execute(Mode_Ctx_t *ctx)
-{
-    if (ctx->rt.pressLoopDue == 0U)
-    {
-        return;
-    }
-
-    ctx->rt.pressLoopDue = 0U;
-
-    if (ctx->cmd.reqPressurePercent != 0U)
-    {
-        ctx->cmd.reqPressurePercent = 0U;
-        // TODO: update pressure controller target.
-    }
-
-    // TODO: run pressure control algorithm and send Elmo command.
-}
-
-static void Mode_Press_Exit(Mode_Ctx_t *ctx)
+/// @return 1 表示执行成功，0 未执行，交由parent继续执行。
+static uint8_t Mode_Press_Exit(Mode_Ctx_t *ctx)
 {
     (void)ctx;
+    return 1;
 }

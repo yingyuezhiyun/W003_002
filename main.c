@@ -66,6 +66,8 @@
 #include "ECAT/src/applInterface.h"
 #endif
 
+Mode_Ctx_t g_modeCtx = {.hsm = &Mode_Root, .rt = {.tick0p1ms = 0}};
+
 void LED_Blink(void)
 {
     GPIO_togglePin(LED1);

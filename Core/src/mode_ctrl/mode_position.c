@@ -4,116 +4,67 @@
 
 #include "Core/inc/elmo_ctrl.h"
 
+#define POSITION_MODE_PERIOD_TICK (100U) // 10ms
+static uint8_t Mode_Position_Enter(Mode_Ctx_t *ctx);
+static uint8_t Mode_Position_Execute(Mode_Ctx_t *ctx);
+static uint8_t Mode_Position_Exit(Mode_Ctx_t *ctx);
+
+
+
+const HsmState_t Mode_Position = {
+    .name = "PositionMode",
+    .parent = &Mode_Root,
+    .enter = Mode_Position_Enter,
+    .execute = Mode_Position_Execute,
+    .exit = Mode_Position_Exit,
+    .Isr_execute = NULL};
+
+
 /// @brief 进入位置模式回调。
 /// @param ctx 模式上下文。
-static void Mode_Position_Enter(Mode_Ctx_t *ctx);
+/// @return 1 表示执行成功，0 未执行，交由parent继续执行。
+static uint8_t Mode_Position_Enter(Mode_Ctx_t *ctx)
+{
+    ctx->rt.lastPositionLoopTick = ctx->rt.tick0p1ms;
+    return 1;
+}
+
 
 /// @brief 位置模式执行回调。
 /// @param ctx 模式上下文。
-static void Mode_Position_Execute(Mode_Ctx_t *ctx);
+/// @return 1 表示执行成功，0 未执行，交由parent继续执行。
+static uint8_t Mode_Position_Execute(Mode_Ctx_t *ctx)
+{
+    uint32_t nowTick = ctx->rt.tick0p1ms;
+    if ((uint32_t)(nowTick - ctx->rt.lastPositionLoopTick) < POSITION_MODE_PERIOD_TICK)
+    {
+        return 1;
+    }
+    ctx->rt.lastPositionLoopTick = nowTick;
+    switch (ctx->cmd_param.cmd)
+    {
+    case MODE_CMD_FULL_OPEN:
+        Set_Position_Percent(ctx, 100.0f);
+        return 1;
+    case MODE_CMD_FULL_CLOSE:
+        Set_Position_Percent(ctx, 0.0f);
+        return 1;
+    case MODE_CMD_SET_POSITION_PERCENT:
+        Set_Position_Percent(ctx, ctx->cmd_param.positionPercent);
+        return 1;
+    default:
+        break;
+    }
+
+    return 0;
+}
+
 
 /// @brief 退出位置模式回调。
 /// @param ctx 模式上下文。
-static void Mode_Position_Exit(Mode_Ctx_t *ctx);
-
-/// @brief 将 0~100% 位置百分比换算为绝对位置。
-/// @param ctx 模式上下文。
-/// @param percent 位置百分比（0.0~100.0）。
-/// @return 绝对位置值（与 Elmo 绝对位置指令一致）。
-static int32_t Mode_Position_PercentToAbsPos(const Mode_Ctx_t *ctx, float percent);
-
-const Mode_State_t Mode_Position = {
-    .name = "PositionMode",
-    .enter = Mode_Position_Enter,
-    .execute = Mode_Position_Execute,
-    .exit = Mode_Position_Exit};
-
-static void Mode_Position_Enter(Mode_Ctx_t *ctx)
-{
-    ctx->rt.lastPositionQueryTick = ctx->rt.tick0p1ms;
-}
-
-static int32_t Mode_Position_PercentToAbsPos(const Mode_Ctx_t *ctx, float percent)
-{
-    float p = percent;
-    float stroke;
-    float posF;
-    int32_t openPos;
-    int32_t closePos;
-
-    if (p < 0.0f)
-    {
-        p = 0.0f;
-    }
-    else if (p > 100.0f)
-    {
-        p = 100.0f;
-    }
-
-    openPos = ctx->cfg.fullOpenPos;
-    closePos = ctx->cfg.fullClosePos;
-    stroke = (float)(openPos - closePos);
-    posF = (float)closePos + (p * 0.01f) * stroke;
-
-    if (posF >= 0.0f)
-    {
-        return (int32_t)(posF + 0.5f);
-    }
-
-    return (int32_t)(posF - 0.5f);
-}
-
-static void Mode_Position_Execute(Mode_Ctx_t *ctx)
-{
-    uint32_t nowTick = ctx->rt.tick0p1ms;
-
-    if ((uint32_t)(nowTick - ctx->rt.lastPositionQueryTick) >= ctx->cfg.queryPeriodTick)
-    {
-        ctx->rt.lastPositionQueryTick = nowTick;
-
-        if ((ElmoOps != NULL) && (ElmoOps->reqPos != NULL))
-        {
-            ElmoOps->reqPos();
-        }
-
-        if ((ElmoOps != NULL) && (ElmoOps->reqIq != NULL))
-        {
-            ElmoOps->reqIq();
-        }
-    }
-
-    if (ctx->cmd.reqFullOpen != 0U)
-    {
-        ctx->cmd.reqFullOpen = 0U;
-        if ((ElmoOps != NULL) && (ElmoOps->setAbsPos != NULL))
-        {
-            ElmoOps->setAbsPos(ctx->cfg.fullOpenPos);
-        }
-    }
-
-    if (ctx->cmd.reqFullClose != 0U)
-    {
-        ctx->cmd.reqFullClose = 0U;
-        if ((ElmoOps != NULL) && (ElmoOps->setAbsPos != NULL))
-        {
-            ElmoOps->setAbsPos(ctx->cfg.fullClosePos);
-        }
-    }
-
-    if (ctx->cmd.reqPositionPercent != 0U)
-    {
-        int32_t absPos;
-
-        ctx->cmd.reqPositionPercent = 0U;
-        absPos = Mode_Position_PercentToAbsPos(ctx, ctx->cmd.positionPercent);
-        if ((ElmoOps != NULL) && (ElmoOps->setAbsPos != NULL))
-        {
-            ElmoOps->setAbsPos(absPos);
-        }
-    }
-}
-
-static void Mode_Position_Exit(Mode_Ctx_t *ctx)
+/// @return 1 表示执行成功，0 未执行，交由parent继续执行。
+static uint8_t Mode_Position_Exit(Mode_Ctx_t *ctx)
 {
     (void)ctx;
+    return 1;
 }
