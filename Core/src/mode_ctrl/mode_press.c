@@ -1,6 +1,9 @@
 #include "glob_cfg.h"
 #include "glob_value.h"
 #include "mode_ctrl.h"
+#include "board.h"
+#include "Core/inc/elmo_ctrl.h"
+
 
 #define PRESSURE_MODE_PERIOD_TICK (90U) // 9ms
 static uint32_t lastPressLoopTick = 0U;
@@ -26,6 +29,8 @@ const HsmState_t Mode_Press = {
 /// @return 1 表示执行成功，0 未执行，交由parent继续执行。
 static uint8_t Mode_Press_Enter(Mode_Ctx_t *ctx)
 {
+    ElmoOps->enable();
+    DEVICE_DELAY_US(5000);
     lastPressLoopTick = ctx->rt.tick0p1ms;
     return 1;
 }

@@ -1,7 +1,7 @@
 #include "glob_cfg.h"
 #include "glob_value.h"
 #include "mode_ctrl.h"
-
+#include "board.h"
 #include "Core/inc/elmo_ctrl.h"
 
 #define POSITION_MODE_PERIOD_TICK (100U) // 10ms
@@ -30,7 +30,9 @@ const HsmState_t Mode_Position = {
 /// @return 1 表示执行成功，0 未执行，交由parent继续执行。
 static uint8_t Mode_Position_Enter(Mode_Ctx_t *ctx)
 {
-    lastPositionLoopTick = ctx->rt.tick0p1ms;
+    ElmoOps->enable();
+    DEVICE_DELAY_US(5000);
+    lastPositionLoopTick = ctx->rt.tick0p1ms;    
     return 1;
 }
 

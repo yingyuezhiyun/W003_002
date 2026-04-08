@@ -77,16 +77,16 @@ typedef enum
     MODE_CMD_SET_PRESSURE_PERCENT = 6  ///< 设置目标压力（百分比 0~100）
 } Mode_CommandId_t;
 
-/// @brief 模式控制对外状态。
-typedef enum
-{
-    MODE_STATUS_BOOT = 0,            ///< 上电/初始化阶段
-    MODE_STATUS_WAIT_CALIB = 1,      ///< 等待标定触发
-    MODE_STATUS_CALIB_RUNNING = 2,   ///< 标定运行中
-    MODE_STATUS_POSITION_ACTIVE = 3, ///< 位置模式运行中
-    MODE_STATUS_PRESSURE_ACTIVE = 4, ///< 压力模式运行中
-    MODE_STATUS_FAULT = 5            ///< 故障状态
-} Mode_Status_t;
+// /// @brief 模式控制对外状态。
+// typedef enum
+// {
+//     MODE_STATUS_BOOT = 0,            ///< 上电/初始化阶段
+//     MODE_STATUS_WAIT_CALIB = 1,      ///< 等待标定触发
+//     MODE_STATUS_CALIB_RUNNING = 2,   ///< 标定运行中
+//     MODE_STATUS_POSITION_ACTIVE = 3, ///< 位置模式运行中
+//     MODE_STATUS_PRESSURE_ACTIVE = 4, ///< 压力模式运行中
+//     MODE_STATUS_FAULT = 5            ///< 故障状态
+// } Mode_Status_t;
 
 /// @brief LED 指示灯模式。
 typedef enum
@@ -98,27 +98,16 @@ typedef enum
     MODE_LED_DOUBLE_BLINK = 4 ///< 双闪
 } Mode_LedPattern_t;
 
-enum
-{
-    MODE_ERR_NONE = 0U,                       ///< 无错误
-    MODE_ERR_CALIB_TIMEOUT = (1UL << 0),      ///< 标定超时
-    MODE_ERR_SWITCH_DENIED = (1UL << 1),      ///< 模式切换被拒绝
-    MODE_ERR_CMD_QUEUE_OVERFLOW = (1UL << 2), ///< 命令队列溢出
-    MODE_ERR_CALIB_FAILED = (1UL << 3)        ///< 标定失败
-};
-
-#define MODE_ERR_FATAL_MASK (MODE_ERR_CALIB_TIMEOUT | MODE_ERR_CALIB_FAILED)
-
 /// @brief 标定子状态。
 typedef enum
 {
-    CALIB_SUB_WAIT_START = 0,   ///< 等待开始
-    CALIB_SUB_WAIT_MIN_END = 1, ///< 寻找最小端点
-    CALIB_SUB_WAIT_MAX_END = 2, ///< 寻找最大端点
-    CALIB_SUB_VERIFY_RANGE = 3, ///< 校验行程
-    CALIB_SUB_DONE = 4,         ///< 标定完成（成功）
-    CALIB_SUB_FAILED = 5,       ///< 标定失败
-    CALIB_SUB_TIMEOUT = 6       ///< 标定超时
+    CALIB_SUB_INIT,         ///< 标定初始化（进入标定模式时）
+    CALIB_SUB_WAIT_MIN_END, ///< 寻找最小端点
+    CALIB_SUB_WAIT_MAX_END, ///< 寻找最大端点
+    CALIB_SUB_VERIFY_RANGE, ///< 校验行程
+    CALIB_SUB_DONE,         ///< 标定完成（成功）
+    CALIB_SUB_FAILED,       ///< 标定失败
+    CALIB_SUB_TIMEOUT       ///< 标定超时
 } Calib_SubState_t;
 
 typedef enum
@@ -126,7 +115,7 @@ typedef enum
     MODE_EXEC_REQ_IGNORED = 0, ///< 忽略执行（未到周期/条件不满足）
     MODE_EXEC_REQ_OK = 1,      ///< 可以执行（周期条件满足）
     MODE_EXEC_REQ_TIMEOUT = 2  ///< 执行超时（交由状态机处理超时事件）
-}EXEC_REQ_E;
+} EXEC_REQ_E;
 
 /// @brief 分层状态机（ HSM ）。
 struct HsmState_s
@@ -146,8 +135,8 @@ struct HsmState_s
 typedef struct
 {
     volatile uint8_t cmd;
-    volatile uint8_t reqStartCalib;   ///< 请求开始标定（置 1 表示待处理）
-    volatile uint8_t reqModeSwitch;   ///< 请求切换模式（预留）
+    volatile uint8_t reqStartCalib; ///< 请求开始标定（置 1 表示待处理）
+    volatile uint8_t reqModeSwitch; ///< 请求切换模式（预留）
     // volatile Mode_Id_t reqTargetMode; ///< 请求切换目标模式（预留）
 
     volatile uint8_t reqFullOpen;        ///< 请求全开（置 1 表示待处理）
@@ -183,14 +172,13 @@ typedef struct
 //     int32_t fullOpenPos;  ///< 全开绝对位置（用于 FULL_OPEN 与百分比换算的 100% 端点）
 //     int32_t fullClosePos; ///< 全关绝对位置（用于 FULL_CLOSE 与百分比换算的 0% 端点）
 //     int32_t stroke;        ///< 行程（fullOpenPos - fullClosePos，用于百分比换算）
-   
-// } Mode_Param_t;
 
+// } Mode_Param_t;
 
 /// @brief 模式控制运行时变量。
 typedef struct
 {
-    volatile uint32_t tick0p1ms;             ///< 全局 tick（0.1ms）
+    volatile uint32_t tick0p1ms; ///< 全局 tick（0.1ms）
     // volatile uint32_t lastCalibLoopTick;    ///< 上次标定轮询 tick
     // volatile uint32_t CalibStartTick;///< 标定开始 tick
     // volatile uint32_t lastPositionLoopTick; ///< 上次位置模式轮询 tick
@@ -214,45 +202,65 @@ typedef struct
 /// @brief 模式监测信息（对外只读）。
 typedef struct
 {
+    union 
+    {
+        struct
+        {
+            uint8_t init : 1;         ///< 是否完成初始化
+            uint8_t seek_min : 1;     ///< 是否找到最小端点
+            uint8_t seek_max : 1;     ///< 是否找到最大端点
+            uint8_t verify_failed : 1; ///< 校验行程失败
+            uint8_t timeout : 1;      ///< 标定超时
+            uint8_t calib_done : 1;   ///< 标定是否完成
+        } content;
+        uint8_t val;
+    } calibStepState;
+
     // Mode_Id_t currentMode;          ///< 当前模式
     Calib_SubState_t calibSubState; ///< 标定子状态
-    Mode_Status_t status;           ///< 当前状态
+    uint8_t mode;           ///< 当前模式
     Mode_LedPattern_t ledPattern;   ///< 当前 LED 指示模式
 
-    volatile uint8_t calibDone;    ///< 标定是否完成
-    volatile uint8_t calibSuccess; ///< 标定是否成功
-    volatile uint8_t calibRunning; ///< 标定是否运行中
+    // volatile uint8_t calibDone;    ///< 标定是否完成
+    // volatile uint8_t calibSuccess; ///< 标定是否成功
+    // volatile uint8_t calibRunning; ///< 标定是否运行中
 
-    volatile uint8_t switchDenied;      ///< 模式切换是否被拒绝
+    // volatile uint8_t switchDenied; ///< 模式切换是否被拒绝
     // Mode_Id_t deniedTargetMode;         ///< 被拒绝的目标模式
-    Mode_SwitchReject_t deniedReason;   ///< 拒绝原因
-    Mode_CommandId_t lastCmd;           ///< 最近一次处理的命令
+    // Mode_SwitchReject_t deniedReason; ///< 拒绝原因
+    Mode_CommandId_t lastCmd; ///< 最近一次处理的命令
     // Mode_CommandSource_t lastCmdSource; ///< 最近一次命令来源
 
-    volatile uint16_t transitionCount; ///< 模式切换次数
-    volatile uint16_t rejectCount;     ///< 拒绝次数
-    volatile uint16_t timeoutCount;    ///< 超时次数
-    volatile uint16_t faultCount;      ///< 故障计数
-    volatile uint16_t cmdDropCount;    ///< 命令丢弃计数
+    union
+    {
+        struct
+        {
+            uint8_t calib_err : 1;
+            uint8_t pos_err : 1;
+            uint8_t press_err : 1;
+            uint8_t hold_err : 1;
+            uint8_t low_temp_err : 1;
+            uint8_t high_temp_err : 1;
+            uint8_t epprom_err : 1;
+            
+        } content;
+        uint8_t val;
+    } status;
 
-    volatile uint32_t tick0p1ms;  ///< 当前 tick（0.1ms）
-    volatile uint32_t errorFlags; ///< 错误标志位（MODE_ERR_*）
-} Mode_Monitor_t;
+} Mode_Status_t;
 
 /// @brief 模式控制上下文（内部使用）。
 struct Mode_Ctx_s
 {
-    HsmState_t *hsm; ///<
+    HsmState_t *hsm; ///< 状态机指针
+    uint8_t lock;    ///< 上下文锁
     // Mode_CommandQueue_t cmdQueue; ///< 命令队列
     // Mode_TraceRing_t trace;       ///< 切换追踪
     Mode_Command_t cmd_param; ///< 命令影子区
     // Mode_Config_t cfg;            ///< 配置参数
-    Mode_Runtime_t rt;            ///< 运行时变量
-    // Mode_Monitor_t monitor;       ///< 监测信息
+    Mode_Runtime_t rt;    ///< 运行时变量
+    Mode_Status_t status; ///< 状态信息
 };
-
-
-
 
 #if 0
 /// @brief 初始化模式控制模块。
@@ -380,7 +388,7 @@ void ModeCtrl_RequestTargetPressure(float pressurePercent);
 
 /// @brief 获取模式监测快照（只读）。
 /// @return 监测结构体只读指针。
-const Mode_Monitor_t *ModeCtrl_GetMonitor(void);
+const Mode_Status_t *ModeCtrl_GetMonitor(void);
 
 /// @brief 获取模式上下文（可读写，谨慎使用）。
 /// @return 上下文结构体指针。
@@ -404,7 +412,7 @@ void ModeIndicator_SetLed(Mode_LedPattern_t pattern);
 
 /// @brief 状态处理接口（弱符号，用户可重载）。
 /// @param monitor 只读监测快照指针。
-void ModeStatus_Update(const Mode_Monitor_t *monitor);
+void ModeStatus_Update(const Mode_Status_t *monitor);
 
 /// @brief 错误处理接口（弱符号，用户可重载）。
 /// @param ctx 模式上下文指针。
@@ -419,8 +427,7 @@ void ModeFSM_Run(HsmState_t *hsm, Mode_Ctx_t *ctx);
 /// @param hsm 顶层模式状态机对象。
 /// @param nextMode 目标模式状态描述对象。
 void Mode_FSM_Request(HsmState_t *hsm, const HsmState_t *nextMode);
-#endif 
-
+#endif
 
 extern const HsmState_t Mode_Calib;
 extern const HsmState_t Mode_Position;
@@ -430,4 +437,3 @@ extern const HsmState_t Mode_Root;
 void ModeHSM_Run(Mode_Ctx_t *ctx);
 void ModeHSM_Run_0p1msISR(Mode_Ctx_t *ctx);
 void Set_Position_Percent(const Mode_Ctx_t *ctx, float percent);
-

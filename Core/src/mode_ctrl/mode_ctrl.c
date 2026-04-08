@@ -1010,6 +1010,7 @@ void ModeHSM_Run(Mode_Ctx_t *ctx)
     // 是否切换模式
     if (ctx->hsm->next != NULL && ctx->hsm->next != ctx->hsm)
     {
+        ctx->lock = 1;
         // 退出当前模式
         if (ctx->hsm != NULL && ctx->hsm->exit != NULL)
         {
@@ -1025,6 +1026,7 @@ void ModeHSM_Run(Mode_Ctx_t *ctx)
         {
             ctx->hsm->enter(ctx);
         }
+        ctx->lock = 0;
     }
 
     const HsmState_t *current = ctx->hsm;
@@ -1044,12 +1046,10 @@ void ModeHSM_Run(Mode_Ctx_t *ctx)
         // 事件未处理，继续向父状态冒泡
         current = current->parent;
     }
-    
-    if (request == MODE_EXEC_REQ_TIMEOUT)//todo 错误处理
+
+    if (request == MODE_EXEC_REQ_TIMEOUT) // todo 错误处理
     {
-        
     }
-    
 }
 
 /// @brief 运行 0.1ms 中断服务程序。
@@ -1061,6 +1061,10 @@ void ModeHSM_Run_0p1msISR(Mode_Ctx_t *ctx)
         return;
     }
     ctx->rt.tick0p1ms++;
+    if (ctx->lock == 1)
+    {
+        return;
+    }
     const HsmState_t *current = ctx->hsm;
     uint8_t result = 0, request = MODE_EXEC_REQ_OK;
     if (current->Isr_execute_request != NULL)
