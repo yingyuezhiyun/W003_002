@@ -6,7 +6,7 @@
 #include "Core/inc/elmo_rs232.h"
 #include "Core/inc/glob_cfg.h"
 
-// 全局 Elmo 参数（重构后统一放在一个数据池中）
+// 全局 Elmo 参数
 ElmoParam g_elmoParam = {
 	.set = {
 		.spd_set = 2000000U,

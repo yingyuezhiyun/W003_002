@@ -15,7 +15,9 @@
 #endif
 
 
-
+/// @brief 
+/// @param  
+/// @return 
 __weak __interrupt void ECAT_Lan9252IrqIsr(void)
 {
 #if ECAT_EN
@@ -25,6 +27,9 @@ __weak __interrupt void ECAT_Lan9252IrqIsr(void)
     Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP1);
 }
 
+/// @brief 
+/// @param  
+/// @return 
 __weak __interrupt void ECAT_Sync0Isr(void)
 {
 #if ECAT_EN
@@ -35,6 +40,9 @@ __weak __interrupt void ECAT_Sync0Isr(void)
     Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP1);
 }
 
+/// @brief 
+/// @param  
+/// @return 
 __weak __interrupt void ECAT_Sync1Isr(void)
 {
 #if ECAT_EN
@@ -72,7 +80,9 @@ __weak __interrupt void INT_ADC_A_1_ISR(void)
 
 }
 
-
+/// @brief 
+/// @param  
+/// @return 
 __weak __interrupt void INT_Elmo_CAN_0_ISR(void)
 {
     if((ElmoOps != NULL) && (ElmoOps->onCanRxIsr != NULL))
@@ -81,6 +91,10 @@ __weak __interrupt void INT_Elmo_CAN_0_ISR(void)
     }
     Interrupt_clearACKGroup(INT_Elmo_CAN_0_INTERRUPT_ACK_GROUP);
 }
+
+/// @brief 
+/// @param  
+/// @return 
 
 __weak __interrupt void INT_Elmo_CAN_1_ISR(void)
 {

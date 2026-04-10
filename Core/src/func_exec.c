@@ -7,7 +7,7 @@
 /// @brief 处理串口解析轮询任务。
 void SCI_Poll(void)
 {
-#if (ELMO_CONTROL_IF == ELMO_IF_RS232)
+#if (ELMO_CONTROL_IF == ELMO_IF_RS232)// RS232 模式下通过串口接收数据，轮询解析
     // 轮询解析 Elmo接收数据
     if ((ElmoOps != NULL) && (ElmoOps->poll != NULL))
     {
