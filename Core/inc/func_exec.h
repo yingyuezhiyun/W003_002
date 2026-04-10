@@ -6,16 +6,20 @@ extern "C"
 #endif
 
 /// @brief 处理串口解析轮询任务。
-void parse_SCI(void);
+void SCI_Poll(void);
 
 /// @brief 处理按键/TTL 等本地输入轮询任务。
-/// @note 建议在主循环中周期调用，调用层级与 parse_SCI() 相同。
-void PollKeyTtl(void);
+void Key_TTL_Poll(void);
 
-/// @brief 执行模式控制主循环任务。
-void RunModeCtrl(void);
+/// @brief 处理 Elmo 轮询任务。
+/// @param ctx 模式上下文。
+void Elmo_Poll(Mode_Ctx_t *ctx);
 
-/// @brief 故障处理入口（预留）。
+/// @brief 处理状态显示,LED 灯等。
+void Status_dandle(void);
+
+
+/// @brief 故障处理入口。
 void Fault_dandle(void);
 
 #ifdef __cplusplus

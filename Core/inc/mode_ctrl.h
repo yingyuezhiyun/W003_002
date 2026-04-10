@@ -33,27 +33,27 @@
 /// @brief 模式控制上下文结构体（前置声明）。
 typedef struct Mode_Ctx_s Mode_Ctx_t;
 typedef struct HsmState_s HsmState_t;
-typedef uint8_t (*HsmHandler)(Mode_Ctx_t *ctx);
 
-// /// @brief 模式 ID。
-// typedef enum
-// {
-//     MODE_ID_NONE = 0,     ///< 未初始化/无有效模式
-//     MODE_ID_CALIB = 1,    ///< 标定模式
-//     MODE_ID_POSITION = 2, ///< 位置模式
-//     MODE_ID_PRESSURE = 3, ///< 压力模式
-//     MODE_ID_FAULT = 4     ///< 故障模式（保留/占位）
-// } Mode_Id_t;
-
-/// @brief 模式切换被拒绝原因。
+/// @brief 模式 。
 typedef enum
 {
-    MODE_REJECT_NONE = 0,          ///< 未拒绝
-    MODE_REJECT_NEED_CALIB = 1,    ///< 需要先完成标定
-    MODE_REJECT_CALIB_RUNNING = 2, ///< 标定进行中
-    MODE_REJECT_CALIB_FAILED = 3,  ///< 标定失败
-    MODE_REJECT_INVALID_TARGET = 4 ///< 目标模式非法
-} Mode_SwitchReject_t;
+    MODE_NONE,     ///< 未初始化/无有效模式
+    MODE_ROOT,     ///< 根模式（所有模式的父状态）
+    MODE_CALIB,    ///< 标定模式
+    MODE_POSITION, ///< 位置模式
+    MODE_PRESSURE, ///< 压力模式
+    MODE_FAULT,     ///< 故障模式
+} Mode_Type;
+
+// /// @brief 模式切换被拒绝原因。
+// typedef enum
+// {
+//     MODE_REJECT_NONE = 0,          ///< 未拒绝
+//     MODE_REJECT_NEED_CALIB = 1,    ///< 需要先完成标定
+//     MODE_REJECT_CALIB_RUNNING = 2, ///< 标定进行中
+//     MODE_REJECT_CALIB_FAILED = 3,  ///< 标定失败
+//     MODE_REJECT_INVALID_TARGET = 4 ///< 目标模式非法
+// } Mode_SwitchReject_t;
 
 // /// @brief 命令来源。
 // typedef enum
@@ -68,14 +68,15 @@ typedef enum
 /// @brief 命令 ID。
 typedef enum
 {
-    MODE_CMD_NONE = 0,                 ///< 空命令
-    MODE_CMD_START_CALIB = 1,          ///< 开始标定
-    MODE_CMD_SWITCH_MODE = 2,          ///< 切换模式
-    MODE_CMD_SET_POSITION_PERCENT = 3, ///< 设置目标位置（百分比 0~100）
-    MODE_CMD_FULL_OPEN = 4,            ///< 全开
-    MODE_CMD_FULL_CLOSE = 5,           ///< 全关
-    MODE_CMD_SET_PRESSURE_PERCENT = 6  ///< 设置目标压力（百分比 0~100）
-} Mode_CommandId_t;
+    MODE_CMD_NONE,                 ///< 空命令
+    MODE_CMD_START_CALIB,          ///< 开始标定
+    // MODE_CMD_SWITCH_MODE,          ///< 切换模式
+    MODE_CMD_SET_POSITION_PERCENT, ///< 设置目标位置（百分比 0~100）
+    MODE_CMD_FULL_OPEN,            ///< 全开
+    MODE_CMD_FULL_CLOSE,           ///< 全关
+    MODE_CMD_SET_PRESSURE_PERCENT, ///< 设置目标压力（百分比 0~100）
+    MODE_CMD_SET_HOLD,             ///< 设置保持
+} Mode_Command_Type;
 
 // /// @brief 模式控制对外状态。
 // typedef enum
@@ -101,6 +102,7 @@ typedef enum
 /// @brief 标定子状态。
 typedef enum
 {
+    CALIB_SUB_NONE,        ///< 未初始化/无有效状态
     CALIB_SUB_INIT,         ///< 标定初始化（进入标定模式时）
     CALIB_SUB_WAIT_MIN_END, ///< 寻找最小端点
     CALIB_SUB_WAIT_MAX_END, ///< 寻找最大端点
@@ -112,23 +114,25 @@ typedef enum
 
 typedef enum
 {
-    MODE_EXEC_REQ_IGNORED = 0, ///< 忽略执行（未到周期/条件不满足）
-    MODE_EXEC_REQ_OK = 1,      ///< 可以执行（周期条件满足）
-    MODE_EXEC_REQ_TIMEOUT = 2  ///< 执行超时（交由状态机处理超时事件）
-} EXEC_REQ_E;
+    MODE_EXEC_IGNORED, ///< 忽略执行（未到周期/条件不满足）
+    MODE_EXEC_DONE,    ///< 执行完成（周期条件满足）
+    MODE_EXEC_PARENT,  ///< 交由父状态执行
+    MODE_EXEC_TIMEOUT, ///< 执行超时（交由状态机处理超时事件）
+    MODE_EXEC_ERROR,   ///< 执行错误（交由状态机处理错误事件）
+} MODE_EXEC_t;
+typedef MODE_EXEC_t (*HsmHandler)(Mode_Ctx_t *ctx);
 
 /// @brief 分层状态机（ HSM ）。
 struct HsmState_s
 {
-    const char *name;               ///< 模式名称（调试/日志用）
-    const HsmState_t *parent;       ///< 父状态指针（实现继承，NULL表示根状态）
-    const HsmState_t *next;         /// 下一个状态指针
-    HsmHandler enter;               ///< 进入模式回调
-    HsmHandler execute;             ///< 周期执行回调
-    HsmHandler execute_request;     /// 执行请求回调（用于执行周期条件检查，返回 EXEC_REQ_E）
-    HsmHandler exit;                ///< 退出模式回调
-    HsmHandler Isr_execute;         ///< 中断服务函数回调
-    HsmHandler Isr_execute_request; ///< 中断服务函数执行请求回调（用于执行周期条件检查，返回 EXEC_REQ_E）
+    const char *name;         ///< 模式名称（调试/日志用）
+    Mode_Type type;           ///< 模式类型
+    const HsmState_t *parent; ///< 父状态指针（实现继承，NULL表示根状态）
+    const HsmState_t *next;   /// 下一个状态指针
+    HsmHandler enter;         ///< 进入模式回调
+    HsmHandler execute;       ///< 周期执行回调
+    HsmHandler exit;          ///< 退出模式回调
+    HsmHandler Isr_execute;   ///< 中断服务函数回调
 };
 
 /// @brief 命令影子区（主循环消费）。
@@ -228,7 +232,7 @@ typedef struct
     // volatile uint8_t switchDenied; ///< 模式切换是否被拒绝
     // Mode_Id_t deniedTargetMode;         ///< 被拒绝的目标模式
     // Mode_SwitchReject_t deniedReason; ///< 拒绝原因
-    Mode_CommandId_t lastCmd; ///< 最近一次处理的命令
+    Mode_Command_t lastCmd; ///< 最近一次处理的命令
     // Mode_CommandSource_t lastCmdSource; ///< 最近一次命令来源
 
     union

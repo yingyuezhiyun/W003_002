@@ -68,11 +68,11 @@
 
 Mode_Ctx_t g_modeCtx = {.hsm = &Mode_Root, .lock = 0, .rt = {.tick0p1ms = 0}};
 
-void LED_Blink(void)
-{
-    GPIO_togglePin(LED1);
-    DEVICE_DELAY_US(500000);
-}
+// void LED_Blink(void)
+// {
+//     GPIO_togglePin(LED1);
+//     DEVICE_DELAY_US(500000);
+// }
 
 void main(void)
 {
@@ -115,20 +115,26 @@ void main(void)
 #if ECAT_EN
         MainLoop();
 #endif
-        LED_Blink();
-#if 0
+        // LED_Blink();
+
         // 处理串口数据
-        parse_SCI();
+        SCI_Poll();
 
         // 处理按键/TTL 本地输入
-        PollKeyTtl();
+        Key_TTL_Poll();
 
         // 处理运行模式控制
-        RunModeCtrl();
+        ModeHSM_Run(&g_modeCtx);
+
+        // 处理 Elmo 轮询任务
+        Elmo_Poll(&g_modeCtx);
+
+        // 处理状态显示
+        Status_dandle();
 
         // 处理故障
         Fault_dandle();
-#endif
+
         asm(" NOP");
     }
 }
