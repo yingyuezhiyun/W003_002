@@ -26,7 +26,7 @@
 #define PARAM_STORE_CFG_MAGIC (0x43464750UL)
 #define PARAM_STORE_CFG_VERSION (1U)
 
-Param_Config_t glob_cfg = {.Pos_limit.I = 8, .Pos_limit.spd = 1000, };
+
 
 typedef struct
 {

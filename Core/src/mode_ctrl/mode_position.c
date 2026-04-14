@@ -4,7 +4,7 @@
 #include "board.h"
 #include "Core/inc/elmo_ctrl.h"
 
-#define POSITION_MODE_PERIOD_TICK (200U) // 20ms
+#define POSITION_MODE_PERIOD_MS (20U) // 20ms
 
 static uint32_t lastPositionLoopTick = 0U;
 
@@ -39,7 +39,7 @@ static MODE_EXEC_t Mode_Position_Enter(Mode_Ctx_t *ctx)
 /// @return MODE_EXEC_t。
 static MODE_EXEC_t Mode_Position_Execute(Mode_Ctx_t *ctx)
 {
-    if (ctx->rt.tick0p1ms - lastPositionLoopTick < POSITION_MODE_PERIOD_TICK)
+    if (ctx->rt.tick0p1ms - lastPositionLoopTick < POSITION_MODE_PERIOD_MS * TICK_PER_MS)
     {
         return MODE_EXEC_IGNORED;
     }
@@ -48,13 +48,13 @@ static MODE_EXEC_t Mode_Position_Execute(Mode_Ctx_t *ctx)
     switch (ctx->cmd_param.cmd)
     {
     case MODE_CMD_FULL_OPEN:
-        Set_Position_Percent(ctx, 100.0f);
+        Set_Position_Percent(100.0f);
         return MODE_EXEC_DONE;
     case MODE_CMD_FULL_CLOSE:
-        Set_Position_Percent(ctx, 0.0f);
+        Set_Position_Percent(0.0f);
         return MODE_EXEC_DONE;
     case MODE_CMD_SET_POSITION_PERCENT:
-        Set_Position_Percent(ctx, ctx->cmd_param.positionPercent);
+        Set_Position_Percent(ctx->cmd_param.positionPercent);
         return MODE_EXEC_DONE;
     default:
         break;

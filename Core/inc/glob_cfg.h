@@ -12,6 +12,10 @@
 #define __weak __attribute__((weak))
 #endif
 
+// 0.1ms 1 tick
+#define TICK_PER_MS (10U) 
+
+
 
 // typedef char INT8;
 

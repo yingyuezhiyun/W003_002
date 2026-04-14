@@ -26,6 +26,28 @@ void ModeHSM_FAULT_Enter(Mode_Ctx_t *ctx)
     ctx->hsm->next = NULL; //
 }
 
+
+void ModeHSM_Init(Mode_Ctx_t *ctx)
+{
+    ctx->hsm = &Mode_Root;
+    ctx->lock = 0;
+
+    ctx->cmd_param.cmd = MODE_CMD_NONE;
+    ctx->cmd_param.positionPercent = 0.0f;
+    ctx->cmd_param.pressurePercent = 0.0f;
+
+  
+
+    ctx->status.calibSubState = CALIB_SUB_NONE;
+    ctx->status.lastCmd.cmd = MODE_CMD_NONE;
+    ctx->status.calibStepState.val = 0;
+    ctx->status.errors.val = 0;
+    ctx->status.locks.content.calib = 1;// 初始化时 默认未标定，标定完成后才解锁
+    ctx->status.locks.content.key = 0;
+
+}
+
+
 /// @brief 运行状态机。
 /// @param ctx 模式上下文对象。
 void ModeHSM_Run(Mode_Ctx_t *ctx)
@@ -84,8 +106,7 @@ void ModeHSM_Run_0p1msISR(Mode_Ctx_t *ctx)
     if ((ctx == NULL) || (ctx->hsm == NULL))
     {
         return;
-    }
-    ctx->rt.tick0p1ms++;
+    }   
     if (ctx->lock == 1)
     {
         return;
@@ -152,6 +173,10 @@ uint8_t Mode_HSM_Transt(Mode_Ctx_t *ctx, Mode_Type next)
     {
         return 0;
     }
+    else if (ctx->status.locks.content.key == 1) // 按键锁定，禁止切换模式
+    {
+        return 0;
+    }
 
     switch (next)
     {
@@ -177,9 +202,8 @@ uint8_t Mode_HSM_Transt(Mode_Ctx_t *ctx, Mode_Type next)
 }
 
 /// @brief 设置位置百分比
-/// @param ctx 模式上下文对象。
 /// @param percent 位置百分比（0.0~100.0）。函数内部会自动限制范围。
-void Set_Position_Percent(const Mode_Ctx_t *ctx, float percent)
+void Set_Position_Percent(float percent)
 {
     if (percent < 0.0f)
     {
@@ -189,7 +213,8 @@ void Set_Position_Percent(const Mode_Ctx_t *ctx, float percent)
     {
         percent = 100.0f;
     }
-    int32_t posF = ((float)ctx->rt.fullClosePos + (percent * 0.01f) * ctx->rt.stroke + 0.5f);
+    valve_param_t *valveParam = glob_value.valveParam;
+    int32_t posF = ((float)valveParam->fullClosePos + (percent * 0.01f) * valveParam->stroke + 0.5f);
     if (ElmoOps != NULL && ElmoOps->setAbsPos != NULL)
     {
         ElmoOps->setAbsPos(posF);

@@ -18,7 +18,26 @@
 #include "ECAT/src/applInterface.h"
 #endif
 
-Mode_Ctx_t g_modeCtx = {.hsm = &Mode_Root, .lock = 0, .rt = {.tick0p1ms = 0}};
+Param_Config_t glob_cfg = {.Pos_limit.I = 8, .Pos_limit.spd = 1000, };
+
+Mode_Ctx_t mode_Ctx;
+
+valve_param_t valve_param = {
+    .fullOpenPos = 0,
+    .fullClosePos = 0,
+    .stroke = 0,
+    .positionPercent = 0.0f,
+    .pressurePercent = 0.0f,
+};
+
+glob_value_t glob_value={
+    .tick0p1ms = 0,
+    .valveParam = &valve_param,
+    .paramCfg = &glob_cfg,
+    .modeCtx = &mode_Ctx,
+};
+
+
 
 // void LED_Blink(void)
 // {
@@ -36,7 +55,7 @@ void main(void)
 
     Board_init();
 
-  
+    ModeHSM_Init(&mode_Ctx);
 
 #if ECAT_EN
     HW_Init();
@@ -48,7 +67,7 @@ void main(void)
     ElmoCtrl_SelectDefault();
 
     EINT; // 开启全局中断
-    ERTM; // Enable Global realtime inter  
+    ERTM; // Enable Global realtime interrupt
 
     while (1)
     {
@@ -58,22 +77,22 @@ void main(void)
 #endif
       
         // 处理串口数据
-        SCI_Poll();
+        SCI_Poll(&mode_Ctx);
 
         // 处理按键/TTL 本地输入
-        Key_TTL_Poll();
+        Key_TTL_Poll(&mode_Ctx);
 
         // 处理运行模式控制
-        ModeHSM_Run(&g_modeCtx);
+        ModeHSM_Run(&mode_Ctx);
 
         // 处理 Elmo 轮询任务
-        Elmo_Poll(&g_modeCtx);
+        Elmo_Poll(&mode_Ctx);
 
         // 处理状态显示
-        Status_dandle();
+        Status_handle(&mode_Ctx);
 
         // 处理故障
-        Fault_dandle();
+        Fault_handle(&mode_Ctx);
 
         asm(" NOP");
     }

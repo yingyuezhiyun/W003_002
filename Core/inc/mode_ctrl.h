@@ -95,7 +95,7 @@ typedef struct
 
 } Mode_Runtime_t;
 
-/// @brief 模式监测信息（对外只读）。
+/// @brief 模式监测信息。
 typedef struct
 {
     union
@@ -118,24 +118,34 @@ typedef struct
     {
         struct
         {
-            uint8_t calib_err : 1;     ///< 标定错误
-            uint8_t pos_err : 1;       ///< 位置错误
-            uint8_t press_err : 1;     ///< 压力错误
-            uint8_t hold_err : 1;      ///< 保持错误
-            uint8_t low_temp_err : 1;  ///< 低温错误
-            uint8_t high_temp_err : 1; ///< 高温错误
-            uint8_t epprom_err : 1;    ///< EEPROM 错误
+            uint8_t calib : 1;     ///< 标定错误
+            uint8_t pos : 1;       ///< 位置错误
+            uint8_t press : 1;     ///< 压力错误
+            uint8_t hold : 1;      ///< 保持错误
+            uint8_t low_temp : 1;  ///< 低温错误
+            uint8_t high_temp : 1; ///< 高温错误
+            uint8_t epprom : 1;    ///< EEPROM 错误
         } content;
         uint8_t val;
-    } status; // 错误状态
+    } errors; // 错误状态
+
+    union
+    {
+        struct
+        {
+            uint8_t calib : 1; /// 标定锁，最高优先级
+            uint8_t key : 1;   /// 按键锁
+        } content;
+        uint8_t val;
+    } locks; // 锁定状态
 
 } Mode_Status_t;
 
-/// @brief 模式控制上下文（内部使用）。
+/// @brief 模式控制上下文。
 struct Mode_Ctx_s
 {
     HsmState_t *hsm;          ///< 状态机指针
-    uint8_t lock;             ///< 上下文锁
+    uint8_t lock;             ///< 模式切换锁
     Mode_Command_t cmd_param; ///< 命令参数
     Mode_Runtime_t rt;        ///< 运行时变量
     Mode_Status_t status;     ///< 状态信息
@@ -146,6 +156,7 @@ extern const HsmState_t Mode_Position;
 extern const HsmState_t Mode_Press;
 extern const HsmState_t Mode_Root;
 
+void ModeHSM_Init(Mode_Ctx_t *ctx);
 void ModeHSM_Run(Mode_Ctx_t *ctx);
 void ModeHSM_Run_0p1msISR(Mode_Ctx_t *ctx);
-void Set_Position_Percent(const Mode_Ctx_t *ctx, float percent);
+void Set_Position_Percent(float percent);

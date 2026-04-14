@@ -4,7 +4,7 @@
 #include "board.h"
 #include "Core/inc/elmo_ctrl.h"
 
-#define PRESSURE_MODE_PERIOD_TICK (90U) // 9ms
+#define POSITION_MODE_PERIOD_MS (9U) // 9ms
 static uint32_t lastPressLoopTick = 0U;
 
 static MODE_EXEC_t Mode_Press_Enter(Mode_Ctx_t *ctx);
@@ -37,7 +37,7 @@ static MODE_EXEC_t Mode_Press_Enter(Mode_Ctx_t *ctx)
 /// @return MODE_EXEC_t。
 static MODE_EXEC_t Mode_Press_ISR_Execute(Mode_Ctx_t *ctx)
 {
-    if (ctx->rt.tick0p1ms - lastPressLoopTick >= PRESSURE_MODE_PERIOD_TICK)
+    if (ctx->rt.tick0p1ms - lastPressLoopTick >= POSITION_MODE_PERIOD_MS * TICK_PER_MS)
     {
         return MODE_EXEC_IGNORED;
     }
