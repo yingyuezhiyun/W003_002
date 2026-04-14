@@ -85,19 +85,24 @@ typedef struct
     volatile float pressurePercent; ///< 压力目标百分比（0.0~100.0）
 } Mode_Command_t;
 
-/// @brief 模式控制运行时变量。
-typedef struct
+/// @brief 模式控制上下文。
+struct Mode_Ctx_s
 {
-    volatile uint32_t tick0p1ms; ///< 全局 tick（0.1ms）
-    int32_t fullOpenPos;         ///< 全开绝对位置（用于 FULL_OPEN 与百分比换算的 100% 端点）
-    int32_t fullClosePos;        ///< 全关绝对位置（用于 FULL_CLOSE 与百分比换算的 0% 端点）
-    int32_t stroke;              ///< 行程（fullOpenPos - fullClosePos，用于百分比换算）
+    HsmState_t *hsm; ///< 状态机指针
+    // uint8_t lock;             ///< 模式切换锁
+    union
+    {
+        struct
+        {
 
-} Mode_Runtime_t;
-
-/// @brief 模式监测信息。
-typedef struct
-{
+            uint8_t calib : 1;  ///< 标定锁，最高优先级
+            uint8_t key : 1;    ///< 按键锁
+            uint8_t transt : 1; ///< 模式切换锁，正在切换模式时为1
+        } content;
+        uint8_t val;
+    } locks;                  // 锁定状态
+    Mode_Command_t cmd_param; ///< 命令参数
+    Mode_Command_t lastCmd;   ///< 最近一次处理的命令
     union
     {
         struct
@@ -112,43 +117,6 @@ typedef struct
         uint8_t val;
     } calibStepState;               ///< 标定步骤状态
     Calib_SubState_t calibSubState; ///< 标定子状态
-    // Mode_LedPattern_t ledPattern;   ///< 当前 LED 指示模式
-    Mode_Command_t lastCmd; ///< 最近一次处理的命令
-    union
-    {
-        struct
-        {
-            uint8_t calib : 1;     ///< 标定错误
-            uint8_t pos : 1;       ///< 位置错误
-            uint8_t press : 1;     ///< 压力错误
-            uint8_t hold : 1;      ///< 保持错误
-            uint8_t low_temp : 1;  ///< 低温错误
-            uint8_t high_temp : 1; ///< 高温错误
-            uint8_t epprom : 1;    ///< EEPROM 错误
-        } content;
-        uint8_t val;
-    } errors; // 错误状态
-
-    union
-    {
-        struct
-        {
-            uint8_t calib : 1; /// 标定锁，最高优先级
-            uint8_t key : 1;   /// 按键锁
-        } content;
-        uint8_t val;
-    } locks; // 锁定状态
-
-} Mode_Status_t;
-
-/// @brief 模式控制上下文。
-struct Mode_Ctx_s
-{
-    HsmState_t *hsm;          ///< 状态机指针
-    uint8_t lock;             ///< 模式切换锁
-    Mode_Command_t cmd_param; ///< 命令参数
-    Mode_Runtime_t rt;        ///< 运行时变量
-    Mode_Status_t status;     ///< 状态信息
 };
 
 extern const HsmState_t Mode_Calib;

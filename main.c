@@ -18,11 +18,17 @@
 #include "ECAT/src/applInterface.h"
 #endif
 
-Param_Config_t glob_cfg = {.Pos_limit.I = 8, .Pos_limit.spd = 1000, };
-
+Param_Config_t glob_cfg = {
+    .Pos_limit.I = 8,
+    .Pos_limit.spd = 1000,
+};
+Status_t glob_status = {
+    .errors.val = 0,
+    .state.val = 0,
+};
 Mode_Ctx_t mode_Ctx;
 
-valve_param_t valve_param = {
+Valve_Param_t valve_param = {
     .fullOpenPos = 0,
     .fullClosePos = 0,
     .stroke = 0,
@@ -30,20 +36,14 @@ valve_param_t valve_param = {
     .pressurePercent = 0.0f,
 };
 
-glob_value_t glob_value={
+glob_value_t glob_value = {
     .tick0p1ms = 0,
     .valveParam = &valve_param,
     .paramCfg = &glob_cfg,
     .modeCtx = &mode_Ctx,
+    .status = &glob_status,
 };
 
-
-
-// void LED_Blink(void)
-// {
-//     GPIO_togglePin(LED1);
-//     DEVICE_DELAY_US(500000);
-// }
 
 void main(void)
 {
@@ -62,7 +62,6 @@ void main(void)
     MainInit();
 #endif
 
-
     // 选择默认 Elmo ，并执行初始化
     ElmoCtrl_SelectDefault();
 
@@ -75,24 +74,24 @@ void main(void)
 #if ECAT_EN
         MainLoop();
 #endif
-      
+
         // 处理串口数据
-        SCI_Poll(&mode_Ctx);
+        SCI_Poll();
 
         // 处理按键/TTL 本地输入
-        Key_TTL_Poll(&mode_Ctx);
+        Key_TTL_Poll();
 
         // 处理运行模式控制
         ModeHSM_Run(&mode_Ctx);
 
         // 处理 Elmo 轮询任务
-        Elmo_Poll(&mode_Ctx);
+        Elmo_Poll();
 
         // 处理状态显示
-        Status_handle(&mode_Ctx);
+        Status_handle();
 
         // 处理故障
-        Fault_handle(&mode_Ctx);
+        Fault_handle();
 
         asm(" NOP");
     }

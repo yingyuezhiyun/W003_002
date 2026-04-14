@@ -4,6 +4,36 @@
 #include "inc/hw_types.h"
 #include "mode_ctrl.h"
 
+/// @brief 状态信息
+typedef struct
+{
+    union
+    {
+        struct
+        {
+            uint8_t calib : 1;     ///< 标定错误
+            uint8_t pos : 1;       ///< 位置错误
+            uint8_t press : 1;     ///< 压力错误
+            uint8_t hold : 1;      ///< 保持错误
+            uint8_t low_temp : 1;  ///< 低温错误
+            uint8_t high_temp : 1; ///< 高温错误
+            uint8_t epprom : 1;    ///< EEPROM 错误
+        } content;
+        uint8_t val;
+    } errors; // 错误状态
+    union
+    {
+        struct
+        {
+            uint8_t rs232_connected : 1; ///< RS232 连接状态
+            uint8_t ecat_connected : 1;  ///< EtherCAT 连接状态
+
+        } content;
+        uint8_t val;
+    } state;
+
+} Status_t;
+
 typedef struct
 {
     int32_t fullOpenPos;   ///< 全开绝对位置（用于 FULL_OPEN 与百分比换算的 100% 端点）
@@ -11,7 +41,7 @@ typedef struct
     int32_t stroke;        ///< 行程（fullOpenPos - fullClosePos，用于百分比换算）
     float positionPercent; ///< 位置百分比（0~100%），根据elmo反馈的当前位置与行程计算得出
     float pressurePercent; ///< 压力百分比（0~100%），根据压力传感器反馈值计算得出
-} valve_param_t;           // 阀门参数
+} Valve_Param_t;           // 阀门参数
 
 typedef struct
 {
@@ -32,10 +62,12 @@ typedef struct
 typedef struct
 {
     volatile uint32_t tick0p1ms; ///< 全局 tick（0.1ms）
-    valve_param_t *valveParam;   ///< 阀门参数
+    Valve_Param_t *valveParam;   ///< 阀门参数
     Param_Config_t *paramCfg;    ///< 配置参数
+    Status_t *status;            ///< 状态信息
     Mode_Ctx_t *modeCtx;         ///< 模式上下文
-} glob_value_t;                  // 全局变量结构体
+
+} glob_value_t; // 全局变量结构体
 
 // extern Mode_Ctx_t g_modeCtx;
 // extern Param_Config_t glob_cfg;

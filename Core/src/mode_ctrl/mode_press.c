@@ -28,7 +28,7 @@ static MODE_EXEC_t Mode_Press_Enter(Mode_Ctx_t *ctx)
 {
     ElmoOps->enable();
     DEVICE_DELAY_US(5000);
-    lastPressLoopTick = ctx->rt.tick0p1ms;
+    lastPressLoopTick = glob_value.tick0p1ms;
     return MODE_EXEC_DONE;
 }
 
@@ -37,11 +37,11 @@ static MODE_EXEC_t Mode_Press_Enter(Mode_Ctx_t *ctx)
 /// @return MODE_EXEC_t。
 static MODE_EXEC_t Mode_Press_ISR_Execute(Mode_Ctx_t *ctx)
 {
-    if (ctx->rt.tick0p1ms - lastPressLoopTick >= POSITION_MODE_PERIOD_MS * TICK_PER_MS)
+    if (glob_value.tick0p1ms - lastPressLoopTick >= POSITION_MODE_PERIOD_MS * TICK_PER_MS)
     {
         return MODE_EXEC_IGNORED;
     }
-    lastPressLoopTick = ctx->rt.tick0p1ms;
+    lastPressLoopTick = glob_value.tick0p1ms;
     // TODO: run pressure control algorithm and send Elmo command.
     return MODE_EXEC_DONE;
 }

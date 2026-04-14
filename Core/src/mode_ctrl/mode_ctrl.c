@@ -26,27 +26,23 @@ void ModeHSM_FAULT_Enter(Mode_Ctx_t *ctx)
     ctx->hsm->next = NULL; //
 }
 
-
 void ModeHSM_Init(Mode_Ctx_t *ctx)
 {
     ctx->hsm = &Mode_Root;
-    ctx->lock = 0;
+    ctx->locks.val = 0;
+    ctx->locks.content.calib = 1; // 默认锁定标定，直到标定完成后解锁
 
     ctx->cmd_param.cmd = MODE_CMD_NONE;
     ctx->cmd_param.positionPercent = 0.0f;
     ctx->cmd_param.pressurePercent = 0.0f;
 
-  
-
-    ctx->status.calibSubState = CALIB_SUB_NONE;
-    ctx->status.lastCmd.cmd = MODE_CMD_NONE;
-    ctx->status.calibStepState.val = 0;
-    ctx->status.errors.val = 0;
-    ctx->status.locks.content.calib = 1;// 初始化时 默认未标定，标定完成后才解锁
-    ctx->status.locks.content.key = 0;
-
+    ctx->calibSubState = CALIB_SUB_NONE;
+    ctx->lastCmd.cmd = MODE_CMD_NONE;
+    ctx->calibStepState.val = 0;
+    // ctx->errors.val = 0;
+    // ctx->locks.content.calib = 1;// 初始化时 默认未标定，标定完成后才解锁
+    // ctx->locks.content.key = 0;
 }
-
 
 /// @brief 运行状态机。
 /// @param ctx 模式上下文对象。
@@ -60,7 +56,7 @@ void ModeHSM_Run(Mode_Ctx_t *ctx)
     // 是否切换模式
     if (ctx->hsm->next != NULL && ctx->hsm->next != ctx->hsm)
     {
-        ctx->lock = 1;
+        ctx->locks.content.transt = 1;
         // 退出当前模式
         if (ctx->hsm != NULL && ctx->hsm->exit != NULL)
         {
@@ -76,7 +72,7 @@ void ModeHSM_Run(Mode_Ctx_t *ctx)
         {
             ctx->hsm->enter(ctx);
         }
-        ctx->lock = 0;
+        ctx->locks.content.transt = 0;
     }
 
     const HsmState_t *current = ctx->hsm;
@@ -106,8 +102,8 @@ void ModeHSM_Run_0p1msISR(Mode_Ctx_t *ctx)
     if ((ctx == NULL) || (ctx->hsm == NULL))
     {
         return;
-    }   
-    if (ctx->lock == 1)
+    }
+    if (ctx->locks.val != 0)
     {
         return;
     }
@@ -143,11 +139,11 @@ uint8_t Mode_HSM_Request(Mode_Ctx_t *ctx, const HsmState_t *next)
         return 1;
     }
 
-    if (ctx->status.calibSubState > CALIB_SUB_NONE && ctx->status.calibSubState < CALIB_SUB_DONE) // 处于标定未完成状态
+    if (ctx->calibSubState > CALIB_SUB_NONE && ctx->calibSubState < CALIB_SUB_DONE) // 处于标定未完成状态
     {
         return 0;
     }
-    else if (ctx->status.calibSubState > CALIB_SUB_DONE && next->type != MODE_CALIB) // 标定失败，且目标模式不是标定模式
+    else if (ctx->calibSubState > CALIB_SUB_DONE && next->type != MODE_CALIB) // 标定失败，且目标模式不是标定模式
     {
         return 0;
     }
@@ -165,18 +161,18 @@ uint8_t Mode_HSM_Transt(Mode_Ctx_t *ctx, Mode_Type next)
     {
         return 0;
     }
-    if (ctx->status.calibSubState > CALIB_SUB_NONE && ctx->status.calibSubState < CALIB_SUB_DONE) // 处于标定未完成状态
+    if (ctx->calibSubState > CALIB_SUB_NONE && ctx->calibSubState < CALIB_SUB_DONE) // 处于标定未完成状态
     {
         return 0;
     }
-    else if (ctx->status.calibSubState > CALIB_SUB_DONE && next != MODE_CALIB) // 标定失败，且目标模式不是标定模式
+    else if (ctx->calibSubState > CALIB_SUB_DONE && next != MODE_CALIB) // 标定失败，且目标模式不是标定模式
     {
         return 0;
     }
-    else if (ctx->status.locks.content.key == 1) // 按键锁定，禁止切换模式
-    {
-        return 0;
-    }
+    // else if (ctx->locks.content.key == 1) // 按键锁定，禁止切换模式
+    // {
+    //     return 0;
+    // }
 
     switch (next)
     {
@@ -213,7 +209,7 @@ void Set_Position_Percent(float percent)
     {
         percent = 100.0f;
     }
-    valve_param_t *valveParam = glob_value.valveParam;
+    Valve_Param_t *valveParam = glob_value.valveParam;
     int32_t posF = ((float)valveParam->fullClosePos + (percent * 0.01f) * valveParam->stroke + 0.5f);
     if (ElmoOps != NULL && ElmoOps->setAbsPos != NULL)
     {
