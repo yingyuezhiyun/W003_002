@@ -23,7 +23,9 @@ typedef enum
 typedef enum
 {
     MODE_CMD_NONE,                 ///< 空命令
-    MODE_CMD_START_CALIB,          ///< 开始标定
+    MODE_CMD_CALIB,                ///< 开始标定
+    MODE_CMD_SET_KEY_LOCK,         ///< 设置按键锁
+    MODE_CMD_SET_KEY_UNLOCK,       ///< 解除按键锁
     MODE_CMD_SET_POSITION_PERCENT, ///< 设置目标位置（百分比 0~100）
     MODE_CMD_FULL_OPEN,            ///< 全开
     MODE_CMD_FULL_CLOSE,           ///< 全关
@@ -94,15 +96,15 @@ struct Mode_Ctx_s
     {
         struct
         {
-
             uint8_t calib : 1;  ///< 标定锁，最高优先级
             uint8_t key : 1;    ///< 按键锁
             uint8_t transt : 1; ///< 模式切换锁，正在切换模式时为1
         } content;
         uint8_t val;
     } locks;                  // 锁定状态
-    Mode_Command_t cmd_param; ///< 命令参数
-    Mode_Command_t lastCmd;   ///< 最近一次处理的命令
+    Mode_Command_t Cmd; ///< 命令参数
+    Mode_Command_t nextCmd;   ///< 下一个命令（用于在状态机中传递命令参数）
+    Mode_Command_t lastCmd;   ///< 上一次处理的命令
     union
     {
         struct
@@ -127,4 +129,5 @@ extern const HsmState_t Mode_Root;
 void ModeHSM_Init(Mode_Ctx_t *ctx);
 void ModeHSM_Run(Mode_Ctx_t *ctx);
 void ModeHSM_Run_0p1msISR(Mode_Ctx_t *ctx);
+uint8_t Mode_HSM_Request_CMD(Mode_Command_Type cmd, float param);
 void Set_Position_Percent(float percent);

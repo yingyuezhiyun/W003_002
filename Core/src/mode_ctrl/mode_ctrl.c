@@ -8,16 +8,6 @@
 #include <stddef.h>
 #include <string.h>
 
-const HsmState_t Mode_Root = {
-    .name = "RootMode",
-    .parent = NULL,
-    .enter = NULL,
-    .execute = NULL,
-    .exit = NULL,
-    .Isr_execute = NULL,
-    .type = MODE_ROOT,
-};
-
 void ModeHSM_FAULT_Enter(Mode_Ctx_t *ctx)
 {
     (void)ctx;
@@ -32,12 +22,14 @@ void ModeHSM_Init(Mode_Ctx_t *ctx)
     ctx->locks.val = 0;
     ctx->locks.content.calib = 1; // 默认锁定标定，直到标定完成后解锁
 
-    ctx->cmd_param.cmd = MODE_CMD_NONE;
-    ctx->cmd_param.positionPercent = 0.0f;
-    ctx->cmd_param.pressurePercent = 0.0f;
+    ctx->Cmd.cmd = MODE_CMD_NONE;
+    ctx->Cmd.positionPercent = 0.0f;
+    ctx->Cmd.pressurePercent = 0.0f;
+    ctx->lastCmd.cmd = MODE_CMD_NONE;
+    ctx->nextCmd.cmd = MODE_CMD_NONE;
 
     ctx->calibSubState = CALIB_SUB_NONE;
-    ctx->lastCmd.cmd = MODE_CMD_NONE;
+
     ctx->calibStepState.val = 0;
     // ctx->errors.val = 0;
     // ctx->locks.content.calib = 1;// 初始化时 默认未标定，标定完成后才解锁
@@ -74,6 +66,13 @@ void ModeHSM_Run(Mode_Ctx_t *ctx)
         }
         ctx->locks.content.transt = 0;
     }
+    // 更新命令参数
+    if (ctx->nextCmd.cmd != MODE_CMD_NONE)
+    {
+        ctx->lastCmd = ctx->Cmd;
+        ctx->Cmd = ctx->nextCmd;
+        ctx->nextCmd.cmd = MODE_CMD_NONE;
+    }
 
     const HsmState_t *current = ctx->hsm;
     MODE_EXEC_t result = MODE_EXEC_PARENT;
@@ -103,7 +102,7 @@ void ModeHSM_Run_0p1msISR(Mode_Ctx_t *ctx)
     {
         return;
     }
-    if (ctx->locks.val != 0)
+    if (ctx->locks.content.transt == 1) // 正在切换模式，禁止执行中断服务程序
     {
         return;
     }
@@ -123,96 +122,74 @@ void ModeHSM_Run_0p1msISR(Mode_Ctx_t *ctx)
     }
 }
 
-/// @brief 请求切换模式。todo 添加限制
-/// @param ctx 模式上下文对象。
-/// @param next 目标模式。
+
+/// @brief 请求执行命令。
+/// @param cmd 命令类型。
+/// @param param 命令参数。
 /// @return 1 表示请求成功，0 表示请求失败。
-uint8_t Mode_HSM_Request(Mode_Ctx_t *ctx, const HsmState_t *next)
+uint8_t Mode_HSM_Request_CMD(Mode_Command_Type cmd, float param)
 {
+    Mode_Ctx_t *ctx = glob_value.modeCtx;
     if (ctx == NULL)
     {
         return 0;
     }
-    if (next == NULL)
+    if (cmd == MODE_CMD_SET_KEY_UNLOCK) // 标定模式下，也可以解除按键锁定，只改变状态不执行动作，避免死锁
     {
-        ctx->hsm->next = NULL;
-        return 1;
+        ctx->locks.content.key = 0;
     }
-
-    if (ctx->calibSubState > CALIB_SUB_NONE && ctx->calibSubState < CALIB_SUB_DONE) // 处于标定未完成状态
+    if (ctx->calibSubState > CALIB_SUB_NONE && ctx->calibSubState < CALIB_SUB_DONE) // 处于标定未完成状态，禁止执行任何命令
     {
         return 0;
     }
-    else if (ctx->calibSubState > CALIB_SUB_DONE && next->type != MODE_CALIB) // 标定失败，且目标模式不是标定模式
+    else if (ctx->locks.content.calib && cmd != MODE_CALIB) // 标定失败或未进行标定，且目标模式不是标定模式
     {
         return 0;
     }
-    ctx->hsm->next = next;
-    return 1;
-}
-
-/// @brief 状态机切换模式。
-/// @param ctx 模式上下文对象。
-/// @param next 目标模式。
-/// @return 1 表示切换成功，0 表示切换失败。
-uint8_t Mode_HSM_Transt(Mode_Ctx_t *ctx, Mode_Type next)
-{
-    if (ctx == NULL)
+    ctx->nextCmd.cmd = cmd;
+    switch (cmd)
     {
-        return 0;
-    }
-    if (ctx->calibSubState > CALIB_SUB_NONE && ctx->calibSubState < CALIB_SUB_DONE) // 处于标定未完成状态
-    {
-        return 0;
-    }
-    else if (ctx->calibSubState > CALIB_SUB_DONE && next != MODE_CALIB) // 标定失败，且目标模式不是标定模式
-    {
-        return 0;
-    }
-    // else if (ctx->locks.content.key == 1) // 按键锁定，禁止切换模式
-    // {
-    //     return 0;
-    // }
-
-    switch (next)
-    {
-    case MODE_CALIB:
-        ctx->hsm = &Mode_Calib;
+    case MODE_CMD_CALIB:
+        ctx->hsm->next = &Mode_Calib; // 直接切换至标定模式执行
         break;
-    // case MODE_FAULT:
-    //     ctx->hsm = &Mode_Fault;
-    //     break;
-    case MODE_POSITION:
-        ctx->hsm = &Mode_Position;
+    case MODE_CMD_SET_KEY_LOCK:
+        ctx->locks.content.key = 1;
+        ctx->hsm->next = &Mode_Position; // 位置模式下执行
         break;
-    case MODE_PRESSURE:
-        ctx->hsm = &Mode_Press;
-        break;
-    case MODE_ROOT:
-        ctx->hsm = &Mode_Root;
+    case MODE_CMD_SET_KEY_UNLOCK:
+        ctx->locks.content.key = 0;
+        ctx->hsm->next = &Mode_Position; // 位置模式下执行
         break;
     default:
+        ctx->nextCmd.cmd = MODE_CMD_NONE;
+        break;
+    }
+    if (ctx->locks.content.key == 0 && ctx->nextCmd.cmd == MODE_CMD_NONE) // 按键未锁定，且不是标定及按键锁定命令时
+    {
+        ctx->nextCmd.cmd = cmd;
+        switch (cmd)
+        {
+        case MODE_CMD_SET_HOLD:
+        case MODE_CMD_FULL_CLOSE:
+        case MODE_CMD_FULL_OPEN:
+            ctx->hsm->next = &Mode_Position; // 位置模式下执行
+            break;
+        case MODE_CMD_SET_POSITION_PERCENT:
+            ctx->nextCmd.positionPercent = param;
+            ctx->hsm->next = &Mode_Position; // 位置模式下执行
+            break;
+        case MODE_CMD_SET_PRESSURE_PERCENT:
+            ctx->nextCmd.pressurePercent = param;
+            ctx->hsm->next = &Mode_Press; // 压力模式下执行
+            break;
+        default:
+            ctx->nextCmd.cmd = MODE_CMD_NONE;
+            break;
+        }
+    }
+    if (cmd != ctx->nextCmd.cmd)
+    {
         return 0;
     }
     return 1;
-}
-
-/// @brief 设置位置百分比
-/// @param percent 位置百分比（0.0~100.0）。函数内部会自动限制范围。
-void Set_Position_Percent(float percent)
-{
-    if (percent < 0.0f)
-    {
-        percent = 0.0f;
-    }
-    else if (percent > 100.0f)
-    {
-        percent = 100.0f;
-    }
-    Valve_Param_t *valveParam = glob_value.valveParam;
-    int32_t posF = ((float)valveParam->fullClosePos + (percent * 0.01f) * valveParam->stroke + 0.5f);
-    if (ElmoOps != NULL && ElmoOps->setAbsPos != NULL)
-    {
-        ElmoOps->setAbsPos(posF);
-    }
 }

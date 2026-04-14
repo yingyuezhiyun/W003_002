@@ -45,7 +45,7 @@ static MODE_EXEC_t Mode_Position_Execute(Mode_Ctx_t *ctx)
     }
     lastPositionLoopTick = glob_value.tick0p1ms;
 
-    switch (ctx->cmd_param.cmd)
+    switch (ctx->Cmd.cmd)
     {
     case MODE_CMD_FULL_OPEN:
         Set_Position_Percent(100.0f);
@@ -54,7 +54,7 @@ static MODE_EXEC_t Mode_Position_Execute(Mode_Ctx_t *ctx)
         Set_Position_Percent(0.0f);
         return MODE_EXEC_DONE;
     case MODE_CMD_SET_POSITION_PERCENT:
-        Set_Position_Percent(ctx->cmd_param.positionPercent);
+        Set_Position_Percent(ctx->Cmd.positionPercent);
         return MODE_EXEC_DONE;
     default:
         break;

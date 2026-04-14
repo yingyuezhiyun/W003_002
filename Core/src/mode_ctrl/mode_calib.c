@@ -49,9 +49,8 @@ static MODE_EXEC_t Mode_Calib_Enter(Mode_Ctx_t *ctx)
     lastCalibLoopTick = glob_value.tick0p1ms;
     CalibStartTick = glob_value.tick0p1ms;
     ctx->calibSubState = CALIB_SUB_WAIT_MIN_END;
-    ctx->calibStepState.content.init = 1;
-    ctx->locks.content.calib = 1; // 锁定标定，直到标定完成
-    GPIO_writePin(FAULT_LED, 0);
+    ctx->calibStepState.content.init = 1;    
+
 
     return MODE_EXEC_DONE;
 }
@@ -117,7 +116,7 @@ static MODE_EXEC_t Mode_Calib_Execute(Mode_Ctx_t *ctx)
             ctx->calibSubState = CALIB_SUB_DONE;
             ctx->calibStepState.content.calib_done = 1;
             ctx->locks.content.calib = 0; // 解锁标定，允许切换模式
-            // todo 切换至位置模式
+            Mode_HSM_Request_CMD(MODE_CMD_SET_HOLD, 0.0f); // 标定完成后保持当前位置
         }
         else
         {
@@ -129,7 +128,7 @@ static MODE_EXEC_t Mode_Calib_Execute(Mode_Ctx_t *ctx)
 
         break;
     default:
-        GPIO_writePin(FAULT_LED, 1);
+        
         ElmoOps->disable();
         break;
     }
