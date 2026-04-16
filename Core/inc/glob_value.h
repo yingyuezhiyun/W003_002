@@ -4,6 +4,13 @@
 #include "inc/hw_types.h"
 #include "mode_ctrl.h"
 
+typedef enum
+{
+	GAUGE_AUTO = 0U,
+	GAUGE_CDG1 = 1U,
+	GAUGE_CDG2 = 2U,
+} GaugeMode_t;
+
 /// @brief 状态信息
 typedef struct
 {
@@ -50,6 +57,12 @@ typedef struct
         uint16_t I;   // 行程校准时的 限位电流
         uint16_t spd; // 行程校准时的 限位速度
     } Pos_limit;      // 行程校准时的参数
+    struct
+    {
+        uint8_t CDG_Mode; // CDG 模式选择 0:自动 1:CDG1 2:CDG2
+        float CDG1_Range; // CDG1 量程（满刻度对应的压力值）
+        float CDG2_Range; // CDG2 量程（满刻度对应的压力值）
+    } CDG_cfg;
     struct
     {
         uint32_t kp;

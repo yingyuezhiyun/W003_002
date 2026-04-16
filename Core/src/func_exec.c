@@ -1,6 +1,7 @@
 #include "glob_cfg.h"
 #include "glob_value.h"
 #include "Core/inc/func_exec.h"
+#include "Core/inc/host_rs232.h"
 #include "Core/inc/elmo_ctrl.h"
 #include "Core/inc/mode_ctrl.h"
 
@@ -11,6 +12,8 @@
 /// @brief 处理串口解析轮询任务。
 void SCI_Poll()
 {
+    HostRs232_Poll();
+
 #if (ELMO_CONTROL_IF == ELMO_IF_RS232) // RS232 模式下通过串口接收数据，轮询解析
     // 轮询解析 Elmo接收数据
     if ((ElmoOps != NULL) && (ElmoOps->poll != NULL))
@@ -32,6 +35,7 @@ void Status_handle()
         GPIO_togglePin(LED1);
         lastToggleTick = nowTick;
     }
+    //  GPIO_writePin(FAULT_LED, 1);
 }
 
 /// @brief 故障处理入口（预留）。
