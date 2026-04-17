@@ -129,11 +129,7 @@ void ModeHSM_Run_0p1msISR(Mode_Ctx_t *ctx)
 /// @return 1 表示请求成功，0 表示请求失败。
 uint8_t Mode_HSM_Request_CMD(Mode_Command_Type cmd, float param)
 {
-    Mode_Ctx_t *ctx = glob_value.modeCtx;
-    if (ctx == NULL)
-    {
-        return 0;
-    }
+    Mode_Ctx_t *ctx = &glob_value.modeCtx;
     if (cmd == MODE_CMD_SET_KEY_UNLOCK) // 标定模式下，也可以解除按键锁定，只改变状态不执行动作，避免死锁
     {
         ctx->locks.content.key = 0;

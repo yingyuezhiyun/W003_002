@@ -57,23 +57,48 @@ char *hostTrimUpper(char *text)
 	}
 	UART_ResponseCode_t responseCode = RC_NO_COMMAND;
 	char *command = line;
-	for (i = 0U; i < cmd[i].command!=NULL; ++i)//todo
+
+	/* 遍历命令表，直到遇到 command == NULL */
+	for (i = 0U; cmd[i].command != NULL; ++i)
 	{
-		// const Command_t *cmd = &commands[i];
 		size_t keyLen = strlen(cmd[i].command);
-		if (cmd[i].prefix)
+		if (strncmp(line, cmd[i].command, keyLen) == 0)
 		{
-			if (strncmp(line, cmd[i].command, keyLen) == 0)
+			const char *arg = line + keyLen;
+			if (cmd[i].func != NULL)
 			{
-				// responseCode = cmd[i].func(&line[keyLen]);
-				responseCode = cmd[i].func(line + keyLen, pprintf);
-				command = cmd[i].command;
+				responseCode = cmd[i].func(arg, pprintf);
+				command = (char *)cmd[i].command;
 			}
-		}
-		else if (strcmp(line, cmd[i].command) == 0)
-		{
-			responseCode = cmd[i].func(line, pprintf);
-			command = cmd[i].command;
+			else if (cmd[i].type == CMD_READ)
+			{
+				/* 没有回调函数但有 responseFormat/dataPtr：按类型打印并返回 RC_READ */
+				if ((cmd[i].dataPtr != NULL) && (cmd[i].responseFormat != NULL))
+				{
+					switch (cmd[i].dataType)
+					{
+					case DT_FLOAT:
+						pprintf((char *)cmd[i].responseFormat, *(float *)cmd[i].dataPtr);
+						break;
+					case DT_INT:
+						pprintf((char *)cmd[i].responseFormat, *(int *)cmd[i].dataPtr);
+						break;
+					case DT_STR:
+						pprintf((char *)cmd[i].responseFormat, (char *)cmd[i].dataPtr);
+						break;
+					default:
+						/* fallback: print format without arg if provided */
+						pprintf((char *)cmd[i].responseFormat);
+						break;
+					}
+				}
+				else if (cmd[i].responseFormat != NULL)
+				{
+					pprintf((char *)cmd[i].responseFormat);
+				}
+				responseCode = RC_READ;
+				command = (char *)cmd[i].command;
+			}
 		}
 	}
 	if (responseCode == RC_NO_COMMAND)
@@ -83,7 +108,6 @@ char *hostTrimUpper(char *text)
 	}
 	if (responseCode != RC_READ)
 	{
-		// rs232ack(responseCode, command);
 		pprintf("%02d,%s\r\n", responseCode, command);
 	}
 }

@@ -75,10 +75,10 @@ typedef struct
 typedef struct
 {
     volatile uint32_t tick0p1ms; ///< 全局 tick（0.1ms）
-    Valve_Param_t *valveParam;   ///< 阀门参数
-    Param_Config_t *paramCfg;    ///< 配置参数
-    Status_t *status;            ///< 状态信息
-    Mode_Ctx_t *modeCtx;         ///< 模式上下文
+    Valve_Param_t valveParam;   ///< 阀门参数
+    Param_Config_t paramCfg;    ///< 配置参数
+    Status_t status;            ///< 状态信息
+    Mode_Ctx_t modeCtx;         ///< 模式上下文
 
 } glob_value_t; // 全局变量结构体
 

@@ -60,8 +60,8 @@ static MODE_EXEC_t Mode_Calib_Enter(Mode_Ctx_t *ctx)
 /// @return MODE_EXEC_t。
 static MODE_EXEC_t Mode_Calib_Execute(Mode_Ctx_t *ctx)
 {
-    Param_Config_t *cfg = glob_value.paramCfg;
-    Valve_Param_t *valveParam = glob_value.valveParam;
+    Param_Config_t *cfg = &glob_value.paramCfg;
+    Valve_Param_t *valveParam = &glob_value.valveParam;
     if (ctx->calibSubState >= CALIB_SUB_DONE)
     {
         return MODE_EXEC_DONE;

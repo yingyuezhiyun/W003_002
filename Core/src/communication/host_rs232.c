@@ -59,14 +59,15 @@ static void hostSendLine(const char *text)
 
 static void hostSendFmt(const char *fmt, ...)
 {
-	char buffer[96];
+	static char buffer[96];
 	va_list args;
 
 	va_start(args, fmt);
 	(void)vsnprintf(buffer, sizeof(buffer), fmt, args);
 	va_end(args);
 	buffer[sizeof(buffer) - 1U] = '\0';
-	hostSendLine(buffer);
+	// hostSendLine(buffer);
+	hostSendRaw(buffer);
 }
 
 static bool hostParseFloatValue(const char *text, float *value)
@@ -130,40 +131,8 @@ static bool hostParseLongValue(const char *text, long *value)
 	return true;
 }
 
-static float hostGetPositionPercent(void)
-{
-	Valve_Param_t *valveParam = glob_value.valveParam;
-	float percent;
 
-	if (valveParam == NULL)
-	{
-		return 0.0f;
-	}
-	if (valveParam->stroke <= 0)
-	{
-		return valveParam->positionPercent;
-	}
-	percent = ((float)(g_elmoParam.fb.pos_fed - valveParam->fullClosePos) * 100.0f) / (float)valveParam->stroke;
-	if (percent < 0.0f)
-	{
-		percent = 0.0f;
-	}
-	else if (percent > 100.0f)
-	{
-		percent = 100.0f;
-	}
-	valveParam->positionPercent = percent;
-	return percent;
-}
 
-static float hostGetPressurePercent(void)
-{
-	if ((glob_value.valveParam == NULL))
-	{
-		return 0.0f;
-	}
-	return glob_value.valveParam->pressurePercent;
-}
 
 static bool hostRequestMode(Mode_Command_Type cmd, float value)
 {
@@ -262,19 +231,19 @@ static uint8_t set_pressure_func(const char *arg, printf_t pprintf)
 
 static uint8_t gauge_auto_func(const char *arg, printf_t pprintf)
 {
-	glob_value.paramCfg->CDG_cfg.CDG_Mode = GAUGE_AUTO;
+	glob_value.paramCfg.CDG_cfg.CDG_Mode = GAUGE_AUTO;
 	return RC_SUCCESS;
 }
 
 static uint8_t gauge_cdg1_func(const char *arg, printf_t pprintf)
 {
-	glob_value.paramCfg->CDG_cfg.CDG_Mode = GAUGE_CDG1;
+	glob_value.paramCfg.CDG_cfg.CDG_Mode = GAUGE_CDG1;
 	return RC_SUCCESS;
 }
 
 static uint8_t gauge_cdg2_func(const char *arg, printf_t pprintf)
 {
-	glob_value.paramCfg->CDG_cfg.CDG_Mode = GAUGE_CDG2;
+	glob_value.paramCfg.CDG_cfg.CDG_Mode = GAUGE_CDG2;
 	return RC_SUCCESS;
 }
 
@@ -283,7 +252,7 @@ static uint8_t set_scale1_func(const char *arg, printf_t pprintf)
 	float value;
 	if (hostParseFloatValue(arg, &value) && (value > 0.0f))
 	{
-		glob_value.paramCfg->CDG_cfg.CDG1_Range = value;
+		glob_value.paramCfg.CDG_cfg.CDG1_Range = value;
 		return RC_SUCCESS;
 	}
 	return RC_PARAM_ERROR;
@@ -294,7 +263,7 @@ static uint8_t set_scale2_func(const char *arg, printf_t pprintf)
 	float value;
 	if (hostParseFloatValue(arg, &value) && (value > 0.0f))
 	{
-		glob_value.paramCfg->CDG_cfg.CDG2_Range = value;
+		glob_value.paramCfg.CDG_cfg.CDG2_Range = value;
 		return RC_SUCCESS;
 	}
 	return RC_PARAM_ERROR;
@@ -306,53 +275,6 @@ static uint8_t calib_func(const char *arg, printf_t pprintf)
 	return ok == 1U ? RC_SUCCESS : RC_BUSY;
 }
 
-static uint8_t read_setpoint_func(const char *arg, printf_t pprintf)
-{
-	// hostSendFmt("S1+%.2f", gHost.setpointValue);
-	return RC_READ;
-}
-
-static uint8_t read_pressure_func(const char *arg, printf_t pprintf)
-{
-	// hostSendFmt("P+%.2f", hostGetPressurePercent());
-	return RC_READ;
-}
-
-static uint8_t read_position_func(const char *arg, printf_t pprintf)
-{
-	// hostSendFmt("V+%.2f", hostGetPositionPercent());
-	return RC_READ;
-}
-
-static uint8_t read_version_func(const char *arg, printf_t pprintf)
-{
-	// hostSendFmt("IQ+3-%s %s", HOST_RS232_VERSION, HOST_RS232_VERSION_DATE);
-	return RC_READ;
-}
-
-static uint8_t read_type_func(const char *arg, printf_t pprintf)
-{
-	// hostSendFmt("T1%u", (unsigned)gHost.setpointType);
-	return RC_READ;
-}
-
-static uint8_t read_sn_func(const char *arg, printf_t pprintf)
-{
-	// hostSendFmt("SN: %s", HOST_RS232_SERIAL_NUMBER);
-	return RC_READ;
-}
-
-static uint8_t read_scale1_func(const char *arg, printf_t pprintf)
-{
-	// hostSendFmt("N1%.2f", gHost.cdg1FullScale);
-	return RC_READ;
-}
-
-static uint8_t read_scale2_func(const char *arg, printf_t pprintf)
-{
-	// hostSendFmt("N2%.2f", gHost.cdg2FullScale);
-	return RC_READ;
-}
 
 static uint8_t reset_func(const char *arg, printf_t pprintf)
 {
@@ -361,39 +283,44 @@ static uint8_t reset_func(const char *arg, printf_t pprintf)
 	return ok;
 }
 
+
+
 Command_t commands[] = {
-	{"C", false, close_func},
-	{"O", false, open_func},
-	{"H", false, hold_func},
-	{"T1", true, set_type_func},
-	{"S1", true, set_setpoint_func},
-	{"D1", false, activate_func},
-	{"DPO", true, set_pressure_func},
-	{"DPR", true, set_position_func},
-	{"V", true, set_position_func},
-	{"L0", false, gauge_auto_func},
-	{"L1", false, gauge_cdg1_func},
-	{"L2", false, gauge_cdg2_func},
-	{"N1", true, set_scale1_func},
-	{"N2", true, set_scale2_func},
-	{"J4", false, calib_func},
-	{"R1", false, read_setpoint_func},
-	{"R5", false, read_pressure_func},
-	{"R6", false, read_position_func},
-	{"R38", false, read_version_func},
-	{"R26", false, read_type_func},
-	{"GSN", false, read_sn_func},
-	{"RN1", false, read_scale1_func},
-	{"RN2", false, read_scale2_func},
-	{"RESET", false, reset_func},
+	CMD_FUNC_ENTRY("C", close_func),
+	CMD_FUNC_ENTRY("O", open_func),
+	CMD_FUNC_ENTRY("H", hold_func),
+	CMD_PARAM_ENTRY("T1", set_type_func),
+	CMD_PARAM_ENTRY("S1", set_setpoint_func),
+	CMD_FUNC_ENTRY("D1", activate_func),
+	CMD_PARAM_ENTRY("DPO", set_pressure_func),
+	CMD_PARAM_ENTRY("DPR", set_position_func),
+	CMD_PARAM_ENTRY("V", set_position_func),
+	CMD_FUNC_ENTRY("L0", gauge_auto_func),
+	CMD_FUNC_ENTRY("L1", gauge_cdg1_func),
+	CMD_FUNC_ENTRY("L2", gauge_cdg2_func),
+	CMD_PARAM_ENTRY("N1", set_scale1_func),
+	CMD_PARAM_ENTRY("N2", set_scale2_func),
+	CMD_FUNC_ENTRY("J4", calib_func),
+	CMD_READ_FLOAT("R1",  "S1+%.2f", gHost.setpointValue),
+	CMD_READ_FLOAT("R5",  "P+%.2f", glob_value.valveParam.pressurePercent),
+	CMD_READ_FLOAT("R6",  "V+%.2f", glob_value.valveParam.positionPercent),
+	CMD_READ_CSTR("R38", "IQ+3-" HOST_RS232_VERSION " " HOST_RS232_VERSION_DATE),
+	CMD_READ_INT("R26", "T1%u", gHost.setpointType),
+	CMD_READ_CSTR("GSN", "SN:" HOST_RS232_SERIAL_NUMBER),
+	CMD_READ_FLOAT("RN1", "N1%.2f", glob_value.paramCfg.CDG_cfg.CDG1_Range),
+	CMD_READ_FLOAT("RN2", "N2%.2f", glob_value.paramCfg.CDG_cfg.CDG2_Range),
+	CMD_FUNC_ENTRY("RESET", reset_func),
+	{NULL, 0, NULL, NULL, NULL, 0},
 };
+
+/* command table uses addresses into embedded `glob_value` and `gHost` */
 
 void HostRs232_Poll(void)
 {
 
 	if ((glob_value.tick0p1ms - gHost.lastRxTick) >= (HOST_RS232_IDLE_TIMEOUT_MS * TICK_PER_MS))
 	{
-		glob_value.status->state.content.rs232_connected = 0;
+		glob_value.status.state.content.rs232_connected = 0;
 	}
 
 	while (SCI_getRxFIFOStatus(RS232_SCI_BASE) != SCI_FIFO_RX0)
@@ -401,7 +328,7 @@ void HostRs232_Poll(void)
 		char c = (char)(SCI_readCharNonBlocking(RS232_SCI_BASE) & 0xFFU);
 
 		gHost.lastRxTick = glob_value.tick0p1ms;
-		glob_value.status->state.content.rs232_connected = 1;
+		glob_value.status.state.content.rs232_connected = 1;
 
 		if ((c == '\r') || (c == '\n') || (c == ';'))
 		{

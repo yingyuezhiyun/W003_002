@@ -54,7 +54,7 @@ void Set_Position_Percent(float percent)
     {
         percent = 100.0f;
     }
-    Valve_Param_t *valveParam = glob_value.valveParam;
+    Valve_Param_t *valveParam = &glob_value.valveParam;
     int32_t posF = ((float)valveParam->fullClosePos + (percent * 0.01f) * valveParam->stroke + 0.5f);
     if (ElmoOps != NULL && ElmoOps->setAbsPos != NULL)
     {

@@ -73,7 +73,7 @@ void Key_TTL_Poll()
 /// @brief 处理 Elmo 轮询任务。
 void Elmo_Poll()
 {
-    if (ElmoOps == NULL || glob_value.modeCtx->hsm->type == MODE_PRESSURE) // 压力控制时不轮询
+    if (ElmoOps == NULL || glob_value.modeCtx.hsm->type == MODE_PRESSURE) // 压力控制时不轮询
     {
         return;
     }

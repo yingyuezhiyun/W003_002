@@ -71,7 +71,7 @@ __weak __interrupt void INT_CPU_TIMER2_ISR(void)
 __weak __interrupt void INT_CPU_TIMER0_ISR(void)
 {
     glob_value.tick0p1ms++;
-    ModeHSM_Run_0p1msISR(glob_value.modeCtx);
+    ModeHSM_Run_0p1msISR(&glob_value.modeCtx);
     CPUTimer_clearOverflowFlag(CPUTIMER0_BASE);
 }
 
