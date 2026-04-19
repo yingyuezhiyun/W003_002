@@ -19,15 +19,18 @@ typedef enum
 {
     CMD_FUNC,  // 函数命令，调用 func 处理
     CMD_PARAM, // 参数命令，调用 func 处理，且传入参数字符串
-    CMD_READ,  // 读取命令，回复 responseFormat 格式化的响应
+    CMD_READ,  // 读取命令，回复 fmt 格式化的响应
 } CMD_Type_t;
 
 typedef enum
 {
-    DT_NONE,  // 无数据
-    DT_FLOAT, // dataPtr 指向 float
-    DT_INT,   // dataPtr 指向 int
-    DT_STR,   // dataPtr 指向 char *
+    DT_NONE,     // 无数据
+    DT_FLOAT,    // dataPtr 指向 float
+    DT_INT,      // dataPtr 指向 int
+    DT_STR,      // dataPtr 指向 char *
+    DT_EX_FLOAT, // 直接存储 float 值
+    DT_EX_INT,   // 直接存储 int 值
+    DT_EX_STR,   // 直接存储字符串（指针或数组）
 } DataType_t;
 
 typedef void (*printf_t)(char *format, ...);
@@ -37,10 +40,16 @@ typedef struct
     const char *command; // 命令字符串
     CMD_Type_t type;     // 命令类型
     CommandFunc func;    // 命令处理函数指针
-    /// 当 func 为 NULL 且 type 为 CMD_READ 时，使用以下字段回复响应。
-    const char *responseFormat; // printf 风格的格式串（常量或带格式占位符）
-    void *dataPtr;              // 指向实际数据的指针（或字符串常量）
-    DataType_t dataType;        // dataPtr 的类型
+    const char *fmt;     // printf 风格的格式串（常量或带格式占位符）
+    DataType_t dataType; // dataPtr 的类型
+    union
+    {
+        void *dataPtr; // 指向实际数据的指针（或字符串常量）
+        float fvalue;  // 直接存储 float 值
+        int ivalue;    // 直接存储 int 值
+        char *svalue;  // 直接存储字符串（指针或数组）
+    } value;           //
+
 } Command_t;
 
 typedef enum
@@ -49,26 +58,31 @@ typedef enum
     UART_SETPOINT_PRESSURE = 1U,
 } UART_SetpointType_t;
 
+#define RX_BUF_SIZE 96U
+#define RX_IDLE_TIMEOUT_MS 1000U
+typedef struct
+{
+    uint32_t sci_base;
+    uint32_t lastRxTick;
+    char rxBuf[RX_BUF_SIZE];
+    uint16_t rxLen;
+    bool rxOverflow;
+    bool isConnected;
+} SCI_RX_t;
+
+#define CMD_FUNC_ENTRY(key, fn) {key, CMD_FUNC, fn, NULL, DT_NONE, 0}
+#define CMD_PARAM_ENTRY(key, fn) {key, CMD_PARAM, fn, NULL, DT_NONE, 0}
+#define CMD_READ_FLOAT(key, fmt, varptr) {key, CMD_READ, NULL, fmt, DT_FLOAT, .value.dataPtr = (void *)&varptr}
+#define CMD_READ_INT(key, fmt, varptr) {key, CMD_READ, NULL, fmt, DT_INT, .value.dataPtr = (void *)&varptr}
+#define CMD_READ_CSTR(key, text) {key, CMD_READ, NULL, text, DT_STR, 0}
+#define CMD_READ_STR(key, fmt, varptr) {key, CMD_READ, NULL, fmt, DT_STR, .value.dataPtr = (void *)varptr}
+#define CMD_READ_EX_FLOAT(key, fmt, var) {key, CMD_READ, NULL, fmt, DT_EX_FLOAT, .value.fvalue = var}
+#define CMD_READ_EX_INT(key, fmt, var) {key, CMD_READ, NULL, fmt, DT_EX_INT, .value.ivalue = var}
+#define CMD_READ_EX_STR(key, fmt, var) {key, CMD_READ, NULL, fmt, DT_EX_STR, .value.svalue = var}
 
 
-
-
-#define CMD_FUNC_ENTRY(key, fn)    { key, CMD_FUNC,  fn,   NULL, NULL, 0 }
-#define CMD_PARAM_ENTRY(key, fn)   { key, CMD_PARAM, fn,   NULL, NULL, 0 }
-#define CMD_READ_FLOAT(key, fmt, varptr) { key, CMD_READ, NULL, fmt, (void *)(&varptr), DT_FLOAT }
-#define CMD_READ_INT(key, fmt, varptr) { key, CMD_READ, NULL, fmt, (void *)(&varptr), DT_INT }
-#define CMD_READ_CSTR(key, text)      { key, CMD_READ, NULL, text, NULL, DT_STR }
-#define CMD_READ_STR(key, fmt, varptr) { key, CMD_READ, NULL, fmt, (void *)(varptr), DT_STR }
-
-
-
-
-
-char *hostTrimUpper(char *text);
-void hostDispatchLine(char *line, Command_t *cmd, printf_t pprintf);
-
-
-
-
-
-
+bool ParseFloatValue(const char *text, float *value);
+bool ParseLongValue(const char *text, long *value);
+char *TrimUpper(char *text);
+void DispatchLine(char *line, Command_t *cmd, printf_t pprintf);
+void SCI_Parse(SCI_RX_t *sci, Command_t *cmd, printf_t pprintf);

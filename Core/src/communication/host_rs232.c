@@ -16,8 +16,6 @@
 
 #include "commu_core.h"
 
-#define HOST_RS232_RX_BUF_SIZE 96U
-#define HOST_RS232_IDLE_TIMEOUT_MS 1000U
 #define HOST_RS232_VERSION "1.0.0"
 #define HOST_RS232_VERSION_DATE "2026-04-14"
 #define HOST_RS232_SERIAL_NUMBER "00000001"
@@ -26,20 +24,21 @@ typedef struct
 {
 	UART_SetpointType_t setpointType;
 	float setpointValue;
-	uint32_t lastRxTick;
-	char rxBuf[HOST_RS232_RX_BUF_SIZE];
-	uint16_t rxLen;
-	bool rxOverflow;
 } HostRs232_State_t;
 
 static HostRs232_State_t gHost = {
 
 	.setpointType = UART_SETPOINT_POSITION,
 	.setpointValue = 0.0f,
+};
+
+static SCI_RX_t Host232SCI = {
+	.sci_base = RS232_SCI_BASE,
 	.lastRxTick = 0U,
 	.rxBuf = {0},
 	.rxLen = 0U,
 	.rxOverflow = false,
+	.isConnected = false,
 };
 
 static void hostSendRaw(const char *text)
@@ -69,70 +68,6 @@ static void hostSendFmt(const char *fmt, ...)
 	// hostSendLine(buffer);
 	hostSendRaw(buffer);
 }
-
-static bool hostParseFloatValue(const char *text, float *value)
-{
-	char *end;
-	float parsed;
-
-	if ((text == NULL) || (*text == '\0'))
-	{
-		return false;
-	}
-
-	parsed = strtof(text, &end);
-	if (end == text)
-	{
-		return false;
-	}
-	while ((*end != '\0') && isspace((unsigned char)*end))
-	{
-		++end;
-	}
-	if (*end != '\0')
-	{
-		return false;
-	}
-	if (value != NULL)
-	{
-		*value = parsed;
-	}
-
-	return true;
-}
-
-static bool hostParseLongValue(const char *text, long *value)
-{
-	char *end;
-	long parsed;
-
-	if ((text == NULL) || (*text == '\0'))
-	{
-		return false;
-	}
-	parsed = strtol(text, &end, 10);
-	if (end == text)
-	{
-		return false;
-	}
-	while ((*end != '\0') && isspace((unsigned char)*end))
-	{
-		++end;
-	}
-	if (*end != '\0')
-	{
-		return false;
-	}
-	if (value != NULL)
-	{
-		*value = parsed;
-	}
-
-	return true;
-}
-
-
-
 
 static bool hostRequestMode(Mode_Command_Type cmd, float value)
 {
@@ -166,7 +101,7 @@ static uint8_t hold_func(const char *arg, printf_t pprintf)
 static uint8_t set_type_func(const char *arg, printf_t pprintf)
 {
 	long value;
-	if (hostParseLongValue(arg, &value) && ((value == 0L) || (value == 1L)))
+	if (ParseLongValue(arg, &value) && ((value == 0L) || (value == 1L)))
 	{
 		gHost.setpointType = (UART_SetpointType_t)value;
 		return RC_SUCCESS;
@@ -177,7 +112,7 @@ static uint8_t set_type_func(const char *arg, printf_t pprintf)
 static uint8_t set_setpoint_func(const char *arg, printf_t pprintf)
 {
 	float value;
-	if (hostParseFloatValue(arg, &value) && (value >= 0.0f) && (value <= 100.0f))
+	if (ParseFloatValue(arg, &value) && (value >= 0.0f) && (value <= 100.0f))
 	{
 		gHost.setpointValue = value;
 		return RC_SUCCESS;
@@ -204,7 +139,7 @@ static uint8_t set_position_func(const char *arg, printf_t pprintf)
 {
 	float value;
 	uint8_t ok;
-	if (hostParseFloatValue(arg, &value) && (value >= 0.0f) && (value <= 100.0f))
+	if (ParseFloatValue(arg, &value) && (value >= 0.0f) && (value <= 100.0f))
 	{
 		ok = Mode_HSM_Request_CMD(MODE_CMD_SET_POSITION_PERCENT, value);
 		return ok == 1U ? RC_SUCCESS : RC_BUSY;
@@ -216,7 +151,7 @@ static uint8_t set_pressure_func(const char *arg, printf_t pprintf)
 {
 	float value;
 	uint8_t ok;
-	if (hostParseFloatValue(arg, &value) && (value >= 0.0f) && (value <= 100.0f))
+	if (ParseFloatValue(arg, &value) && (value >= 0.0f) && (value <= 100.0f))
 	{
 		ok = Mode_HSM_Request_CMD(MODE_CMD_SET_PRESSURE_PERCENT, value);
 		if (ok == 1U)
@@ -250,7 +185,7 @@ static uint8_t gauge_cdg2_func(const char *arg, printf_t pprintf)
 static uint8_t set_scale1_func(const char *arg, printf_t pprintf)
 {
 	float value;
-	if (hostParseFloatValue(arg, &value) && (value > 0.0f))
+	if (ParseFloatValue(arg, &value) && (value > 0.0f))
 	{
 		glob_value.paramCfg.CDG_cfg.CDG1_Range = value;
 		return RC_SUCCESS;
@@ -261,7 +196,7 @@ static uint8_t set_scale1_func(const char *arg, printf_t pprintf)
 static uint8_t set_scale2_func(const char *arg, printf_t pprintf)
 {
 	float value;
-	if (hostParseFloatValue(arg, &value) && (value > 0.0f))
+	if (ParseFloatValue(arg, &value) && (value > 0.0f))
 	{
 		glob_value.paramCfg.CDG_cfg.CDG2_Range = value;
 		return RC_SUCCESS;
@@ -275,7 +210,6 @@ static uint8_t calib_func(const char *arg, printf_t pprintf)
 	return ok == 1U ? RC_SUCCESS : RC_BUSY;
 }
 
-
 static uint8_t reset_func(const char *arg, printf_t pprintf)
 {
 	uint8_t ok = RC_SUCCESS;
@@ -283,9 +217,7 @@ static uint8_t reset_func(const char *arg, printf_t pprintf)
 	return ok;
 }
 
-
-
-Command_t commands[] = {
+static Command_t commands[] = {
 	CMD_FUNC_ENTRY("C", close_func),
 	CMD_FUNC_ENTRY("O", open_func),
 	CMD_FUNC_ENTRY("H", hold_func),
@@ -301,61 +233,38 @@ Command_t commands[] = {
 	CMD_PARAM_ENTRY("N1", set_scale1_func),
 	CMD_PARAM_ENTRY("N2", set_scale2_func),
 	CMD_FUNC_ENTRY("J4", calib_func),
-	CMD_READ_FLOAT("R1",  "S1+%.2f", gHost.setpointValue),
-	CMD_READ_FLOAT("R5",  "P+%.2f", glob_value.valveParam.pressurePercent),
-	CMD_READ_FLOAT("R6",  "V+%.2f", glob_value.valveParam.positionPercent),
+	CMD_READ_FLOAT("R1", "S1+%.2f", gHost.setpointValue),
+	CMD_READ_FLOAT("R5", "P+%.2f", glob_value.valveParam.pressurePercent),
+	CMD_READ_FLOAT("R6", "V+%.2f", glob_value.valveParam.positionPercent),
 	CMD_READ_CSTR("R38", "IQ+3-" HOST_RS232_VERSION " " HOST_RS232_VERSION_DATE),
 	CMD_READ_INT("R26", "T1%u", gHost.setpointType),
 	CMD_READ_CSTR("GSN", "SN:" HOST_RS232_SERIAL_NUMBER),
 	CMD_READ_FLOAT("RN1", "N1%.2f", glob_value.paramCfg.CDG_cfg.CDG1_Range),
 	CMD_READ_FLOAT("RN2", "N2%.2f", glob_value.paramCfg.CDG_cfg.CDG2_Range),
 	CMD_FUNC_ENTRY("RESET", reset_func),
-	{NULL, 0, NULL, NULL, NULL, 0},
+	{NULL, DT_NONE, NULL, NULL, NULL, 0},
 };
 
-/* command table uses addresses into embedded `glob_value` and `gHost` */
+static Command_t* get_ex_cmd()
+{
+	Command_t ex_cmds[] = {
+		CMD_READ_EX_FLOAT("TEST1", "TEST1+%.2f", 0.1 * 5 + 1),
+		CMD_READ_EX_INT("TEST2", "TEST2%u", 42 + 33),
+		CMD_READ_EX_STR("TEST3", "TEST3:%s", "Hello, World!"),
+		{NULL, DT_NONE, NULL, NULL, NULL, 0},
+	};
+
+	Command_t* cmd = malloc(sizeof(ex_cmds));
+	if (cmd != NULL)
+	{
+		memcpy(cmd, ex_cmds, sizeof(ex_cmds));
+	}
+	return cmd;	
+}
+
 
 void HostRs232_Poll(void)
 {
-
-	if ((glob_value.tick0p1ms - gHost.lastRxTick) >= (HOST_RS232_IDLE_TIMEOUT_MS * TICK_PER_MS))
-	{
-		glob_value.status.state.content.rs232_connected = 0;
-	}
-
-	while (SCI_getRxFIFOStatus(RS232_SCI_BASE) != SCI_FIFO_RX0)
-	{
-		char c = (char)(SCI_readCharNonBlocking(RS232_SCI_BASE) & 0xFFU);
-
-		gHost.lastRxTick = glob_value.tick0p1ms;
-		glob_value.status.state.content.rs232_connected = 1;
-
-		if ((c == '\r') || (c == '\n') || (c == ';'))
-		{
-			if ((gHost.rxOverflow == false) && (gHost.rxLen > 0U))
-			{
-				gHost.rxBuf[gHost.rxLen] = '\0';
-				hostDispatchLine(hostTrimUpper(gHost.rxBuf), commands, hostSendFmt);
-			}
-
-			gHost.rxLen = 0U;
-			gHost.rxOverflow = false;
-			continue;
-		}
-
-		if (gHost.rxOverflow)
-		{
-			continue;
-		}
-
-		if (gHost.rxLen < (HOST_RS232_RX_BUF_SIZE - 1U))
-		{
-			gHost.rxBuf[gHost.rxLen++] = c;
-		}
-		else
-		{
-			gHost.rxLen = 0U;
-			gHost.rxOverflow = true;
-		}
-	}
+	SCI_Parse(&Host232SCI, commands, hostSendFmt);
+	glob_value.status.state.content.rs232_connected = Host232SCI.isConnected;
 }
