@@ -11,6 +11,7 @@
 #include "Core/inc/elmo_ctrl.h"
 #include "Core/inc/mode_ctrl.h"
 #include "Core/inc/func_exec.h"
+#include "host_rs232.h"
 
 #if ECAT_EN
 #include "ECAT/9252_HW.h"
@@ -39,6 +40,8 @@ void main(void)
     Board_init();
 
     ModeHSM_Init(&glob_value.modeCtx);
+    
+    HostRs232_Init();
 
 #if ECAT_EN
     HW_Init();

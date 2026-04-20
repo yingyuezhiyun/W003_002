@@ -39,6 +39,7 @@ static SCI_RX_t Host232SCI = {
 	.rxLen = 0U,
 	.rxOverflow = false,
 	.isConnected = false,
+
 };
 
 static void hostSendRaw(const char *text)
@@ -242,7 +243,7 @@ static Command_t commands[] = {
 	CMD_READ_FLOAT("RN1", "N1%.2f", glob_value.paramCfg.CDG_cfg.CDG1_Range),
 	CMD_READ_FLOAT("RN2", "N2%.2f", glob_value.paramCfg.CDG_cfg.CDG2_Range),
 	CMD_FUNC_ENTRY("RESET", reset_func),
-	{NULL, DT_NONE, NULL, NULL, NULL, 0},
+	{NULL, 0, NULL, NULL, DT_NONE, 0},
 };
 
 static Command_t* get_ex_cmd()
@@ -251,7 +252,7 @@ static Command_t* get_ex_cmd()
 		CMD_READ_EX_FLOAT("TEST1", "TEST1+%.2f", 0.1 * 5 + 1),
 		CMD_READ_EX_INT("TEST2", "TEST2%u", 42 + 33),
 		CMD_READ_EX_STR("TEST3", "TEST3:%s", "Hello, World!"),
-		{NULL, DT_NONE, NULL, NULL, NULL, 0},
+		{NULL, 0, NULL, NULL, DT_NONE, 0},
 	};
 
 	Command_t* cmd = malloc(sizeof(ex_cmds));
@@ -262,9 +263,21 @@ static Command_t* get_ex_cmd()
 	return cmd;	
 }
 
+/// @brief 
+/// @param  
+void HostRs232_Init(void)
+{
+	
+	Host232SCI.get_ex_cmd_func = get_ex_cmd;
+	Host232SCI.cmdTable = commands;
+	Host232SCI.pprintf = hostSendFmt;
+	Host232SCI.get_ex_cmd_func = get_ex_cmd;
+}
 
+/// @brief 
+/// @param  
 void HostRs232_Poll(void)
 {
-	SCI_Parse(&Host232SCI, commands, hostSendFmt);
+	SCI_Parse(&Host232SCI);
 	glob_value.status.state.content.rs232_connected = Host232SCI.isConnected;
 }

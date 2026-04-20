@@ -60,6 +60,7 @@ typedef enum
 
 #define RX_BUF_SIZE 96U
 #define RX_IDLE_TIMEOUT_MS 1000U
+typedef Command_t *(*GetExCmdFunc_t)(void);
 typedef struct
 {
     uint32_t sci_base;
@@ -68,6 +69,9 @@ typedef struct
     uint16_t rxLen;
     bool rxOverflow;
     bool isConnected;
+    Command_t *cmdTable;
+    GetExCmdFunc_t get_ex_cmd_func;
+    printf_t pprintf;
 } SCI_RX_t;
 
 #define CMD_FUNC_ENTRY(key, fn) {key, CMD_FUNC, fn, NULL, DT_NONE, 0}
@@ -80,9 +84,7 @@ typedef struct
 #define CMD_READ_EX_INT(key, fmt, var) {key, CMD_READ, NULL, fmt, DT_EX_INT, .value.ivalue = var}
 #define CMD_READ_EX_STR(key, fmt, var) {key, CMD_READ, NULL, fmt, DT_EX_STR, .value.svalue = var}
 
-
 bool ParseFloatValue(const char *text, float *value);
 bool ParseLongValue(const char *text, long *value);
-char *TrimUpper(char *text);
-void DispatchLine(char *line, Command_t *cmd, printf_t pprintf);
-void SCI_Parse(SCI_RX_t *sci, Command_t *cmd, printf_t pprintf);
+
+void SCI_Parse(SCI_RX_t *sci);
