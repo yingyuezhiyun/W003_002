@@ -40,7 +40,7 @@ void main(void)
     Board_init();
 
     ModeHSM_Init(&glob_value.modeCtx);
-    
+
     HostRs232_Init();
 
 #if ECAT_EN
@@ -50,6 +50,10 @@ void main(void)
 
     // 选择默认 Elmo ，并执行初始化
     ElmoCtrl_SelectDefault();
+
+    // 启动定时器
+    CPUTimer_startTimer(CPUTIMER0_BASE);
+   // CPUTimer_startTimer(CPUTIMER2_BASE);
 
     EINT; // 开启全局中断
     ERTM; // Enable Global realtime interrupt

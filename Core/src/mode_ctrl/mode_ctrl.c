@@ -138,7 +138,7 @@ uint8_t Mode_HSM_Request_CMD(Mode_Command_Type cmd, float param)
     {
         return 0;
     }
-    else if (ctx->locks.content.calib && cmd != MODE_CALIB) // 标定失败或未进行标定，且目标模式不是标定模式
+    else if (ctx->locks.content.calib && cmd != MODE_CMD_CALIB) // 标定失败或未进行标定，且目标模式不是标定模式
     {
         return 0;
     }

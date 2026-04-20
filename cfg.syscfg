@@ -140,17 +140,17 @@ cputimer1.enableInterrupt          = true;
 cputimer1.emulationMode            = "CPUTIMER_EMULATIONMODE_RUNFREE";
 cputimer1.registerInterrupts       = true;
 cputimer1.cputimerBase             = "CPUTIMER2_BASE";
-cputimer1.timerPeriod              = 4294967295;
 cputimer1.timerPrescaler           = 199;
 cputimer1.$name                    = "CPU_TIMER2";
+cputimer1.timerPeriod              = 1000;
 cputimer1.timerInt.enableInterrupt = true;
 
-cputimer2.timerPeriod              = 4294967295;
 cputimer2.enableInterrupt          = true;
 cputimer2.registerInterrupts       = true;
 cputimer2.emulationMode            = "CPUTIMER_EMULATIONMODE_RUNFREE";
 cputimer2.timerPrescaler           = 19;
 cputimer2.$name                    = "CPU_TIMER0";
+cputimer2.timerPeriod              = 1000;
 cputimer2.timerInt.enableInterrupt = true;
 
 epwm1.$name                                             = "myEPWM0";

@@ -73,12 +73,22 @@ __weak __interrupt void INT_CPU_TIMER0_ISR(void)
     glob_value.tick0p1ms++;
     ModeHSM_Run_0p1msISR(&glob_value.modeCtx);
     CPUTimer_clearOverflowFlag(CPUTIMER0_BASE);
+
+    // INT_TIMER0 is a PIE Group 1 interrupt; acknowledge to allow further Group 1 interrupts.
+    Interrupt_clearACKGroup(INT_CPU_TIMER0_INTERRUPT_ACK_GROUP);
 }
 
 
 __weak __interrupt void INT_ADC_A_1_ISR(void)
 {
-
+    // Clear ADCA INT1 flag and acknowledge PIE Group 1.
+    ADC_clearInterruptStatus(ADC_A_BASE, ADC_INT_NUMBER1);
+    if(ADC_getInterruptOverflowStatus(ADC_A_BASE, ADC_INT_NUMBER1))
+    {
+        ADC_clearInterruptOverflowStatus(ADC_A_BASE, ADC_INT_NUMBER1);
+        ADC_clearInterruptStatus(ADC_A_BASE, ADC_INT_NUMBER1);
+    }
+    Interrupt_clearACKGroup(INT_ADC_A_1_INTERRUPT_ACK_GROUP);
 }
 
 /// @brief 
