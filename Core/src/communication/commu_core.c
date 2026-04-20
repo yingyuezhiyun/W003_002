@@ -285,19 +285,24 @@ void SCI_Parse(SCI_RX_t *sci)
 			break;
 		}
 	}
-	commandsEntry_t *commands_list_head = NULL;
-	Command_t *cmd = sci->cmdTable;
-	Command_t *ex_cmd = NULL;
-	insert_command_entry(&commands_list_head, cmd);
+
 	/* 所有数据已读完，开始一次性解析缓冲区中的完整行 */
 	if (sci->rxLen > 0U)
 	{
+		commandsEntry_t *commands_list_head = NULL;
+		Command_t *cmd = sci->cmdTable;
+		Command_t *ex_cmd = NULL;
+		// insert_command_entry(&commands_list_head, cmd);
 		size_t readPos = 0U; /* 处理读取位置 */
 		for (size_t i = 0U; i < sci->rxLen; ++i)
 		{
 			char ch = sci->rxBuf[i];
 			if ((ch == '\r') || (ch == '\n'))
 			{
+				if (commands_list_head == NULL)
+				{
+					insert_command_entry(&commands_list_head, cmd);
+				}		
 				if (sci->get_ex_cmd_func != NULL && ex_cmd == NULL)
 				{
 					ex_cmd = sci->get_ex_cmd_func();
@@ -333,12 +338,12 @@ void SCI_Parse(SCI_RX_t *sci)
 			/* 没有残留 */
 			sci->rxLen = 0U;
 		}
+		if (ex_cmd != NULL)
+		{
+			free(ex_cmd);
+		}
+		free_command_entries(commands_list_head);
 	}
-	if (ex_cmd != NULL)
-	{
-		free(ex_cmd);
-	}
-	free_command_entries(commands_list_head);
 
 	/* 处理缓冲区溢出 */
 	if (sci->rxOverflow)
