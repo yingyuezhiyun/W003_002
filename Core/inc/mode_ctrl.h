@@ -49,8 +49,10 @@ typedef enum
 {
     CALIB_SUB_NONE,            ///< 未初始化/无有效状态
     CALIB_SUB_INIT,            ///< 标定初始化（进入标定模式时）
+    CALIB_SUB_SET_MIN_END,     ///< 向最小端点运动
     CALIB_SUB_WAIT_MIN_END,    ///< 寻找最小端点
     CALIB_SUB_WAIT_ELMO_READY, ///< 等待 Elmo 准备就绪
+    CALIB_SUB_SET_MAX_END,     ///< 向最大端点运动
     CALIB_SUB_WAIT_MAX_END,    ///< 寻找最大端点
     CALIB_SUB_VERIFY_RANGE,    ///< 校验行程
     CALIB_SUB_DONE,            ///< 标定完成（成功）
@@ -103,10 +105,10 @@ struct Mode_Ctx_s
             uint8_t transt : 1; ///< 模式切换锁，正在切换模式时为1
         } content;
         uint8_t val;
-    } locks;                  // 锁定状态
-    Mode_Command_t Cmd; ///< 命令参数
-    Mode_Command_t nextCmd;   ///< 下一个命令（用于在状态机中传递命令参数）
-    Mode_Command_t lastCmd;   ///< 上一次处理的命令
+    } locks;                // 锁定状态
+    Mode_Command_t Cmd;     ///< 命令参数
+    Mode_Command_t nextCmd; ///< 下一个命令（用于在状态机中传递命令参数）
+    Mode_Command_t lastCmd; ///< 上一次处理的命令
     union
     {
         struct
@@ -123,12 +125,11 @@ struct Mode_Ctx_s
     Calib_SubState_t calibSubState; ///< 标定子状态
 };
 
-extern  HsmState_t Mode_Calib;
-extern  HsmState_t Mode_Position;
-extern  HsmState_t Mode_Press;
-extern  HsmState_t Mode_Root;
-extern  HsmState_t Mode_Fault;
-
+extern HsmState_t Mode_Calib;
+extern HsmState_t Mode_Position;
+extern HsmState_t Mode_Press;
+extern HsmState_t Mode_Root;
+extern HsmState_t Mode_Fault;
 
 void ModeHSM_Init(Mode_Ctx_t *ctx);
 void ModeHSM_Run(Mode_Ctx_t *ctx);

@@ -76,5 +76,6 @@
     },
     "files.watcherExclude": {
         "**/CPU1_RAM/**": true
-    }
+    },
+    "python-envs.defaultEnvManager": "ms-python.python:system"
 }

@@ -51,19 +51,19 @@ static void elmoCanSendSDOWrite(uint16_t index, uint8_t subIndex, uint32_t value
 	txMsgData[2] = (uint8_t)((index >> 8U) & 0xFFU);
 	txMsgData[3] = subIndex;
 
-	if(size >= 1U)
+	if (size >= 1U)
 	{
 		txMsgData[4] = (uint8_t)(value & 0xFFU);
 	}
-	if(size >= 2U)
+	if (size >= 2U)
 	{
 		txMsgData[5] = (uint8_t)((value >> 8U) & 0xFFU);
 	}
-	if(size >= 3U)
+	if (size >= 3U)
 	{
 		txMsgData[6] = (uint8_t)((value >> 16U) & 0xFFU);
 	}
-	if(size >= 4U)
+	if (size >= 4U)
 	{
 		txMsgData[7] = (uint8_t)((value >> 24U) & 0xFFU);
 	}
@@ -77,62 +77,62 @@ static void elmoCanProcess(const uint8_t *msgData, uint8_t msgLen)
 	uint16_t index;
 	int32_t val;
 
-	if((msgData == NULL) || (msgLen < 8U))
+	if ((msgData == NULL) || (msgLen < 8U))
 	{
 		return;
 	}
 
-	if((msgData[0] & 0xE0U) != 0x40U)
+	if ((msgData[0] & 0xE0U) != 0x40U)
 	{
 		return;
 	}
 
 	index = (uint16_t)(((uint16_t)msgData[2] << 8U) | msgData[1]);
 
-	switch(index)
+	switch (index)
 	{
-		case ELMO_IDX_ENABLE_FB:
-			g_elmoParam.fb.en = ((msgData[4] & 0x1U) != 0U) ? 1U : 0U;
-			break;
+	case ELMO_IDX_ENABLE_FB:
+		g_elmoParam.fb.en = ((msgData[4] & 0x1U) != 0U) ? 1U : 0U;
+		break;
 
-		case ELMO_IDX_POS_FB:
-			val = (int32_t)(((uint32_t)msgData[7] << 24U) |
-							((uint32_t)msgData[6] << 16U) |
-							((uint32_t)msgData[5] << 8U) |
-							msgData[4]);
-			g_elmoParam.fb.pos_fed = val;
-			break;
+	case ELMO_IDX_POS_FB:
+		val = (int32_t)(((uint32_t)msgData[7] << 24U) |
+						((uint32_t)msgData[6] << 16U) |
+						((uint32_t)msgData[5] << 8U) |
+						msgData[4]);
+		g_elmoParam.fb.pos_fed = val;
+		break;
 
-		case ELMO_IDX_SPD_FB:
-			val = (int32_t)(((uint32_t)msgData[7] << 24U) |
-							((uint32_t)msgData[6] << 16U) |
-							((uint32_t)msgData[5] << 8U) |
-							msgData[4]);
-			g_elmoParam.fb.spd_fed = val;
-			break;
+	case ELMO_IDX_SPD_FB:
+		val = (int32_t)(((uint32_t)msgData[7] << 24U) |
+						((uint32_t)msgData[6] << 16U) |
+						((uint32_t)msgData[5] << 8U) |
+						msgData[4]);
+		g_elmoParam.fb.spd_fed = val;
+		break;
 
-		case ELMO_IDX_IQ_FB:
+	case ELMO_IDX_IQ_FB:
+	{
+		union
 		{
-			union
-			{
-				int32_t i32;
-				float f32;
-			} conv;
+			int32_t i32;
+			float f32;
+		} conv;
 
-			conv.i32 = (int32_t)(((uint32_t)msgData[7] << 24U) |
-								 ((uint32_t)msgData[6] << 16U) |
-								 ((uint32_t)msgData[5] << 8U) |
-								 msgData[4]);
-			g_elmoParam.fb.iq_fed = fabsf(conv.f32);
-			break;
-		}
+		conv.i32 = (int32_t)(((uint32_t)msgData[7] << 24U) |
+							 ((uint32_t)msgData[6] << 16U) |
+							 ((uint32_t)msgData[5] << 8U) |
+							 msgData[4]);
+		g_elmoParam.fb.iq_fed = fabsf(conv.f32);
+		break;
+	}
 
-		case ELMO_IDX_ERR_FB:
-			g_elmoParam.fb.ec = (int32_t)(((uint16_t)msgData[5] << 8U) | msgData[4]);
-			break;
+	case ELMO_IDX_ERR_FB:
+		g_elmoParam.fb.ec = (int32_t)(((uint16_t)msgData[5] << 8U) | msgData[4]);
+		break;
 
-		default:
-			break;
+	default:
+		break;
 	}
 }
 
@@ -193,6 +193,12 @@ static void elmoCanSetRelPos(int32_t posVal)
 static void elmoCanSetAbsPos(int32_t posVal)
 {
 	g_elmoParam.set.abs_pos_set = posVal;
+	static int32_t lastAbsPosSet = 0;
+	if (posVal == lastAbsPosSet && fabs(g_elmoParam.fb.pos_fed - posVal) < 100)
+	{
+		return;
+	}
+	lastAbsPosSet = posVal;
 	elmoCanSendSDOWrite(ELMO_IDX_ABS_POS_CMD, 1U, (uint32_t)posVal, 4U);
 	elmoCanSendSDOWrite(ELMO_IDX_MOTION_TRIGGER, 1U, 1U, 4U);
 }
@@ -232,11 +238,11 @@ static void elmoCanOnRxIsr(void)
 {
 	uint32_t cause = CAN_getInterruptCause(Elmo_CAN_BASE);
 
-	if(cause == CAN_INT_INT0ID_STATUS)
+	if (cause == CAN_INT_INT0ID_STATUS)
 	{
 		(void)CAN_getStatus(Elmo_CAN_BASE);
 	}
-	else if(cause == ELMO_CAN_RX_OBJ_ID)
+	else if (cause == ELMO_CAN_RX_OBJ_ID)
 	{
 		uint8_t msgData[8] = {0U};
 
@@ -274,8 +280,7 @@ static const ElmoOpsTable g_elmoCanOps = {
 // CAN 描述对象
 static const ElmoBackend g_elmoCanBackend = {
 	.name = "elmo_can",
-	.ops = &g_elmoCanOps
-};
+	.ops = &g_elmoCanOps};
 
 // 获取 CAN 描述对象
 const ElmoBackend *ElmoCan_GetBackend(void)

@@ -205,6 +205,40 @@ static uint8_t set_scale2_func(const char *arg, printf_t pprintf)
 	return RC_PARAM_ERROR;
 }
 
+static uint8_t set_xrelpos_func(const char *arg, printf_t pprintf)
+{
+	float value;
+	if (ParseFloatValue(arg, &value))
+	{
+		ElmoOps->setRelPos(value);
+		return RC_SUCCESS;
+	}
+	return RC_PARAM_ERROR;
+}
+
+static uint8_t set_xabspos_func(const char *arg, printf_t pprintf)
+{
+	float value;
+	if (ParseFloatValue(arg, &value))
+	{
+		ElmoOps->setAbsPos(value);
+		return RC_SUCCESS;
+	}
+	return RC_PARAM_ERROR;
+}
+
+
+static uint8_t set_xspd_func(const char *arg, printf_t pprintf)
+{
+	float value;
+	if (ParseFloatValue(arg, &value))
+	{
+		ElmoOps->setSpd(value);
+		return RC_SUCCESS;
+	}
+	return RC_PARAM_ERROR;
+}
+
 static uint8_t calib_func(const char *arg, printf_t pprintf)
 {
 	uint8_t ok = Mode_HSM_Request_CMD(MODE_CMD_CALIB, 0.0f);
@@ -243,6 +277,9 @@ static Command_t commands[] = {
 	CMD_READ_FLOAT("RN1", "N1%.2f", glob_value.paramCfg.CDG_cfg.CDG1_Range),
 	CMD_READ_FLOAT("RN2", "N2%.2f", glob_value.paramCfg.CDG_cfg.CDG2_Range),
 	CMD_FUNC_ENTRY("RESET", reset_func),
+	CMD_PARAM_ENTRY("XRELPOS", set_xrelpos_func),
+	CMD_PARAM_ENTRY("XSPD", set_xspd_func),
+	CMD_PARAM_ENTRY("XABSPOS", set_xabspos_func),
 	{NULL, 0, NULL, NULL, DT_NONE, 0},
 };
 

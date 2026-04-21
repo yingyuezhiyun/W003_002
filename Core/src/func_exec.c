@@ -68,15 +68,15 @@ void Key_TTL_Poll()
     }
 }
 
-#define ELMO_POLL_PERIOD_MS (5U) // 5ms
+#define ELMO_POLL_PERIOD_MS (10U) // 10ms
 
 /// @brief 处理 Elmo 轮询任务。
 void Elmo_Poll()
 {
-    if (ElmoOps == NULL || glob_value.modeCtx.hsm->type == MODE_PRESSURE) // 压力控制时不轮询
-    {
-        return;
-    }
+    // if (ElmoOps == NULL || glob_value.modeCtx.hsm->type == MODE_PRESSURE) // 压力控制时不轮询
+    // {
+    //     return;
+    // }
 
     uint32_t nowTick = glob_value.tick0p1ms;
     static uint32_t lastElmoQueryTick = 0U;
@@ -85,50 +85,56 @@ void Elmo_Poll()
         return;
     }
     lastElmoQueryTick = nowTick;
-    static uint8_t pollCount = 0U;
-    switch (pollCount)
+    static uint8_t pollCount = 0U, subCount = 0U;
+    if (pollCount == 0)
     {
-    case 0:
         // 轮询读取位置
         if (ElmoOps->reqPos)
         {
             ElmoOps->reqPos();
         }
-        break;
-    case 1:
-        // 轮询读取电流
-        if (ElmoOps->reqIq)
-        {
-            ElmoOps->reqIq();
-        }
-        break;
-    case 2:
-        // 轮询读取速度
-        if (ElmoOps->reqSpd)
-        {
-            ElmoOps->reqSpd();
-        }
-        break;
-    case 3:
-        // 轮询读取错误码
-        if (ElmoOps->reqEc)
-        {
-            ElmoOps->reqEc();
-        }
-        break;
-    case 4:
-        // 轮询读取使能状态
-        if (ElmoOps->reqEn)
-        {
-            ElmoOps->reqEn();
-        }
-        break;
-    default:
-        break;
+        pollCount++;
     }
-    pollCount++;
-    if (pollCount >= 5U)
+    else
     {
+        switch (subCount)
+        {
+        case 0:
+            // 轮询读取电流
+            if (ElmoOps->reqIq)
+            {
+                ElmoOps->reqIq();
+            }
+            break;
+        case 1:
+            // 轮询读取错误码
+            if (ElmoOps->reqEc)
+            {
+                ElmoOps->reqEc();
+            }
+            break;
+        case 2:
+            // 轮询读取速度
+            if (ElmoOps->reqSpd)
+            {
+                ElmoOps->reqSpd();
+            }
+            break;
+        case 3:
+            // 轮询读取使能状态
+            if (ElmoOps->reqEn)
+            {
+                ElmoOps->reqEn();
+            }
+            break;
+        default:
+            break;
+        }
+        subCount++;
+        if (subCount >= 4U)
+        {
+            subCount = 0U;
+        }
         pollCount = 0U;
     }
 }

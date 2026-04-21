@@ -20,7 +20,7 @@ static void elmoRs232Send(const char *cmd)
 {
 	const char *p = cmd;
 
-	while(*p != '\0')
+	while (*p != '\0')
 	{
 		SCI_writeCharBlockingFIFO(Elmo_SCI_BASE, (uint16_t)(uint8_t)(*p));
 		p++;
@@ -34,14 +34,14 @@ static int16_t buildCmd(char *dst, uint16_t dstLen, const char *prefix,
 	uint16_t i = 0U;
 	int16_t written;
 
-	while((prefix[i] != '\0') && (i < (dstLen - 1U)))
+	while ((prefix[i] != '\0') && (i < (dstLen - 1U)))
 	{
 		dst[i] = prefix[i];
 		i++;
 	}
 
 	written = (int16_t)snprintf(&dst[i], dstLen - i, "%ld%s", (long)value, suffix);
-	if(written < 0)
+	if (written < 0)
 	{
 		return -1;
 	}
@@ -55,29 +55,29 @@ static void elmoRs232ParseLine(char *line)
 	char *eq = strchr(line, '=');
 	char *payload = (eq == NULL) ? NULL : (eq + 1);
 
-	if(payload == NULL)
+	if (payload == NULL)
 	{
 		return;
 	}
 
-	if(strncmp(line, "PX", 2) == 0)
+	if (strncmp(line, "PX", 2) == 0)
 	{
 		g_elmoParam.fb.pos_fed = (int32_t)strtol(payload, NULL, 10);
 	}
-	else if(strncmp(line, "VX", 2) == 0)
+	else if (strncmp(line, "VX", 2) == 0)
 	{
 		g_elmoParam.fb.spd_fed = (int32_t)labs(strtol(payload, NULL, 10));
 	}
-	else if(strncmp(line, "IQ", 2) == 0)
+	else if (strncmp(line, "IQ", 2) == 0)
 	{
 		float iq = (float)atof(payload);
 		g_elmoParam.fb.iq_fed = fabsf(iq);
 	}
-	else if(strncmp(line, "SO", 2) == 0)
+	else if (strncmp(line, "SO", 2) == 0)
 	{
 		g_elmoParam.fb.en = (strtol(payload, NULL, 10) != 0) ? 1U : 0U;
 	}
-	else if(strncmp(line, "EC", 2) == 0)
+	else if (strncmp(line, "EC", 2) == 0)
 	{
 		g_elmoParam.fb.ec = (int32_t)strtol(payload, NULL, 10);
 	}
@@ -93,14 +93,14 @@ static void elmoRs232Init(void)
 // RS232 主循环轮询
 static void elmoRs232Poll(void)
 {
-	while(SCI_getRxFIFOStatus(Elmo_SCI_BASE) != SCI_FIFO_RX0)
+	while (SCI_getRxFIFOStatus(Elmo_SCI_BASE) != SCI_FIFO_RX0)
 	{
 		uint16_t c16 = SCI_readCharNonBlocking(Elmo_SCI_BASE);
 		char c = (char)(c16 & 0xFFU);
 
-		if((c == '\n') || (c == '\r') || (c == ';'))
+		if ((c == '\n') || (c == '\r') || (c == ';'))
 		{
-			if(g_elmoRxLen > 0U)
+			if (g_elmoRxLen > 0U)
 			{
 				g_elmoRxBuf[g_elmoRxLen] = '\0';
 				elmoRs232ParseLine(g_elmoRxBuf);
@@ -109,7 +109,7 @@ static void elmoRs232Poll(void)
 			continue;
 		}
 
-		if(g_elmoRxLen < (ELMO_RS232_RX_BUF_SIZE - 1U))
+		if (g_elmoRxLen < (ELMO_RS232_RX_BUF_SIZE - 1U))
 		{
 			g_elmoRxBuf[g_elmoRxLen++] = c;
 		}
@@ -179,6 +179,12 @@ static void elmoRs232AbsPosSet(int32_t posVal)
 {
 	char cmd[28];
 	g_elmoParam.set.abs_pos_set = posVal;
+	static int32_t lastAbsPosSet = 0;
+	if (posVal == lastAbsPosSet && fabs(g_elmoParam.fb.pos_fed - posVal) < 100)
+	{
+		return;
+	}
+	lastAbsPosSet = posVal;
 
 	(void)buildCmd(cmd, sizeof(cmd), "PA=", posVal, ";BG;\r");
 	elmoRs232Send(cmd);
@@ -236,8 +242,7 @@ static const ElmoOpsTable g_elmoRs232Ops = {
 // RS232 描述对象
 static const ElmoBackend g_elmoRs232Backend = {
 	.name = "elmo_rs232",
-	.ops = &g_elmoRs232Ops
-};
+	.ops = &g_elmoRs232Ops};
 
 // 获取 RS232 描述对象
 const ElmoBackend *ElmoRs232_GetBackend(void)

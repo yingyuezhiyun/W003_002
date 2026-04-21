@@ -1,0 +1,13 @@
+PDF: docs/MAN-SIMCR.pdf
+BP[N] - Brake Parameter: [4, 26]
+OL[N] - Output Logic: [5, 117]
+OP - Output Polarity: []
+OB[N] - Output Bit-field: [5, 112]
+RS - Soft Reset: [5, 143]
+KL - Kill Motion: [5, 94]
+HP - Halt Program Execution: [74]
+AB - Abort: []
+ST - Stop: [6, 151]
+literal:quick stop: [24, 51, 108]
+literal:emergency: [26, 109, 145]
+literal:e-stop: []
