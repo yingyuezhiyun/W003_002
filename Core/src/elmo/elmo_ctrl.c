@@ -9,6 +9,7 @@
 // 全局 Elmo 参数
 ElmoParam g_elmoParam = {
 	.set = {
+		.en = 0U,
 		.spd_set = 2000000U,
 		.ac_set = 60000000U,
 		.dc_set = 60000000U,
@@ -19,8 +20,8 @@ ElmoParam g_elmoParam = {
 		.pos_fed = 0,
 		.spd_fed = 0,
 		.iq_fed = 0.0f,
-		.elmo_ec = 0,
-		.elmo_en = 0U,
+		.ec = 0,
+		.en = 0U,
 	}
 };
 

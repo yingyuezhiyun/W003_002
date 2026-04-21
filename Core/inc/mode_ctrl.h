@@ -31,6 +31,7 @@ typedef enum
     MODE_CMD_FULL_CLOSE,           ///< 全关
     MODE_CMD_SET_PRESSURE_PERCENT, ///< 设置目标压力（百分比 0~100）
     MODE_CMD_SET_HOLD,             ///< 设置保持
+    MODE_CMD_FAULT,                ///< 进入故障模式
 } Mode_Command_Type;
 
 // /// @brief LED 指示灯模式。
@@ -46,14 +47,15 @@ typedef enum
 /// @brief 标定子状态。
 typedef enum
 {
-    CALIB_SUB_NONE,         ///< 未初始化/无有效状态
-    CALIB_SUB_INIT,         ///< 标定初始化（进入标定模式时）
-    CALIB_SUB_WAIT_MIN_END, ///< 寻找最小端点
-    CALIB_SUB_WAIT_MAX_END, ///< 寻找最大端点
-    CALIB_SUB_VERIFY_RANGE, ///< 校验行程
-    CALIB_SUB_DONE,         ///< 标定完成（成功）
-    CALIB_SUB_FAILED,       ///< 标定失败
-    CALIB_SUB_TIMEOUT       ///< 标定超时
+    CALIB_SUB_NONE,            ///< 未初始化/无有效状态
+    CALIB_SUB_INIT,            ///< 标定初始化（进入标定模式时）
+    CALIB_SUB_WAIT_MIN_END,    ///< 寻找最小端点
+    CALIB_SUB_WAIT_ELMO_READY, ///< 等待 Elmo 准备就绪
+    CALIB_SUB_WAIT_MAX_END,    ///< 寻找最大端点
+    CALIB_SUB_VERIFY_RANGE,    ///< 校验行程
+    CALIB_SUB_DONE,            ///< 标定完成（成功）
+    CALIB_SUB_FAILED,          ///< 标定失败
+    CALIB_SUB_TIMEOUT          ///< 标定超时
 } Calib_SubState_t;
 
 typedef enum
@@ -121,10 +123,12 @@ struct Mode_Ctx_s
     Calib_SubState_t calibSubState; ///< 标定子状态
 };
 
-extern const HsmState_t Mode_Calib;
-extern const HsmState_t Mode_Position;
-extern const HsmState_t Mode_Press;
-extern const HsmState_t Mode_Root;
+extern  HsmState_t Mode_Calib;
+extern  HsmState_t Mode_Position;
+extern  HsmState_t Mode_Press;
+extern  HsmState_t Mode_Root;
+extern  HsmState_t Mode_Fault;
+
 
 void ModeHSM_Init(Mode_Ctx_t *ctx);
 void ModeHSM_Run(Mode_Ctx_t *ctx);

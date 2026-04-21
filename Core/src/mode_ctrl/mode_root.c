@@ -10,7 +10,7 @@
 
 static MODE_EXEC_t Mode_Root_Execute(Mode_Ctx_t *ctx);
 
-const HsmState_t Mode_Root = {
+HsmState_t Mode_Root = {
     .name = "RootMode",
     .parent = NULL,
     .enter = NULL,

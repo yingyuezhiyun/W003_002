@@ -12,7 +12,7 @@ static MODE_EXEC_t Mode_Position_Enter(Mode_Ctx_t *ctx);
 static MODE_EXEC_t Mode_Position_Execute(Mode_Ctx_t *ctx);
 static MODE_EXEC_t Mode_Position_Exit(Mode_Ctx_t *ctx);
 
-const HsmState_t Mode_Position = {
+HsmState_t Mode_Position = {
     .name = "PositionMode",
     .parent = &Mode_Root,
     .enter = Mode_Position_Enter,
@@ -28,8 +28,10 @@ const HsmState_t Mode_Position = {
 /// @return MODE_EXEC_t。
 static MODE_EXEC_t Mode_Position_Enter(Mode_Ctx_t *ctx)
 {
-    ElmoOps->enable();
-    DEVICE_DELAY_US(5000);
+    if (g_elmoParam.fb.en == 0)
+    {
+        ElmoOps->enable();
+    }
     lastPositionLoopTick = glob_value.tick0p1ms;
     return MODE_EXEC_DONE;
 }

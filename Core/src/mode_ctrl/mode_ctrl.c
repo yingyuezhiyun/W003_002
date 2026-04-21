@@ -8,14 +8,6 @@
 #include <stddef.h>
 #include <string.h>
 
-void ModeHSM_FAULT_Enter(Mode_Ctx_t *ctx)
-{
-    (void)ctx;
-    // 进入故障模式时的处理逻辑，例如记录日志、设置错误标志等
-    // ...
-    ctx->hsm->next = NULL; //
-}
-
 void ModeHSM_Init(Mode_Ctx_t *ctx)
 {
     ctx->hsm = &Mode_Root;
@@ -90,7 +82,7 @@ void ModeHSM_Run(Mode_Ctx_t *ctx)
 
     if (result >= MODE_EXEC_TIMEOUT) // todo 错误处理
     {
-        ModeHSM_FAULT_Enter(ctx);
+        Mode_HSM_Request_CMD(MODE_CMD_FAULT, 0.0f); // 进入故障模式
     }
 }
 
@@ -122,7 +114,6 @@ void ModeHSM_Run_0p1msISR(Mode_Ctx_t *ctx)
     }
 }
 
-
 /// @brief 请求执行命令。
 /// @param cmd 命令类型。
 /// @param param 命令参数。
@@ -130,9 +121,14 @@ void ModeHSM_Run_0p1msISR(Mode_Ctx_t *ctx)
 uint8_t Mode_HSM_Request_CMD(Mode_Command_Type cmd, float param)
 {
     Mode_Ctx_t *ctx = &glob_value.modeCtx;
-    if (cmd == MODE_CMD_SET_KEY_UNLOCK) // 标定模式下，也可以解除按键锁定，只改变状态不执行动作，避免死锁
+    if (cmd == MODE_CMD_SET_KEY_UNLOCK) // 解除按键锁定，只改变状态不执行动作，避免死锁
     {
         ctx->locks.content.key = 0;
+    }
+    if (cmd == MODE_CMD_FAULT) // 进入故障模式
+    {
+        ctx->hsm->next = &Mode_Fault;
+        return 1;
     }
     if (ctx->calibSubState > CALIB_SUB_NONE && ctx->calibSubState < CALIB_SUB_DONE) // 处于标定未完成状态，禁止执行任何命令
     {

@@ -5,6 +5,7 @@
 // Elmo 下发设置参数结构体
 typedef struct
 {
+    volatile uint8_t en;         // 使能位，0=无效，1=有效
     volatile uint32_t spd_set;    // 速度给定
     volatile uint32_t ac_set;     // 加速度给定
     volatile uint32_t dc_set;     // 减速度给定
@@ -18,8 +19,8 @@ typedef struct
     volatile int32_t pos_fed; // 位置反馈
     volatile int32_t spd_fed; // 速度反馈
     volatile float iq_fed;    // 电流反馈
-    volatile int32_t elmo_ec; // 错误码反馈
-    volatile uint8_t elmo_en; // 使能状态反馈
+    volatile int32_t ec;      // 错误码反馈
+    volatile uint8_t en;      // 使能状态反馈
 } ElmoFeedbackParam;
 
 // Elmo 参数总结构体（设置 + 反馈）

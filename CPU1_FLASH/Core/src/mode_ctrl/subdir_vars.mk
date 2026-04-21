@@ -8,6 +8,7 @@ SHELL = cmd.exe
 C_SRCS += \
 ../Core/src/mode_ctrl/mode_calib.c \
 ../Core/src/mode_ctrl/mode_ctrl.c \
+../Core/src/mode_ctrl/mode_fault.c \
 ../Core/src/mode_ctrl/mode_position.c \
 ../Core/src/mode_ctrl/mode_press.c \
 ../Core/src/mode_ctrl/mode_root.c 
@@ -15,6 +16,7 @@ C_SRCS += \
 C_DEPS += \
 ./Core/src/mode_ctrl/mode_calib.d \
 ./Core/src/mode_ctrl/mode_ctrl.d \
+./Core/src/mode_ctrl/mode_fault.d \
 ./Core/src/mode_ctrl/mode_position.d \
 ./Core/src/mode_ctrl/mode_press.d \
 ./Core/src/mode_ctrl/mode_root.d 
@@ -22,6 +24,7 @@ C_DEPS += \
 OBJS += \
 ./Core/src/mode_ctrl/mode_calib.obj \
 ./Core/src/mode_ctrl/mode_ctrl.obj \
+./Core/src/mode_ctrl/mode_fault.obj \
 ./Core/src/mode_ctrl/mode_position.obj \
 ./Core/src/mode_ctrl/mode_press.obj \
 ./Core/src/mode_ctrl/mode_root.obj 
@@ -29,6 +32,7 @@ OBJS += \
 OBJS__QUOTED += \
 "Core\src\mode_ctrl\mode_calib.obj" \
 "Core\src\mode_ctrl\mode_ctrl.obj" \
+"Core\src\mode_ctrl\mode_fault.obj" \
 "Core\src\mode_ctrl\mode_position.obj" \
 "Core\src\mode_ctrl\mode_press.obj" \
 "Core\src\mode_ctrl\mode_root.obj" 
@@ -36,6 +40,7 @@ OBJS__QUOTED += \
 C_DEPS__QUOTED += \
 "Core\src\mode_ctrl\mode_calib.d" \
 "Core\src\mode_ctrl\mode_ctrl.d" \
+"Core\src\mode_ctrl\mode_fault.d" \
 "Core\src\mode_ctrl\mode_position.d" \
 "Core\src\mode_ctrl\mode_press.d" \
 "Core\src\mode_ctrl\mode_root.d" 
@@ -43,6 +48,7 @@ C_DEPS__QUOTED += \
 C_SRCS__QUOTED += \
 "../Core/src/mode_ctrl/mode_calib.c" \
 "../Core/src/mode_ctrl/mode_ctrl.c" \
+"../Core/src/mode_ctrl/mode_fault.c" \
 "../Core/src/mode_ctrl/mode_position.c" \
 "../Core/src/mode_ctrl/mode_press.c" \
 "../Core/src/mode_ctrl/mode_root.c" 

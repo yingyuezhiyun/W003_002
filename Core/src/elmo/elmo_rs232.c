@@ -75,11 +75,11 @@ static void elmoRs232ParseLine(char *line)
 	}
 	else if(strncmp(line, "SO", 2) == 0)
 	{
-		g_elmoParam.fb.elmo_en = (strtol(payload, NULL, 10) != 0) ? 1U : 0U;
+		g_elmoParam.fb.en = (strtol(payload, NULL, 10) != 0) ? 1U : 0U;
 	}
 	else if(strncmp(line, "EC", 2) == 0)
 	{
-		g_elmoParam.fb.elmo_ec = (int32_t)strtol(payload, NULL, 10);
+		g_elmoParam.fb.ec = (int32_t)strtol(payload, NULL, 10);
 	}
 }
 
@@ -124,14 +124,14 @@ static void elmoRs232Poll(void)
 static void elmoRs232Enable(void)
 {
 	elmoRs232Send("MO=1;\r");
-	g_elmoParam.fb.elmo_en = 1U;
+	g_elmoParam.set.en = 1U;
 }
 
-// 下发去使能命令
+// 下发关闭命令
 static void elmoRs232Disable(void)
 {
 	elmoRs232Send("MO=0;\r");
-	g_elmoParam.fb.elmo_en = 0U;
+	g_elmoParam.set.en = 0U;
 }
 
 // 下发速度给定

@@ -13,6 +13,7 @@
 #define MODE_CALIB_PERIOD_MS (10U) // 10ms
 
 #define MODE_CALIB_SPEED (400000)
+#define MODE_NORMAL_SPEED (2000000)
 
 #define MODE_CALIB_MIN_POS (-3000000)
 #define MODE_CALIB_MAX_POS (3000000)
@@ -25,7 +26,7 @@ static MODE_EXEC_t Mode_Calib_Enter(Mode_Ctx_t *ctx);
 static MODE_EXEC_t Mode_Calib_Execute(Mode_Ctx_t *ctx);
 static MODE_EXEC_t Mode_Calib_Exit(Mode_Ctx_t *ctx);
 
-const HsmState_t Mode_Calib = {
+HsmState_t Mode_Calib = {
     .name = "CalibMode",
     .parent = &Mode_Root,
     .enter = Mode_Calib_Enter,
@@ -49,8 +50,7 @@ static MODE_EXEC_t Mode_Calib_Enter(Mode_Ctx_t *ctx)
     lastCalibLoopTick = glob_value.tick0p1ms;
     CalibStartTick = glob_value.tick0p1ms;
     ctx->calibSubState = CALIB_SUB_WAIT_MIN_END;
-    ctx->calibStepState.content.init = 1;    
-
+    ctx->calibStepState.content.init = 1;
 
     return MODE_EXEC_DONE;
 }
@@ -86,37 +86,60 @@ static MODE_EXEC_t Mode_Calib_Execute(Mode_Ctx_t *ctx)
     switch (ctx->calibSubState)
     {
     case CALIB_SUB_WAIT_MIN_END:
+        if (g_elmoParam.fb.en == 0)
+        {
+            ElmoOps->enable();
+        }
         ElmoOps->setRelPos(MODE_CALIB_MIN_POS);                                                                      // 向最小端点方向运动
         if ((fabs(g_elmoParam.fb.spd_fed) < cfg->Pos_limit.spd) && (fabs(g_elmoParam.fb.iq_fed) > cfg->Pos_limit.I)) // 速度足够慢且电流足够大，认为到达端点
         {
             valveParam->fullClosePos = g_elmoParam.fb.pos_fed;
-            ctx->calibSubState = CALIB_SUB_WAIT_MAX_END;
+            // 先关闭电机，等待电流刷新后再反向运动
+            ElmoOps->disable();
             ctx->calibStepState.content.seek_min = 1;
+            ctx->calibSubState = CALIB_SUB_WAIT_ELMO_READY;
+        }
+        break;
+    case CALIB_SUB_WAIT_ELMO_READY:
+        if (fabs(g_elmoParam.fb.iq_fed) < 0.5f && fabs(g_elmoParam.fb.spd_fed) < 100) // 等待电流足够小且速度足够慢，认为 Elmo 已经准备好开始下一步运动
+        {
+            ctx->calibSubState = CALIB_SUB_WAIT_MAX_END;
+            ElmoOps->enable();
+        }
+        else if (g_elmoParam.fb.en == 1)
+        {
+            ElmoOps->disable(); // 如果电流或速度还没有足够小，继续保持电机关闭状态
         }
         break;
     case CALIB_SUB_WAIT_MAX_END:
+        if (g_elmoParam.fb.en == 0)
+        {
+            ElmoOps->enable();
+        }
         ElmoOps->setRelPos(MODE_CALIB_MAX_POS);                                                                      // 向最大端点运动
         if ((fabs(g_elmoParam.fb.spd_fed) < cfg->Pos_limit.spd) && (fabs(g_elmoParam.fb.iq_fed) > cfg->Pos_limit.I)) // 速度足够慢且电流足够大，认为到达端点
         {
             valveParam->fullOpenPos = g_elmoParam.fb.pos_fed;
-            ctx->calibSubState = CALIB_SUB_VERIFY_RANGE;
+            ElmoOps->disable();
             ctx->calibStepState.content.seek_max = 1;
+            ctx->calibSubState = CALIB_SUB_VERIFY_RANGE;
         }
         break;
     case CALIB_SUB_VERIFY_RANGE:
-        ElmoOps->disable();
         int32_t stroke = valveParam->fullOpenPos - valveParam->fullClosePos;
         if (stroke > MODE_CALIB_STROKE_THREAD)
         {
             DEVICE_DELAY_US(5000);
-            ElmoOps->enable();
+            // ElmoOps->enable();
+            ElmoOps->setSpd(MODE_NORMAL_SPEED);
             valveParam->fullClosePos += stroke * 0.02f;
             valveParam->fullOpenPos -= stroke * 0.02f;
             valveParam->stroke = stroke * 0.96f;
             ctx->calibSubState = CALIB_SUB_DONE;
             ctx->calibStepState.content.calib_done = 1;
             ctx->locks.content.calib = 0; // 解锁标定，允许切换模式
-            Mode_HSM_Request_CMD(MODE_CMD_SET_HOLD, 0.0f); // 标定完成后保持当前位置
+            // Mode_HSM_Request_CMD(MODE_CMD_SET_HOLD, 0.0f); // 标定完成后保持当前位置
+            Mode_HSM_Request_CMD(MODE_CMD_FULL_OPEN, 0.0f); // 标定完成后保持全开位置
         }
         else
         {
@@ -128,7 +151,7 @@ static MODE_EXEC_t Mode_Calib_Execute(Mode_Ctx_t *ctx)
 
         break;
     default:
-        
+
         ElmoOps->disable();
         break;
     }

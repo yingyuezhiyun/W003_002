@@ -92,7 +92,7 @@ static void elmoCanProcess(const uint8_t *msgData, uint8_t msgLen)
 	switch(index)
 	{
 		case ELMO_IDX_ENABLE_FB:
-			g_elmoParam.fb.elmo_en = ((msgData[4] & 0x1U) != 0U) ? 1U : 0U;
+			g_elmoParam.fb.en = ((msgData[4] & 0x1U) != 0U) ? 1U : 0U;
 			break;
 
 		case ELMO_IDX_POS_FB:
@@ -128,7 +128,7 @@ static void elmoCanProcess(const uint8_t *msgData, uint8_t msgLen)
 		}
 
 		case ELMO_IDX_ERR_FB:
-			g_elmoParam.fb.elmo_ec = (int32_t)(((uint16_t)msgData[5] << 8U) | msgData[4]);
+			g_elmoParam.fb.ec = (int32_t)(((uint16_t)msgData[5] << 8U) | msgData[4]);
 			break;
 
 		default:
@@ -150,14 +150,14 @@ static void elmoCanPoll(void)
 static void elmoCanEnable(void)
 {
 	elmoCanSendSDOWrite(ELMO_IDX_ENABLE, 1U, 1U, 4U);
-	g_elmoParam.fb.elmo_en = 1U;
+	g_elmoParam.set.en = 1U;
 }
 
-// 下发去使能命令
+// 下发关闭命令
 static void elmoCanDisable(void)
 {
 	elmoCanSendSDOWrite(ELMO_IDX_ENABLE, 1U, 0U, 4U);
-	g_elmoParam.fb.elmo_en = 0U;
+	g_elmoParam.set.en = 0U;
 }
 
 // 下发速度给定

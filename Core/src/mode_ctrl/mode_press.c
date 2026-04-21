@@ -11,7 +11,7 @@ static MODE_EXEC_t Mode_Press_Enter(Mode_Ctx_t *ctx);
 static MODE_EXEC_t Mode_Press_ISR_Execute(Mode_Ctx_t *ctx);
 static MODE_EXEC_t Mode_Press_Exit(Mode_Ctx_t *ctx);
 
-const HsmState_t Mode_Press = {
+HsmState_t Mode_Press = {
     .name = "PressMode",
     .parent = &Mode_Root,
     .enter = Mode_Press_Enter,
@@ -26,8 +26,10 @@ const HsmState_t Mode_Press = {
 /// @return MODE_EXEC_t。
 static MODE_EXEC_t Mode_Press_Enter(Mode_Ctx_t *ctx)
 {
-    ElmoOps->enable();
-    DEVICE_DELAY_US(5000);
+    if (g_elmoParam.fb.en == 0)
+    {
+        ElmoOps->enable();
+    }
     lastPressLoopTick = glob_value.tick0p1ms;
     return MODE_EXEC_DONE;
 }
