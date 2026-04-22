@@ -146,14 +146,13 @@ static MODE_EXEC_t Mode_Calib_Execute(Mode_Ctx_t *ctx)
             valveParam->stroke = stroke * 0.96f;
             ctx->calibSubState = CALIB_SUB_DONE;
             ctx->calibStepState.content.calib_done = 1;
-            ctx->locks.content.calib = 0; // 解锁标定，允许切换模式
-            // Mode_HSM_Request_CMD(MODE_CMD_SET_HOLD, 0.0f); // 标定完成后保持当前位置
-            Mode_HSM_Request_CMD(MODE_CMD_FULL_OPEN, 0.0f); // 标定完成后保持全开位置
+            Mode_HSM_Request_CMD(MODE_CMD_CALIB_DONE, 0.0f); // 标定完成后保持全开位置
         }
         else
         {
             ctx->calibSubState = CALIB_SUB_FAILED;
             ctx->calibStepState.content.verify_failed = 1;
+            Mode_HSM_Request_CMD(MODE_CMD_FAULT, 0.0f); // 校验行程失败，进入故障模式
         }
         break;
     case CALIB_SUB_DONE:

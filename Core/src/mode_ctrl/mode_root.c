@@ -44,6 +44,10 @@ static MODE_EXEC_t Mode_Root_Execute(Mode_Ctx_t *ctx)
             ElmoOps.setEnable(0); // 进入故障模式时关闭电机
         }
         break;
+    case MODE_CMD_CALIB_DONE:
+        // 标定完成后保持全开位置，直到收到其他命令
+        Set_Position_Percent(100.0f);
+        break;
     default:
         break;
     }

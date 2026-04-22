@@ -122,6 +122,7 @@ can1.registerInterrupts      = true;
 can1.msgObjsUsed             = [1,2,3,4,5];
 can1.can.canrxPin.$assign    = "GPIO36";
 can1.can.cantxPin.$assign    = "GPIO37";
+can1.can0Int.enableInterrupt = true;
 can1.msgObj1.$name           = "msgObj0";
 can1.msgObj1.msgType         = "CAN_MSG_OBJ_TYPE_TX";
 can1.msgObj1.msgID           = 1663;
@@ -130,7 +131,6 @@ can1.msgObj2.$name           = "msgObj1";
 can1.msgObj2.msgLen          = 8;
 can1.msgObj2.msgID           = 1663;
 can1.msgObj2.msgType         = "CAN_MSG_OBJ_TYPE_TX";
-can1.can0Int.enableInterrupt = true;
 can1.msgObj3.$name           = "msgObj2";
 can1.msgObj3.msgType         = "CAN_MSG_OBJ_TYPE_TX";
 can1.msgObj3.msgLen          = 8;
@@ -287,7 +287,7 @@ gpio16.padConfig       = "PULLUP";
 gpio16.gpioPin.$assign = "GPIO81";
 
 gpio17.padConfig       = "PULLUP";
-gpio17.$name           = "POS_CLOSE_PIN";
+gpio17.$name           = "POS_CLOSE_KEY";
 gpio17.gpioPin.$assign = "GPIO82";
 
 gpio18.$name             = "POS_OPEN_TTL_OUT";

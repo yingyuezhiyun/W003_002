@@ -43,29 +43,182 @@ void Fault_handle()
 {
 }
 
+typedef struct
+{
+    uint8_t pos_close_ttl_in : 1;
+    uint8_t pos_open_ttl_in : 1;
+    uint8_t pos_open_key : 1;
+    uint8_t pos_close_key : 1;
+    uint8_t last_pos_close_ttl_in : 1;
+    uint8_t last_pos_open_ttl_in : 1;
+    uint8_t last_pos_open_key : 1;
+    uint8_t last_pos_close_key : 1;
+    uint32_t last_check_tick;
+    uint8_t all_key_down_cnt;
+} key_ttl_state_t;
+
+key_ttl_state_t key_ttl_state = {
+    .pos_close_ttl_in = 0,
+    .pos_open_ttl_in = 0,
+    .pos_open_key = 0,
+    .pos_close_key = 0,
+    .last_pos_close_ttl_in = 1,
+    .last_pos_open_ttl_in = 1,
+    .last_pos_open_key = 0,
+    .last_pos_close_key = 0,
+    .last_check_tick = 0U,
+    .all_key_down_cnt = 0,
+};
+
+#define KEY_TTL_POLL_PERIOD_MS (10U)
 /// @brief 处理按键/TTL 等本地输入轮询任务。
 void Key_TTL_Poll()
 {
-    if (GPIO_readPin(POS_CLOSE_TTL_IN) == 1)
+
+    key_ttl_state_t *state = &key_ttl_state;
+    uint32_t nowTick = glob_value.tick0p1ms;
+    if ((uint32_t)(nowTick - state->last_check_tick) < KEY_TTL_POLL_PERIOD_MS * TICK_PER_MS)
     {
-        /* code */
+        return;
     }
-    // else if (GPIO_readPin(POS_CLOSE_TTL_OUT) == 0)
-    // {
-    //     /* code */
-    // }
-    else if (GPIO_readPin(POS_OPEN_TTL_IN) == 1)
+    state->last_check_tick = nowTick;
+    state->pos_close_ttl_in = GPIO_readPin(POS_CLOSE_TTL_IN);
+    state->pos_open_ttl_in = GPIO_readPin(POS_OPEN_TTL_IN);
+    state->pos_open_key = GPIO_readPin(POS_OPEN_KEY);
+    state->pos_close_key = GPIO_readPin(POS_CLOSE_KEY);
+
+    ///**************按键功能************************/
+    if ((state->pos_open_key == 0) && (state->pos_close_key == 0)) // 按键同时按下，进入标定模式
     {
-        /* code */
+        state->all_key_down_cnt++;
+        if (state->all_key_down_cnt >= 100) // 按下1s
+        {
+            Mode_HSM_Request_CMD(MODE_CMD_CALIB, 0.0f);
+            state->all_key_down_cnt = 0;
+        }
+        state->last_pos_close_key = state->pos_close_key;
+        state->last_pos_open_key = state->pos_open_key;
     }
-    else if (GPIO_readPin(POS_OPEN_KEY) == 0)
+    else if (state->pos_open_key != state->last_pos_open_key)// 按键状态变化，执行相应命令
     {
-        /* code */
+        if (state->pos_open_key == 0) // 按键有效时为低电平
+        {
+            Mode_HSM_Request_CMD(MODE_CMD_FULL_OPEN, 0.0f);            
+        }        
+        state->last_pos_open_key = state->pos_open_key;
+        state->all_key_down_cnt = 0;
     }
-    else if (GPIO_readPin(POS_CLOSE_PIN) == 0)
+    else if (state->pos_close_key != state->last_pos_close_key)// 按键状态变化，执行相应命令
     {
-        /* code */
+        if (state->pos_close_key == 0) // 按键有效时为低电平
+        {
+            Mode_HSM_Request_CMD(MODE_CMD_FULL_CLOSE, 0.0f);
+        }        
+        state->last_pos_close_key = state->pos_close_key;
+        state->all_key_down_cnt = 0;
     }
+    else
+    {
+        state->all_key_down_cnt = 0;
+    }
+
+
+    ///**************TTL 功能************************/
+    if (state->pos_close_ttl_in == 1) // （电路反向设计）外部TTL 输入有效时为低电平，内部为高电平
+    {
+        Mode_HSM_Request_CMD(MODE_CMD_SET_KEY_LOCK, 0.0f); // TTL 输入有效，执行按键锁定命令
+        state->last_pos_close_ttl_in = state->pos_close_ttl_in;
+    }
+    else if (state->last_pos_close_ttl_in != state->pos_close_ttl_in)
+    {
+        Mode_HSM_Request_CMD(MODE_CMD_SET_KEY_UNLOCK, 0.0f);// TTL 输入无效，执行按键解锁命令
+        state->last_pos_close_ttl_in = state->pos_close_ttl_in;
+    }
+#if 0 // 目前不使用外部 全开TTL 输入控制全开，避免误触发导致安全风险
+    else if (state->pos_open_ttl_in == 1)
+    {
+        Mode_HSM_Request_CMD(MODE_CMD_FULL_OPEN, 0.0f);
+    }
+#endif
+
+#if 0
+    key_ttl_state_t *state = &key_ttl_state;
+    uint32_t nowTick = glob_value.tick0p1ms;
+    if ((uint32_t)(nowTick - state->last_check_tick) < KEY_TTL_POLL_PERIOD_MS * TICK_PER_MS)
+    {
+        return;
+    }
+    state->last_check_tick = nowTick;
+    state->pos_close_ttl_in = GPIO_readPin(POS_CLOSE_TTL_IN);
+    state->pos_open_ttl_in = GPIO_readPin(POS_OPEN_TTL_IN);
+    state->pos_open_key = GPIO_readPin(POS_OPEN_KEY);
+    state->pos_close_key = GPIO_readPin(POS_CLOSE_KEY);
+
+    if ((state->pos_open_key == 0) && (state->pos_close_key == 0)) // 按键同时按下，进入标定模式
+    {
+        state->all_key_down_cnt++;
+        if (state->all_key_down_cnt >= 100) // 按下1s
+        {
+            Mode_HSM_Request_CMD(MODE_CMD_CALIB, 0.0f);
+            state->all_key_down_cnt = 0;
+        }
+        state->last_pos_close_key = state->pos_close_key;
+        state->last_pos_open_key = state->pos_open_key;
+    }
+    else if(glob_value.valveParam.locks.content.calib) // 标定锁定时禁止执行任何命令，直到标定完成后解锁
+    {
+        state->pos_close_ttl_in = 1;
+        state->pos_open_ttl_in = 1;
+        state->last_pos_close_ttl_in = state->pos_close_ttl_in;
+        state->last_pos_open_ttl_in = state->pos_open_ttl_in;
+    } 
+    else if (state->pos_close_ttl_in != state->last_pos_close_ttl_in) // TTL 输入状态变化，执行相应命令
+    {
+        if (state->pos_close_ttl_in == 1) // （电路反向设计）外部TTL 输入有效时为低电平，内部为高电平
+        {
+            Mode_HSM_Request_CMD(MODE_CMD_SET_KEY_LOCK, 0.0f); // TTL 输入有效，执行按键锁定命令
+        }
+        else
+        {
+            Mode_HSM_Request_CMD(MODE_CMD_SET_KEY_UNLOCK, 0.0f);// TTL 输入无效，执行按键解锁命令
+        }
+        state->last_pos_close_ttl_in = state->pos_close_ttl_in;
+    }
+#if 0 // 目前不使用外部 全开TTL 输入控制全开，避免误触发导致安全风险
+    else if (state->pos_open_ttl_in != state->last_pos_open_ttl_in) // TTL 输入状态变化，执行相应命令
+    {
+        if (state->pos_open_ttl_in == 1) // （电路反向设计）外部TTL 输入有效时为低电平，内部为高电平
+        {
+            Mode_HSM_Request_CMD(MODE_CMD_FULL_OPEN, 0.0f); // TTL 输入有效，执行全开命令
+        }
+        state->last_pos_open_ttl_in = state->pos_open_ttl_in;
+    }
+#endif
+    else if (state->pos_open_key != state->last_pos_open_key)
+    {
+        if (state->pos_open_key == 0) // 按键有效时为低电平
+        {
+            Mode_HSM_Request_CMD(MODE_CMD_FULL_OPEN, 0.0f);
+            state->all_key_down_cnt = 0;
+        }        
+        state->last_pos_open_key = state->pos_open_key;
+        state->all_key_down_cnt = 0;
+    }
+    else if (state->pos_close_key != state->last_pos_close_key)
+    {
+        if (state->pos_close_key == 0) // 按键有效时为低电平
+        {
+            Mode_HSM_Request_CMD(MODE_CMD_FULL_CLOSE, 0.0f);
+            state->all_key_down_cnt = 0;
+        }        
+        state->last_pos_close_key = state->pos_close_key;
+        state->all_key_down_cnt = 0;
+    }
+    else
+    {
+        state->all_key_down_cnt = 0;
+    }
+#endif
 }
 
 #define ELMO_POLL_PERIOD_MS (10U) // 10ms

@@ -148,7 +148,7 @@ extern "C"
 //
 // GPIO82 - GPIO Settings
 //
-#define POS_CLOSE_PIN_GPIO_PIN_CONFIG GPIO_82_GPIO82
+#define POS_CLOSE_KEY_GPIO_PIN_CONFIG GPIO_82_GPIO82
 //
 // GPIO87 - GPIO Settings
 //
@@ -389,8 +389,8 @@ void RUN_LED_init();
 void FAULT_LED_init();
 #define POS_OPEN_KEY 81
 void POS_OPEN_KEY_init();
-#define POS_CLOSE_PIN 82
-void POS_CLOSE_PIN_init();
+#define POS_CLOSE_KEY 82
+void POS_CLOSE_KEY_init();
 #define POS_OPEN_TTL_OUT 87
 void POS_OPEN_TTL_OUT_init();
 #define POS_CLOSE_TTL_OUT 86

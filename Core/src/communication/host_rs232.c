@@ -16,6 +16,8 @@
 
 #include "commu_core.h"
 
+#include "param_store.h"
+
 #define HOST_RS232_VERSION "1.0.0"
 #define HOST_RS232_VERSION_DATE "2026-04-14"
 #define HOST_RS232_SERIAL_NUMBER "00000001"
@@ -255,6 +257,15 @@ static uint8_t reset_func(const char *arg, printf_t pprintf)
 	return ok;
 }
 
+static uint8_t save_params_func(const char *arg, printf_t pprintf)
+{
+	if (ParamStore_SaveConfig(&glob_value.paramCfg) == 1)
+	{
+		return RC_SUCCESS;
+	}
+	return RC_HARDWARE_ERROR;
+}
+
 static Command_t commands[] = {
 	CMD_FUNC_ENTRY("C", close_func),
 	CMD_FUNC_ENTRY("O", open_func),
@@ -280,10 +291,12 @@ static Command_t commands[] = {
 	CMD_READ_FLOAT("RN1", "N1%.2f", glob_value.paramCfg.CDG_cfg.CDG1_Range),
 	CMD_READ_FLOAT("RN2", "N2%.2f", glob_value.paramCfg.CDG_cfg.CDG2_Range),
 	CMD_FUNC_ENTRY("RESET", reset_func),
+
 	CMD_PARAM_ENTRY("XRELPOS", set_xrelpos_func),
 	CMD_PARAM_ENTRY("XSPD", set_xspd_func),
 	CMD_PARAM_ENTRY("XABSPOS", set_xabspos_func),
 	CMD_FUNC_ENTRY("XSTOP", set_xstop_func),
+	CMD_FUNC_ENTRY("SA", save_params_func),
 	{NULL, 0, NULL, NULL, DT_NONE, 0},
 };
 

@@ -19,15 +19,13 @@
 #include "ECAT/src/applInterface.h"
 #endif
 
-
 glob_value_t glob_value = {
     .tick0p1ms = 0,
-    .valveParam = {0, 0, 0, 0, 0},
+    .valveParam = {.locks.content.calib=1, .fullOpenPos = 0, .fullClosePos = 0, .stroke = 0, .positionPercent = 0.0f, .pressurePercent = 0.0f},
     .paramCfg = {.Pos_limit.I = 8, .Pos_limit.spd = 1000},
     .modeCtx = {0},
     .status = {.errors.val = 0, .state.val = 0},
 };
-
 
 void main(void)
 {
@@ -38,22 +36,27 @@ void main(void)
     Interrupt_initVectorTable();
 
     Board_init();
+    
+    // 从 EEPROM 加载配置参数，失败则设置错误标志
+    glob_value.status.errors.content.epprom = !ParamStore_LoadConfig(&glob_value.paramCfg);
 
+    // 初始化运行模式控制
     ModeHSM_Init(&glob_value.modeCtx);
-
+    // 初始化RS232串口通信
     HostRs232_Init();
 
 #if ECAT_ENABLE
+    // 初始化 EtherCAT
     HW_Init();
     MainInit();
 #endif
 
-    // 选择默认 Elmo ，并执行初始化
+    // Elmo 控制器初始化
     ElmoCtrl_Init();
 
     // 启动定时器
     CPUTimer_startTimer(CPUTIMER0_BASE);
-   // CPUTimer_startTimer(CPUTIMER2_BASE);
+    // CPUTimer_startTimer(CPUTIMER2_BASE);
 
     EINT; // 开启全局中断
     ERTM; // Enable Global realtime interrupt

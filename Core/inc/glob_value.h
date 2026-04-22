@@ -43,6 +43,15 @@ typedef struct
 
 typedef struct
 {
+    union
+    {
+        struct
+        {
+            uint8_t calib : 1; ///< 标定锁，最高优先级
+            uint8_t key : 1;   ///< 按键锁
+        } content;
+        uint8_t val;
+    } locks;               // 锁定状态    
     int32_t fullOpenPos;   ///< 全开绝对位置（用于 FULL_OPEN 与百分比换算的 100% 端点）
     int32_t fullClosePos;  ///< 全关绝对位置（用于 FULL_CLOSE 与百分比换算的 0% 端点）
     int32_t stroke;        ///< 行程（fullOpenPos - fullClosePos，用于百分比换算）

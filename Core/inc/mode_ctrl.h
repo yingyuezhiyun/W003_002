@@ -32,6 +32,7 @@ typedef enum
     MODE_CMD_SET_PRESSURE_PERCENT, ///< 设置目标压力（百分比 0~100）
     MODE_CMD_SET_HOLD,             ///< 设置保持
     MODE_CMD_FAULT,                ///< 进入故障模式
+    MODE_CMD_CALIB_DONE,           ///< 标定完成（仅用于状态机内部传递标定完成事件）
 } Mode_Command_Type;
 
 // /// @brief LED 指示灯模式。
@@ -96,16 +97,17 @@ struct Mode_Ctx_s
 {
     HsmState_t *hsm; ///< 状态机指针
     // uint8_t lock;             ///< 模式切换锁
-    union
-    {
-        struct
-        {
-            uint8_t calib : 1;  ///< 标定锁，最高优先级
-            uint8_t key : 1;    ///< 按键锁
-            uint8_t transt : 1; ///< 模式切换锁，正在切换模式时为1
-        } content;
-        uint8_t val;
-    } locks;                // 锁定状态
+    // union
+    // {
+    //     struct
+    //     {
+    //         uint8_t calib : 1;  ///< 标定锁，最高优先级
+    //         uint8_t key : 1;    ///< 按键锁
+    //         uint8_t transt : 1; ///< 模式切换锁，正在切换模式时为1
+    //     } content;
+    //     uint8_t val;
+    // } locks;                // 锁定状态
+    uint8_t transt_lock;    ///< 模式切换锁，正在切换模式时为
     Mode_Command_t Cmd;     ///< 命令参数
     Mode_Command_t nextCmd; ///< 下一个命令（用于在状态机中传递命令参数）
     Mode_Command_t lastCmd; ///< 上一次处理的命令
@@ -129,7 +131,6 @@ extern HsmState_t Mode_Calib;
 extern HsmState_t Mode_Position;
 extern HsmState_t Mode_Press;
 extern HsmState_t Mode_Root;
-
 
 void ModeHSM_Init(Mode_Ctx_t *ctx);
 void ModeHSM_Run(Mode_Ctx_t *ctx);

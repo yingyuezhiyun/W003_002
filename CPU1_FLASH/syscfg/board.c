@@ -124,7 +124,7 @@ void PinMux_init()
 	GPIO_setPinConfig(GPIO_80_GPIO80);
 	// GPIO81 -> POS_OPEN_KEY Pinmux
 	GPIO_setPinConfig(GPIO_81_GPIO81);
-	// GPIO82 -> POS_CLOSE_PIN Pinmux
+	// GPIO82 -> POS_CLOSE_KEY Pinmux
 	GPIO_setPinConfig(GPIO_82_GPIO82);
 	// GPIO87 -> POS_OPEN_TTL_OUT Pinmux
 	GPIO_setPinConfig(GPIO_87_GPIO87);
@@ -608,7 +608,7 @@ void GPIO_init(){
 	RUN_LED_init();
 	FAULT_LED_init();
 	POS_OPEN_KEY_init();
-	POS_CLOSE_PIN_init();
+	POS_CLOSE_KEY_init();
 	POS_OPEN_TTL_OUT_init();
 	POS_CLOSE_TTL_OUT_init();
 	POS_OPEN_TTL_IN_init();
@@ -722,11 +722,11 @@ void POS_OPEN_KEY_init(){
 	GPIO_setDirectionMode(POS_OPEN_KEY, GPIO_DIR_MODE_IN);
 	GPIO_setControllerCore(POS_OPEN_KEY, GPIO_CORE_CPU1);
 }
-void POS_CLOSE_PIN_init(){
-	GPIO_setPadConfig(POS_CLOSE_PIN, GPIO_PIN_TYPE_STD | GPIO_PIN_TYPE_PULLUP);
-	GPIO_setQualificationMode(POS_CLOSE_PIN, GPIO_QUAL_SYNC);
-	GPIO_setDirectionMode(POS_CLOSE_PIN, GPIO_DIR_MODE_IN);
-	GPIO_setControllerCore(POS_CLOSE_PIN, GPIO_CORE_CPU1);
+void POS_CLOSE_KEY_init(){
+	GPIO_setPadConfig(POS_CLOSE_KEY, GPIO_PIN_TYPE_STD | GPIO_PIN_TYPE_PULLUP);
+	GPIO_setQualificationMode(POS_CLOSE_KEY, GPIO_QUAL_SYNC);
+	GPIO_setDirectionMode(POS_CLOSE_KEY, GPIO_DIR_MODE_IN);
+	GPIO_setControllerCore(POS_CLOSE_KEY, GPIO_CORE_CPU1);
 }
 void POS_OPEN_TTL_OUT_init(){
 	GPIO_writePin(POS_OPEN_TTL_OUT, 1);
