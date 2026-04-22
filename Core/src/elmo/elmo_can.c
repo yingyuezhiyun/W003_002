@@ -1,6 +1,7 @@
 #include "Core/inc/elmo_can.h"
 
 #include <math.h>
+#include <stdbool.h>
 
 #include "board.h"
 
@@ -8,23 +9,53 @@
 #define ELMO_CAN_RX_OBJ_ID (2U)
 
 // Elmo object dictionary indexes used in the legacy project.
-#define ELMO_IDX_ENABLE         (0x3146U)
-#define ELMO_IDX_SPEED_CMD      (0x31E3U)
-#define ELMO_IDX_ACCEL_CMD      (0x3002U)
-#define ELMO_IDX_DECEL_CMD      (0x3050U)
-#define ELMO_IDX_REL_POS_CMD    (0x3197U)
-#define ELMO_IDX_ABS_POS_CMD    (0x3186U)
+#define ELMO_IDX_ENABLE (0x3146U)
+#define ELMO_IDX_SPEED_CMD (0x31E3U)
+#define ELMO_IDX_ACCEL_CMD (0x3002U)
+#define ELMO_IDX_DECEL_CMD (0x3050U)
+#define ELMO_IDX_REL_POS_CMD (0x3197U)
+#define ELMO_IDX_ABS_POS_CMD (0x3186U)
 #define ELMO_IDX_MOTION_TRIGGER (0x3020U)
 
-#define ELMO_IDX_POS_FB         (0x319DU)
-#define ELMO_IDX_SPD_FB         (0x3239U)
-#define ELMO_IDX_IQ_FB          (0x30E0U)
-#define ELMO_IDX_ENABLE_FB      (0x31E2U)
-#define ELMO_IDX_ERR_FB         (0x306AU)
+#define ELMO_IDX_POS_FB (0x319DU)
+#define ELMO_IDX_SPD_FB (0x3239U)
+#define ELMO_IDX_IQ_FB (0x30E0U)
+#define ELMO_IDX_ENABLE_FB (0x31E2U)
+#define ELMO_IDX_ERR_FB (0x306AU)
 
-// 发送一帧 8 字节 CAN 数据到 Elmo
+/// @brief 等待CAN发送对象准备就绪（即上一个消息已被发送，TXRQ位被清除）。
+/// @param timeout_us  等待超时时间，单位微秒。
+/// @return  true表示准备就绪，false表示超时
+static bool elmoCanWaitTxReady(uint32_t timeout_us)
+{
+	uint32_t remain = timeout_us;
+	const uint32_t bit = (1U << (ELMO_CAN_TX_OBJ_ID - 1U));
+
+	while ((CAN_getTxRequests(Elmo_CAN_BASE) & bit) != 0U)
+	{
+		if (remain == 0U)
+		{
+			return false;
+		}
+		// small sleep to yield CPU and give CAN hardware time to clear TXRQ
+		DEVICE_DELAY_US(5);
+		if (remain > 5U)
+		{
+			remain -= 5U;
+		}
+		else
+		{
+			remain = 0U;
+		}
+	}
+	return true;
+}
+
+/// @brief 发送CAN消息。
+/// @param msgData  消息数据指针
 static void elmoCanSendObj(const uint8_t *msgData)
 {
+	elmoCanWaitTxReady(5000U);
 	CAN_sendMessage(Elmo_CAN_BASE, ELMO_CAN_TX_OBJ_ID, 8U, (uint16_t *)msgData);
 }
 
@@ -32,7 +63,6 @@ static void elmoCanSendObj(const uint8_t *msgData)
 static void elmoCanSendSDORequest(uint16_t index, uint8_t subIndex, uint8_t command)
 {
 	uint8_t txMsgData[8] = {0U};
-
 	txMsgData[0] = command;
 	txMsgData[1] = (uint8_t)(index & 0xFFU);
 	txMsgData[2] = (uint8_t)((index >> 8U) & 0xFFU);
@@ -70,7 +100,7 @@ static void elmoCanSendSDOWrite(uint16_t index, uint8_t subIndex, uint32_t value
 
 	elmoCanSendObj(txMsgData);
 }
-
+int32_t g_testVal = 0;
 // 解析 Elmo 的 CAN 反馈数据
 static void elmoCanProcess(const uint8_t *msgData, uint8_t msgLen)
 {
@@ -126,6 +156,13 @@ static void elmoCanProcess(const uint8_t *msgData, uint8_t msgLen)
 		g_elmoParam.fb.iq_fed = fabsf(conv.f32);
 		break;
 	}
+	case ELMO_IDX_ABS_POS_CMD:
+		val = (int32_t)(((uint32_t)msgData[7] << 24U) |
+						((uint32_t)msgData[6] << 16U) |
+						((uint32_t)msgData[5] << 8U) |
+						msgData[4]);
+		g_testVal = val;
+		break;
 
 	case ELMO_IDX_ERR_FB:
 		g_elmoParam.fb.ec = (int32_t)(((uint16_t)msgData[5] << 8U) | msgData[4]);
@@ -201,6 +238,7 @@ static void elmoCanSetAbsPos(int32_t posVal)
 	lastAbsPosSet = posVal;
 	elmoCanSendSDOWrite(ELMO_IDX_ABS_POS_CMD, 1U, (uint32_t)posVal, 4U);
 	elmoCanSendSDOWrite(ELMO_IDX_MOTION_TRIGGER, 1U, 1U, 4U);
+	elmoCanSendSDORequest(ELMO_IDX_ABS_POS_CMD, 1U, 0x40U);
 }
 
 // 请求位置反馈

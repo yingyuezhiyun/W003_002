@@ -129,7 +129,7 @@ extern HsmState_t Mode_Calib;
 extern HsmState_t Mode_Position;
 extern HsmState_t Mode_Press;
 extern HsmState_t Mode_Root;
-extern HsmState_t Mode_Fault;
+
 
 void ModeHSM_Init(Mode_Ctx_t *ctx);
 void ModeHSM_Run(Mode_Ctx_t *ctx);

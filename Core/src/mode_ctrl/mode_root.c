@@ -33,9 +33,14 @@ static MODE_EXEC_t Mode_Root_Execute(Mode_Ctx_t *ctx)
     case MODE_CMD_SET_KEY_UNLOCK:
     case MODE_CMD_SET_HOLD:
         /* code */
-        //todo 
+        // todo
         break;
-
+    case MODE_CMD_FAULT:
+        if (g_elmoParam.fb.en)
+        {
+            ElmoOps->disable(); // 进入故障模式时关闭电机
+        }
+        break;
     default:
         break;
     }

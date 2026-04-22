@@ -127,7 +127,8 @@ uint8_t Mode_HSM_Request_CMD(Mode_Command_Type cmd, float param)
     }
     if (cmd == MODE_CMD_FAULT) // 进入故障模式
     {
-        ctx->hsm->next = &Mode_Fault;
+        ctx->hsm->next = &Mode_Root;
+        ctx->nextCmd.cmd = cmd;
         return 1;
     }
     if (ctx->calibSubState > CALIB_SUB_NONE && ctx->calibSubState < CALIB_SUB_DONE) // 处于标定未完成状态，禁止执行任何命令
