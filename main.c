@@ -13,7 +13,7 @@
 #include "Core/inc/func_exec.h"
 #include "host_rs232.h"
 
-#if ECAT_EN
+#if ECAT_ENABLE
 #include "ECAT/9252_HW.h"
 #include "ECAT/src/ecatappl.h"
 #include "ECAT/src/applInterface.h"
@@ -43,13 +43,13 @@ void main(void)
 
     HostRs232_Init();
 
-#if ECAT_EN
+#if ECAT_ENABLE
     HW_Init();
     MainInit();
 #endif
 
     // 选择默认 Elmo ，并执行初始化
-    ElmoCtrl_SelectDefault();
+    ElmoCtrl_Init();
 
     // 启动定时器
     CPUTimer_startTimer(CPUTIMER0_BASE);
@@ -61,7 +61,7 @@ void main(void)
     while (1)
     {
         // 处理 EtherCAT 主循环
-#if ECAT_EN
+#if ECAT_ENABLE
         MainLoop();
 #endif
 

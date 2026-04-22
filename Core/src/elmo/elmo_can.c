@@ -21,6 +21,8 @@
 #define ELMO_IDX_REL_POS_CMD (0x3197U)
 #define ELMO_IDX_ABS_POS_CMD (0x3186U)
 #define ELMO_IDX_MOTION_TRIGGER (0x3020U)
+#define ELMO_IDX_ST_DEC_CMD (0x31D7U)
+#define ELMO_IDX_ST_CMD (0x31E7U)
 
 #define ELMO_IDX_POS_FB (0x319DU)
 #define ELMO_IDX_SPD_FB (0x3239U)
@@ -35,7 +37,10 @@ static inline uint32_t elmoCanObjBit(uint8_t objId)
 	return (1UL << ((uint32_t)objId - 1UL));
 }
 
-// Try to pick a free TX message object (TXRQ bit cleared). Returns 0 if none free.
+
+/// @brief 从当前的 Tx 请求中 与elmo的发送通道匹配，挑选一个空闲的消息对象 ID。
+/// @param txRequests 
+/// @return 
 static uint8_t elmoCanPickFreeTxObj(uint32_t txRequests)
 {
 	const uint8_t count = (uint8_t)(ELMO_CAN_TX_OBJ_LAST - ELMO_CAN_TX_OBJ_FIRST + 1U);
@@ -62,7 +67,9 @@ static uint8_t elmoCanPickFreeTxObj(uint32_t txRequests)
 	return 0U;
 }
 
-// Wait until any TX object becomes free, then return its objId.
+/// @brief 等待并获取一个空闲的CAN消息对象 ID。
+/// @param  
+/// @return 
 static uint8_t elmoCanWaitFreeTxObj(void)
 {
 	int16_t loop_us = 5000;
@@ -128,9 +135,9 @@ static void elmoCanSendSDOWrite(uint16_t index, uint8_t subIndex, uint32_t value
 
 	elmoCanSendObj(txMsgData);
 }
-int32_t g_testVal = 0;
+
 // 解析 Elmo 的 CAN 反馈数据
-static void elmoCanProcess(const uint8_t *msgData, uint8_t msgLen)
+static void elmoCanProcess(const uint8_t *msgData, uint8_t msgLen, ElmoFeedbackParam *fb)
 {
 	uint16_t index;
 	int32_t val;
@@ -150,7 +157,7 @@ static void elmoCanProcess(const uint8_t *msgData, uint8_t msgLen)
 	switch (index)
 	{
 	case ELMO_IDX_ENABLE_FB:
-		g_elmoParam.fb.en = ((msgData[4] & 0x1U) != 0U) ? 1U : 0U;
+		fb->en = ((msgData[4] & 0x1U) != 0U) ? 1U : 0U;
 		break;
 
 	case ELMO_IDX_POS_FB:
@@ -158,7 +165,7 @@ static void elmoCanProcess(const uint8_t *msgData, uint8_t msgLen)
 						((uint32_t)msgData[6] << 16U) |
 						((uint32_t)msgData[5] << 8U) |
 						msgData[4]);
-		g_elmoParam.fb.pos_fed = val;
+		fb->pos_fed = val;
 		break;
 
 	case ELMO_IDX_SPD_FB:
@@ -166,7 +173,7 @@ static void elmoCanProcess(const uint8_t *msgData, uint8_t msgLen)
 						((uint32_t)msgData[6] << 16U) |
 						((uint32_t)msgData[5] << 8U) |
 						msgData[4]);
-		g_elmoParam.fb.spd_fed = val;
+		fb->spd_fed = val;
 		break;
 
 	case ELMO_IDX_IQ_FB:
@@ -181,7 +188,7 @@ static void elmoCanProcess(const uint8_t *msgData, uint8_t msgLen)
 							 ((uint32_t)msgData[6] << 16U) |
 							 ((uint32_t)msgData[5] << 8U) |
 							 msgData[4]);
-		g_elmoParam.fb.iq_fed = fabsf(conv.f32);
+		fb->iq_fed = fabsf(conv.f32);
 		break;
 	}
 	case ELMO_IDX_ABS_POS_CMD:
@@ -189,11 +196,47 @@ static void elmoCanProcess(const uint8_t *msgData, uint8_t msgLen)
 						((uint32_t)msgData[6] << 16U) |
 						((uint32_t)msgData[5] << 8U) |
 						msgData[4]);
-		g_testVal = val;
+		fb->abs_pos_set = val;
+		break;
+	case ELMO_IDX_REL_POS_CMD:
+		val = (int32_t)(((uint32_t)msgData[7] << 24U) |
+						((uint32_t)msgData[6] << 16U) |
+						((uint32_t)msgData[5] << 8U) |
+						msgData[4]);
+		fb->rel_pos_set = val;
+		break;
+	case ELMO_IDX_SPEED_CMD:
+		val = (int32_t)(((uint32_t)msgData[7] << 24U) |
+						((uint32_t)msgData[6] << 16U) |
+						((uint32_t)msgData[5] << 8U) |
+						msgData[4]);
+		fb->spd_set = val;
+		break;
+	case ELMO_IDX_ACCEL_CMD:
+		val = (int32_t)(((uint32_t)msgData[7] << 24U) |
+						((uint32_t)msgData[6] << 16U) |
+						((uint32_t)msgData[5] << 8U) |
+						msgData[4]);
+		fb->ac_set = val;
+		break;
+	case ELMO_IDX_DECEL_CMD:
+		val = (int32_t)(((uint32_t)msgData[7] << 24U) |
+						((uint32_t)msgData[6] << 16U) |
+						((uint32_t)msgData[5] << 8U) |
+						msgData[4]);
+		fb->dc_set = val;
 		break;
 
 	case ELMO_IDX_ERR_FB:
-		g_elmoParam.fb.ec = (int32_t)(((uint16_t)msgData[5] << 8U) | msgData[4]);
+		fb->ec = (int32_t)(((uint16_t)msgData[5] << 8U) | msgData[4]);
+		break;
+
+		case ELMO_IDX_ST_DEC_CMD:
+		val = (int32_t)(((uint32_t)msgData[7] << 24U) |
+						((uint32_t)msgData[6] << 16U) |
+						((uint32_t)msgData[5] << 8U) |
+						msgData[4]);
+		fb->stop_dc_set = val;
 		break;
 
 	default:
@@ -201,55 +244,33 @@ static void elmoCanProcess(const uint8_t *msgData, uint8_t msgLen)
 	}
 }
 
-// CAN 初始化（当前由 SysConfig 完成底层初始化）
-static void elmoCanInit(void)
-{
-}
-
-// CAN 主循环轮询（当前使用中断接收，轮询可留空）
-static void elmoCanPoll(void)
-{
-}
-
 // 下发使能命令
-static void elmoCanEnable(void)
+static void elmoCanSetEnable(uint8_t enable)
 {
-	elmoCanSendSDOWrite(ELMO_IDX_ENABLE, 1U, 1U, 4U);
-	g_elmoParam.set.en = 1U;
-}
-
-// 下发关闭命令
-static void elmoCanDisable(void)
-{
-	elmoCanSendSDOWrite(ELMO_IDX_ENABLE, 1U, 0U, 4U);
-	g_elmoParam.set.en = 0U;
+	elmoCanSendSDOWrite(ELMO_IDX_ENABLE, 1U, enable, 4U);
 }
 
 // 下发速度给定
 static void elmoCanSetSpd(int32_t spdVal)
 {
-	g_elmoParam.set.spd_set = (uint32_t)spdVal;
 	elmoCanSendSDOWrite(ELMO_IDX_SPEED_CMD, 1U, (uint32_t)spdVal, 4U);
 }
 
 // 下发加速度给定
 static void elmoCanSetAc(int32_t acVal)
 {
-	g_elmoParam.set.ac_set = (uint32_t)acVal;
 	elmoCanSendSDOWrite(ELMO_IDX_ACCEL_CMD, 1U, (uint32_t)acVal, 4U);
 }
 
 // 下发减速度给定
 static void elmoCanSetDc(int32_t dcVal)
 {
-	g_elmoParam.set.dc_set = (uint32_t)dcVal;
 	elmoCanSendSDOWrite(ELMO_IDX_DECEL_CMD, 1U, (uint32_t)dcVal, 4U);
 }
 
 // 下发相对位置给定
 static void elmoCanSetRelPos(int32_t posVal)
 {
-	g_elmoParam.set.rel_pos_set = posVal;
 	elmoCanSendSDOWrite(ELMO_IDX_REL_POS_CMD, 1U, (uint32_t)posVal, 4U);
 	elmoCanSendSDOWrite(ELMO_IDX_MOTION_TRIGGER, 1U, 1U, 4U);
 }
@@ -257,19 +278,21 @@ static void elmoCanSetRelPos(int32_t posVal)
 // 下发绝对位置给定
 static void elmoCanSetAbsPos(int32_t posVal)
 {
-	g_elmoParam.set.abs_pos_set = posVal;
-	static int32_t lastAbsPosSet = 0;
-	if (posVal == lastAbsPosSet && fabs(g_elmoParam.fb.pos_fed - posVal) < 100)
-	{
-		return;
-	}
-	lastAbsPosSet = posVal;
 	elmoCanSendSDOWrite(ELMO_IDX_ABS_POS_CMD, 1U, (uint32_t)posVal, 4U);
 	elmoCanSendSDOWrite(ELMO_IDX_MOTION_TRIGGER, 1U, 1U, 4U);
-	elmoCanSendSDORequest(ELMO_IDX_ABS_POS_CMD, 1U, 0x40U);
 }
 
-// 请求位置反馈
+static void elmoCanSetStopDc(int32_t dcVal)
+{
+	elmoCanSendSDOWrite(ELMO_IDX_ST_DEC_CMD, 1U, (uint32_t)dcVal, 4U);
+}
+
+static void elmoCanStop(void)
+{
+	elmoCanSendSDOWrite(ELMO_IDX_ST_CMD, 1U, 0U, 4U);
+}
+
+// 请求位置反馈		
 static void elmoCanReqPos(void)
 {
 	elmoCanSendSDORequest(ELMO_IDX_POS_FB, 1U, 0x40U);
@@ -299,8 +322,33 @@ static void elmoCanReqEc(void)
 	elmoCanSendSDORequest(ELMO_IDX_ERR_FB, 1U, 0x40U);
 }
 
+static void elmoCanReqSetSpd(void)
+{
+	elmoCanSendSDORequest(ELMO_IDX_SPEED_CMD, 1U, 0x40U);
+}
+static void elmoCanReqSetAc(void)
+{
+	elmoCanSendSDORequest(ELMO_IDX_ACCEL_CMD, 1U, 0x40U);
+}
+static void elmoCanReqSetDc(void)
+{
+	elmoCanSendSDORequest(ELMO_IDX_DECEL_CMD, 1U, 0x40U);
+}
+static void elmoCanReqSetRelPos(void)
+{
+	elmoCanSendSDORequest(ELMO_IDX_REL_POS_CMD, 1U, 0x40U);
+}
+static void elmoCanReqSetAbsPos(void)
+{
+	elmoCanSendSDORequest(ELMO_IDX_ABS_POS_CMD, 1U, 0x40U);
+}
+static void elmoCanReqSetStopDc(void)
+{
+	elmoCanSendSDORequest(ELMO_IDX_ST_DEC_CMD, 1U, 0x40U);
+}
+
 // CAN 接收中断处理入口
-static void elmoCanOnRxIsr(void)
+static void elmoCanOnRxIsr(ElmoFeedbackParam *fb)
 {
 	uint32_t cause = CAN_getInterruptCause(Elmo_CAN_BASE);
 
@@ -311,10 +359,9 @@ static void elmoCanOnRxIsr(void)
 	else if (cause == ELMO_CAN_RX_OBJ_ID)
 	{
 		uint8_t msgData[8] = {0U};
-
 		CAN_readMessage(Elmo_CAN_BASE, ELMO_CAN_RX_OBJ_ID, (uint16_t *)msgData);
 		CAN_clearInterruptStatus(Elmo_CAN_BASE, ELMO_CAN_RX_OBJ_ID);
-		elmoCanProcess(msgData, 8U);
+		elmoCanProcess(msgData, 8U, fb);
 	}
 	else if ((cause >= ELMO_CAN_TX_OBJ_FIRST) && (cause <= ELMO_CAN_TX_OBJ_LAST))
 	{
@@ -329,32 +376,27 @@ static void elmoCanOnRxIsr(void)
 	CAN_clearGlobalInterruptStatus(Elmo_CAN_BASE, CAN_GLOBAL_INT_CANINT0);
 }
 
-// CAN 操作函数表
-static const ElmoOpsTable g_elmoCanOps = {
-	.init = elmoCanInit,
-	.poll = elmoCanPoll,
-	.enable = elmoCanEnable,
-	.disable = elmoCanDisable,
+const ElmoCtrl ElmoCanCtrl = {
+
+	.setEnable = elmoCanSetEnable,
 	.setSpd = elmoCanSetSpd,
 	.setAc = elmoCanSetAc,
 	.setDc = elmoCanSetDc,
 	.setRelPos = elmoCanSetRelPos,
 	.setAbsPos = elmoCanSetAbsPos,
+	.setStopDc = elmoCanSetStopDc,
+	.stop = elmoCanStop,
+	.reqSetSpd = elmoCanReqSetSpd,
+	.reqSetAc = elmoCanReqSetAc,
+	.reqSetDc = elmoCanReqSetDc,
+	.reqSetRelPos = elmoCanReqSetRelPos,
+	.reqSetAbsPos = elmoCanReqSetAbsPos,
+	.reqSetStopDc = elmoCanReqSetStopDc,
 	.reqPos = elmoCanReqPos,
 	.reqSpd = elmoCanReqSpd,
 	.reqIq = elmoCanReqIq,
 	.reqEn = elmoCanReqEn,
 	.reqEc = elmoCanReqEc,
-	.onCanRxIsr = elmoCanOnRxIsr,
+	.Parse = NULL,
+	.ParseIsr = elmoCanOnRxIsr,
 };
-
-// CAN 描述对象
-static const ElmoBackend g_elmoCanBackend = {
-	.name = "elmo_can",
-	.ops = &g_elmoCanOps};
-
-// 获取 CAN 描述对象
-const ElmoBackend *ElmoCan_GetBackend(void)
-{
-	return &g_elmoCanBackend;
-}

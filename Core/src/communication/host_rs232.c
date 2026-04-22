@@ -70,10 +70,7 @@ static void hostSendFmt(const char *fmt, ...)
 	hostSendRaw(buffer);
 }
 
-static bool hostRequestMode(Mode_Command_Type cmd, float value)
-{
-	return (Mode_HSM_Request_CMD(cmd, value) != 0U);
-}
+
 
 static void hostResetDevice(void)
 {
@@ -210,7 +207,7 @@ static uint8_t set_xrelpos_func(const char *arg, printf_t pprintf)
 	float value;
 	if (ParseFloatValue(arg, &value))
 	{
-		ElmoOps->setRelPos(value);
+		ElmoOps.setRelPos(value);
 		return RC_SUCCESS;
 	}
 	return RC_PARAM_ERROR;
@@ -221,7 +218,7 @@ static uint8_t set_xabspos_func(const char *arg, printf_t pprintf)
 	float value;
 	if (ParseFloatValue(arg, &value))
 	{
-		ElmoOps->setAbsPos(value);
+		ElmoOps.setAbsPos(value);
 		return RC_SUCCESS;
 	}
 	return RC_PARAM_ERROR;
@@ -233,10 +230,16 @@ static uint8_t set_xspd_func(const char *arg, printf_t pprintf)
 	float value;
 	if (ParseFloatValue(arg, &value))
 	{
-		ElmoOps->setSpd(value);
+		ElmoOps.setSpd(value);
 		return RC_SUCCESS;
 	}
 	return RC_PARAM_ERROR;
+}
+
+static uint8_t set_xstop_func(const char *arg, printf_t pprintf)
+{
+	Mode_HSM_Request_CMD(MODE_CMD_SET_HOLD, 0.0f);
+	return RC_SUCCESS;
 }
 
 static uint8_t calib_func(const char *arg, printf_t pprintf)
@@ -280,6 +283,7 @@ static Command_t commands[] = {
 	CMD_PARAM_ENTRY("XRELPOS", set_xrelpos_func),
 	CMD_PARAM_ENTRY("XSPD", set_xspd_func),
 	CMD_PARAM_ENTRY("XABSPOS", set_xabspos_func),
+	CMD_FUNC_ENTRY("XSTOP", set_xstop_func),
 	{NULL, 0, NULL, NULL, DT_NONE, 0},
 };
 

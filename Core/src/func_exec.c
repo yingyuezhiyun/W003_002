@@ -16,9 +16,9 @@ void SCI_Poll()
 
 #if (ELMO_CONTROL_IF == ELMO_IF_RS232) // RS232 模式下通过串口接收数据，轮询解析
     // 轮询解析 Elmo接收数据
-    if ((ElmoOps != NULL) && (ElmoOps->poll != NULL))
+    if ((ElmoOps != NULL) && (ElmoOps->Parse != NULL))
     {
-        ElmoOps->poll();
+        ElmoOps->Parse();
     }
 #endif
 }
@@ -89,9 +89,9 @@ void Elmo_Poll()
     if (pollCount == 0)
     {
         // 轮询读取位置
-        if (ElmoOps->reqPos)
+        if (ElmoOps.reqPos)
         {
-            ElmoOps->reqPos();
+            ElmoOps.reqPos();
         }
         pollCount++;
     }
@@ -101,30 +101,30 @@ void Elmo_Poll()
         {
         case 0:
             // 轮询读取电流
-            if (ElmoOps->reqIq)
+            if (ElmoOps.reqIq)
             {
-                ElmoOps->reqIq();
+                ElmoOps.reqIq();
             }
             break;
         case 1:
             // 轮询读取错误码
-            if (ElmoOps->reqEc)
+            if (ElmoOps.reqEc)
             {
-                ElmoOps->reqEc();
+                ElmoOps.reqEc();
             }
             break;
         case 2:
             // 轮询读取速度
-            if (ElmoOps->reqSpd)
+            if (ElmoOps.reqSpd)
             {
-                ElmoOps->reqSpd();
+                ElmoOps.reqSpd();
             }
             break;
         case 3:
             // 轮询读取使能状态
-            if (ElmoOps->reqEn)
+            if (ElmoOps.reqEn)
             {
-                ElmoOps->reqEn();
+                ElmoOps.reqEn();
             }
             break;
         default:

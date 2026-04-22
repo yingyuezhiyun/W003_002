@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
+#include <math.h>
 
 static MODE_EXEC_t Mode_Root_Execute(Mode_Ctx_t *ctx);
 
@@ -32,13 +33,15 @@ static MODE_EXEC_t Mode_Root_Execute(Mode_Ctx_t *ctx)
         break;
     case MODE_CMD_SET_KEY_UNLOCK:
     case MODE_CMD_SET_HOLD:
-        /* code */
-        // todo
+        if (fabs(ElmoOps.fb.spd_fed) >= 1000)
+        {
+            ElmoOps.stop();
+        }
         break;
     case MODE_CMD_FAULT:
-        if (g_elmoParam.fb.en)
+        if (ElmoOps.fb.en)
         {
-            ElmoOps->disable(); // 进入故障模式时关闭电机
+            ElmoOps.setEnable(0); // 进入故障模式时关闭电机
         }
         break;
     default:
@@ -61,8 +64,8 @@ void Set_Position_Percent(float percent)
     }
     Valve_Param_t *valveParam = &glob_value.valveParam;
     int32_t posF = ((float)valveParam->fullClosePos + (percent * 0.01f) * valveParam->stroke + 0.5f);
-    if (ElmoOps != NULL && ElmoOps->setAbsPos != NULL)
+    if (ElmoOps.setAbsPos != NULL)
     {
-        ElmoOps->setAbsPos(posF);
+        ElmoOps.setAbsPos(posF);
     }
 }

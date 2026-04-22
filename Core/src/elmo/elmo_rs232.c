@@ -50,7 +50,7 @@ static int16_t buildCmd(char *dst, uint16_t dstLen, const char *prefix,
 }
 
 // 解析 Elmo 的串口回包
-static void elmoRs232ParseLine(char *line)
+static void elmoRs232ParseLine(char *line, ElmoFeedbackParam *fb)
 {
 	char *eq = strchr(line, '=');
 	char *payload = (eq == NULL) ? NULL : (eq + 1);
@@ -62,24 +62,48 @@ static void elmoRs232ParseLine(char *line)
 
 	if (strncmp(line, "PX", 2) == 0)
 	{
-		g_elmoParam.fb.pos_fed = (int32_t)strtol(payload, NULL, 10);
+		fb->pos_fed = (int32_t)strtol(payload, NULL, 10);
 	}
 	else if (strncmp(line, "VX", 2) == 0)
 	{
-		g_elmoParam.fb.spd_fed = (int32_t)labs(strtol(payload, NULL, 10));
+		fb->spd_fed = (int32_t)labs(strtol(payload, NULL, 10));
 	}
 	else if (strncmp(line, "IQ", 2) == 0)
 	{
 		float iq = (float)atof(payload);
-		g_elmoParam.fb.iq_fed = fabsf(iq);
+		fb->iq_fed = fabsf(iq);
 	}
 	else if (strncmp(line, "SO", 2) == 0)
 	{
-		g_elmoParam.fb.en = (strtol(payload, NULL, 10) != 0) ? 1U : 0U;
+		fb->en = (strtol(payload, NULL, 10) != 0) ? 1U : 0U;
 	}
 	else if (strncmp(line, "EC", 2) == 0)
 	{
-		g_elmoParam.fb.ec = (int32_t)strtol(payload, NULL, 10);
+		fb->ec = (int32_t)strtol(payload, NULL, 10);
+	}
+	else if (strncmp(line, "PS", 2) == 0)
+	{
+		fb->spd_set = (int32_t)strtol(payload, NULL, 10);
+	}
+	else if (strncmp(line, "AC", 2) == 0)
+	{
+		fb->ac_set = (int32_t)strtol(payload, NULL, 10);
+	}
+	else if (strncmp(line, "DC", 2) == 0)
+	{
+		fb->dc_set = (int32_t)strtol(payload, NULL, 10);
+	}
+	else if (strncmp(line, "PR", 2) == 0)
+	{
+		fb->rel_pos_set = (int32_t)strtol(payload, NULL, 10);
+	}
+	else if (strncmp(line, "PA", 2) == 0)
+	{
+		fb->abs_pos_set = (int32_t)strtol(payload, NULL, 10);
+	}
+	else if (strncmp(line, "SD", 2) == 0)
+	{
+		fb->stop_dc_set = (int32_t)strtol(payload, NULL, 10);
 	}
 }
 
@@ -91,7 +115,7 @@ static void elmoRs232Init(void)
 }
 
 // RS232 主循环轮询
-static void elmoRs232Poll(void)
+static void elmoRs232Poll(ElmoFeedbackParam *fb)
 {
 	while (SCI_getRxFIFOStatus(Elmo_SCI_BASE) != SCI_FIFO_RX0)
 	{
@@ -103,7 +127,7 @@ static void elmoRs232Poll(void)
 			if (g_elmoRxLen > 0U)
 			{
 				g_elmoRxBuf[g_elmoRxLen] = '\0';
-				elmoRs232ParseLine(g_elmoRxBuf);
+				elmoRs232ParseLine(g_elmoRxBuf, fb);
 				g_elmoRxLen = 0U;
 			}
 			continue;
@@ -121,25 +145,17 @@ static void elmoRs232Poll(void)
 }
 
 // 下发使能命令
-static void elmoRs232Enable(void)
+static void elmoRs232SetEnable(uint8_t enable)
 {
-	elmoRs232Send("MO=1;\r");
-	g_elmoParam.set.en = 1U;
-}
-
-// 下发关闭命令
-static void elmoRs232Disable(void)
-{
-	elmoRs232Send("MO=0;\r");
-	g_elmoParam.set.en = 0U;
+	char cmd[16];
+	(void)buildCmd(cmd, sizeof(cmd), "MO=", enable ? 1 : 0, ";\r");
+	elmoRs232Send(cmd);
 }
 
 // 下发速度给定
 static void elmoRs232SpdSet(int32_t spdVal)
 {
 	char cmd[24];
-	g_elmoParam.set.spd_set = (uint32_t)spdVal;
-
 	(void)buildCmd(cmd, sizeof(cmd), "SP=", spdVal, ";\r");
 	elmoRs232Send(cmd);
 }
@@ -148,8 +164,6 @@ static void elmoRs232SpdSet(int32_t spdVal)
 static void elmoRs232AcSet(int32_t acVal)
 {
 	char cmd[24];
-	g_elmoParam.set.ac_set = (uint32_t)acVal;
-
 	(void)buildCmd(cmd, sizeof(cmd), "AC=", acVal, ";\r");
 	elmoRs232Send(cmd);
 }
@@ -158,8 +172,6 @@ static void elmoRs232AcSet(int32_t acVal)
 static void elmoRs232DcSet(int32_t dcVal)
 {
 	char cmd[24];
-	g_elmoParam.set.dc_set = (uint32_t)dcVal;
-
 	(void)buildCmd(cmd, sizeof(cmd), "DC=", dcVal, ";\r");
 	elmoRs232Send(cmd);
 }
@@ -168,8 +180,6 @@ static void elmoRs232DcSet(int32_t dcVal)
 static void elmoRs232RelPosSet(int32_t posVal)
 {
 	char cmd[28];
-	g_elmoParam.set.rel_pos_set = posVal;
-
 	(void)buildCmd(cmd, sizeof(cmd), "PR=", posVal, ";BG;\r");
 	elmoRs232Send(cmd);
 }
@@ -178,16 +188,22 @@ static void elmoRs232RelPosSet(int32_t posVal)
 static void elmoRs232AbsPosSet(int32_t posVal)
 {
 	char cmd[28];
-	g_elmoParam.set.abs_pos_set = posVal;
-	static int32_t lastAbsPosSet = 0;
-	if (posVal == lastAbsPosSet && fabs(g_elmoParam.fb.pos_fed - posVal) < 100)
-	{
-		return;
-	}
-	lastAbsPosSet = posVal;
-
 	(void)buildCmd(cmd, sizeof(cmd), "PA=", posVal, ";BG;\r");
 	elmoRs232Send(cmd);
+}
+
+static void elmoRs232SetStopDc(int32_t dcVal)
+{
+	char cmd[24];
+	(void)buildCmd(cmd, sizeof(cmd), "SD=", dcVal, ";\r");
+	elmoRs232Send(cmd);
+}
+
+
+// 停止
+static void elmoRs232Stop(void)
+{
+	elmoRs232Send("ST;\r");
 }
 
 // 请求位置反馈
@@ -220,32 +236,57 @@ static void elmoRs232ECRequest(void)
 	elmoRs232Send("EC;\r");
 }
 
-// RS232 操作函数表
-static const ElmoOpsTable g_elmoRs232Ops = {
-	.init = elmoRs232Init,
-	.poll = elmoRs232Poll,
-	.enable = elmoRs232Enable,
-	.disable = elmoRs232Disable,
+static void elmoRs232ReqSetRelPos(void)
+{
+	elmoRs232Send("PR;\r");
+}
+
+static void elmoRs232ReqSetAbsPos(void)
+{
+	elmoRs232Send("PA;\r");
+}
+
+static void elmoRs232ReqSetSpd(void)
+{
+	elmoRs232Send("PS;\r");
+}
+
+static void elmoRs232ReqSetAc(void)
+{
+	elmoRs232Send("AC;\r");
+}
+
+static void elmoRs232ReqSetDc(void)
+{
+	elmoRs232Send("DC;\r");
+}
+
+static void elmoRs232ReqSetStopDc(void)
+{
+	elmoRs232Send("SD;\r");
+}
+
+const ElmoCtrl ElmoRs232Ctrl = {
+
+	.setEnable = elmoRs232SetEnable,
 	.setSpd = elmoRs232SpdSet,
 	.setAc = elmoRs232AcSet,
 	.setDc = elmoRs232DcSet,
 	.setRelPos = elmoRs232RelPosSet,
 	.setAbsPos = elmoRs232AbsPosSet,
+	.setStopDc = elmoRs232SetStopDc,
+	.stop = elmoRs232Stop,
+	.reqSetSpd = elmoRs232ReqSetSpd,
+	.reqSetAc = elmoRs232ReqSetAc,
+	.reqSetDc = elmoRs232ReqSetDc,
+	.reqSetRelPos = elmoRs232ReqSetRelPos,
+	.reqSetAbsPos = elmoRs232ReqSetAbsPos,
+	.reqSetStopDc = elmoRs232ReqSetStopDc,
 	.reqPos = elmoRs232PosRequest,
 	.reqSpd = elmoRs232SpdRequest,
 	.reqIq = elmoRs232IqRequest,
 	.reqEn = elmoRs232ENRequest,
 	.reqEc = elmoRs232ECRequest,
-	.onCanRxIsr = NULL,
+	.ParseIsr = NULL,
+	.Parse = elmoRs232Poll,
 };
-
-// RS232 描述对象
-static const ElmoBackend g_elmoRs232Backend = {
-	.name = "elmo_rs232",
-	.ops = &g_elmoRs232Ops};
-
-// 获取 RS232 描述对象
-const ElmoBackend *ElmoRs232_GetBackend(void)
-{
-	return &g_elmoRs232Backend;
-}
