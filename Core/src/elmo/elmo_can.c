@@ -5,8 +5,13 @@
 
 #include "board.h"
 
-#define ELMO_CAN_TX_OBJ_ID (1U)
-#define ELMO_CAN_RX_OBJ_ID (2U)
+#define ELMO_CAN_RX_OBJ_ID (5U)
+
+// Use multiple TX message objects to avoid overwriting a message object
+// while its previous TX request is still pending.
+#define ELMO_CAN_TX_OBJ_FIRST (1U)
+#define ELMO_CAN_TX_OBJ_LAST (4U)
+#define ELMO_CAN_TX_WAIT_STEP_US (5U)
 
 // Elmo object dictionary indexes used in the legacy project.
 #define ELMO_IDX_ENABLE (0x3146U)
@@ -23,40 +28,63 @@
 #define ELMO_IDX_ENABLE_FB (0x31E2U)
 #define ELMO_IDX_ERR_FB (0x306AU)
 
-/// @brief 等待CAN发送对象准备就绪（即上一个消息已被发送，TXRQ位被清除）。
-/// @param timeout_us  等待超时时间，单位微秒。
-/// @return  true表示准备就绪，false表示超时
-static bool elmoCanWaitTxReady(uint32_t timeout_us)
-{
-	uint32_t remain = timeout_us;
-	const uint32_t bit = (1U << (ELMO_CAN_TX_OBJ_ID - 1U));
+static uint8_t g_elmoCanTxObjNext = ELMO_CAN_TX_OBJ_FIRST;
 
-	while ((CAN_getTxRequests(Elmo_CAN_BASE) & bit) != 0U)
+static inline uint32_t elmoCanObjBit(uint8_t objId)
+{
+	return (1UL << ((uint32_t)objId - 1UL));
+}
+
+// Try to pick a free TX message object (TXRQ bit cleared). Returns 0 if none free.
+static uint8_t elmoCanPickFreeTxObj(uint32_t txRequests)
+{
+	const uint8_t count = (uint8_t)(ELMO_CAN_TX_OBJ_LAST - ELMO_CAN_TX_OBJ_FIRST + 1U);
+
+	for (uint8_t k = 0U; k < count; k++)
 	{
-		if (remain == 0U)
+		uint8_t objId = (uint8_t)(g_elmoCanTxObjNext + k);
+		if (objId > ELMO_CAN_TX_OBJ_LAST)
 		{
-			return false;
+			objId = (uint8_t)(ELMO_CAN_TX_OBJ_FIRST + (objId - ELMO_CAN_TX_OBJ_LAST - 1U));
 		}
-		// small sleep to yield CPU and give CAN hardware time to clear TXRQ
-		DEVICE_DELAY_US(5);
-		if (remain > 5U)
+
+		if ((txRequests & elmoCanObjBit(objId)) == 0UL)
 		{
-			remain -= 5U;
-		}
-		else
-		{
-			remain = 0U;
+			g_elmoCanTxObjNext = (uint8_t)(objId + 1U);
+			if (g_elmoCanTxObjNext > ELMO_CAN_TX_OBJ_LAST)
+			{
+				g_elmoCanTxObjNext = ELMO_CAN_TX_OBJ_FIRST;
+			}
+			return objId;
 		}
 	}
-	return true;
+
+	return 0U;
+}
+
+// Wait until any TX object becomes free, then return its objId.
+static uint8_t elmoCanWaitFreeTxObj(void)
+{
+	int16_t loop_us = 5000;
+	do
+	{
+		uint32_t txRequests = CAN_getTxRequests(Elmo_CAN_BASE);
+		uint8_t objId = elmoCanPickFreeTxObj(txRequests);
+		if (objId != 0U)
+		{
+			return objId;
+		}
+		DEVICE_DELAY_US(ELMO_CAN_TX_WAIT_STEP_US);
+		loop_us -= ELMO_CAN_TX_WAIT_STEP_US;
+	} while (loop_us > 0);
 }
 
 /// @brief 发送CAN消息。
 /// @param msgData  消息数据指针
 static void elmoCanSendObj(const uint8_t *msgData)
 {
-	elmoCanWaitTxReady(5000U);
-	CAN_sendMessage(Elmo_CAN_BASE, ELMO_CAN_TX_OBJ_ID, 8U, (uint16_t *)msgData);
+	uint8_t objId = elmoCanWaitFreeTxObj();
+	CAN_sendMessage(Elmo_CAN_BASE, objId, 8U, (uint16_t *)msgData);
 }
 
 // 发送 SDO 读请求
@@ -287,6 +315,11 @@ static void elmoCanOnRxIsr(void)
 		CAN_readMessage(Elmo_CAN_BASE, ELMO_CAN_RX_OBJ_ID, (uint16_t *)msgData);
 		CAN_clearInterruptStatus(Elmo_CAN_BASE, ELMO_CAN_RX_OBJ_ID);
 		elmoCanProcess(msgData, 8U);
+	}
+	else if ((cause >= ELMO_CAN_TX_OBJ_FIRST) && (cause <= ELMO_CAN_TX_OBJ_LAST))
+	{
+		// Clear TX interrupt sources if TX objects are configured to generate interrupts.
+		CAN_clearInterruptStatus(Elmo_CAN_BASE, cause);
 	}
 	else
 	{

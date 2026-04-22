@@ -421,14 +421,50 @@ void Elmo_CAN_init(){
 	// Initialize the transmit message object used for sending CAN messages.
 	// Message Object Parameters:
 	//      Message Object ID Number: 2
+	//      Message Identifier: 1663
+	//      Message Frame: CAN_MSG_FRAME_STD
+	//      Message Type: CAN_MSG_OBJ_TYPE_TX
+	//      Message ID Mask: 0
+	//      Message Object Flags: 
+	//      Message Data Length: 8 Bytes
+	//
+	CAN_setupMessageObject(Elmo_CAN_BASE, 2, Elmo_CAN_MessageObj2_ID, CAN_MSG_FRAME_STD,CAN_MSG_OBJ_TYPE_TX, 0, 0,8);
+	//
+	// Initialize the transmit message object used for sending CAN messages.
+	// Message Object Parameters:
+	//      Message Object ID Number: 3
+	//      Message Identifier: 1663
+	//      Message Frame: CAN_MSG_FRAME_STD
+	//      Message Type: CAN_MSG_OBJ_TYPE_TX
+	//      Message ID Mask: 0
+	//      Message Object Flags: 
+	//      Message Data Length: 8 Bytes
+	//
+	CAN_setupMessageObject(Elmo_CAN_BASE, 3, Elmo_CAN_MessageObj3_ID, CAN_MSG_FRAME_STD,CAN_MSG_OBJ_TYPE_TX, 0, 0,8);
+	//
+	// Initialize the transmit message object used for sending CAN messages.
+	// Message Object Parameters:
+	//      Message Object ID Number: 4
+	//      Message Identifier: 1663
+	//      Message Frame: CAN_MSG_FRAME_STD
+	//      Message Type: CAN_MSG_OBJ_TYPE_TX
+	//      Message ID Mask: 0
+	//      Message Object Flags: 
+	//      Message Data Length: 8 Bytes
+	//
+	CAN_setupMessageObject(Elmo_CAN_BASE, 4, Elmo_CAN_MessageObj4_ID, CAN_MSG_FRAME_STD,CAN_MSG_OBJ_TYPE_TX, 0, 0,8);
+	//
+	// Initialize the transmit message object used for sending CAN messages.
+	// Message Object Parameters:
+	//      Message Object ID Number: 5
 	//      Message Identifier: 1535
 	//      Message Frame: CAN_MSG_FRAME_STD
 	//      Message Type: CAN_MSG_OBJ_TYPE_RX
 	//      Message ID Mask: 2047
 	//      Message Object Flags: CAN_MSG_OBJ_RX_INT_ENABLE,CAN_MSG_OBJ_USE_ID_FILTER
-	//      Message Data Length: 8 Bytes
+	//      Message Data Length: 0 Bytes
 	//
-	CAN_setupMessageObject(Elmo_CAN_BASE, 2, Elmo_CAN_MessageObj2_ID, CAN_MSG_FRAME_STD,CAN_MSG_OBJ_TYPE_RX, 2047, CAN_MSG_OBJ_RX_INT_ENABLE|CAN_MSG_OBJ_USE_ID_FILTER,8);
+	CAN_setupMessageObject(Elmo_CAN_BASE, 5, Elmo_CAN_MessageObj5_ID, CAN_MSG_FRAME_STD,CAN_MSG_OBJ_TYPE_RX, 2047, CAN_MSG_OBJ_RX_INT_ENABLE|CAN_MSG_OBJ_USE_ID_FILTER,0);
 	CAN_setInterruptMux(Elmo_CAN_BASE, 0);
 	//
 	// Start CAN module operations

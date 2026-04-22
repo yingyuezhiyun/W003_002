@@ -303,7 +303,10 @@ void ADC_D_init();
 #define Elmo_CAN_BASE CANA_BASE
 
 #define Elmo_CAN_MessageObj1_ID 1663
-#define Elmo_CAN_MessageObj2_ID 1535
+#define Elmo_CAN_MessageObj2_ID 1663
+#define Elmo_CAN_MessageObj3_ID 1663
+#define Elmo_CAN_MessageObj4_ID 1663
+#define Elmo_CAN_MessageObj5_ID 1535
 void Elmo_CAN_init();
 
 
