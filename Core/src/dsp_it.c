@@ -7,6 +7,7 @@
 #include "glob_value.h"
 #include "Core/inc/elmo_ctrl.h"
 #include "Core/inc/mode_ctrl.h"
+#include "Core/inc/func_exec.h"
 
 #if ECAT_ENABLE
 #include "ECAT/9252_HW.h"
@@ -14,10 +15,9 @@
 #include "ECAT/src/applInterface.h"
 #endif
 
-
-/// @brief 
-/// @param  
-/// @return 
+/// @brief
+/// @param
+/// @return
 __weak __interrupt void ECAT_Lan9252IrqIsr(void)
 {
 #if ECAT_ENABLE
@@ -27,9 +27,9 @@ __weak __interrupt void ECAT_Lan9252IrqIsr(void)
     Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP1);
 }
 
-/// @brief 
-/// @param  
-/// @return 
+/// @brief
+/// @param
+/// @return
 __weak __interrupt void ECAT_Sync0Isr(void)
 {
 #if ECAT_ENABLE
@@ -40,9 +40,9 @@ __weak __interrupt void ECAT_Sync0Isr(void)
     Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP1);
 }
 
-/// @brief 
-/// @param  
-/// @return 
+/// @brief
+/// @param
+/// @return
 __weak __interrupt void ECAT_Sync1Isr(void)
 {
 #if ECAT_ENABLE
@@ -78,36 +78,69 @@ __weak __interrupt void INT_CPU_TIMER0_ISR(void)
     Interrupt_clearACKGroup(INT_CPU_TIMER0_INTERRUPT_ACK_GROUP);
 }
 
-
-__weak __interrupt void INT_ADC_A_1_ISR(void)
-{
-    // Clear ADCA INT1 flag and acknowledge PIE Group 1.
-    ADC_clearInterruptStatus(ADC_A_BASE, ADC_INT_NUMBER1);
-    if(ADC_getInterruptOverflowStatus(ADC_A_BASE, ADC_INT_NUMBER1))
-    {
-        ADC_clearInterruptOverflowStatus(ADC_A_BASE, ADC_INT_NUMBER1);
-        ADC_clearInterruptStatus(ADC_A_BASE, ADC_INT_NUMBER1);
-    }
-    Interrupt_clearACKGroup(INT_ADC_A_1_INTERRUPT_ACK_GROUP);
-}
-
-/// @brief 
-/// @param  
-/// @return 
+/// @brief
+/// @param
+/// @return
 __weak __interrupt void INT_Elmo_CAN_0_ISR(void)
 {
-    if(ElmoOps.ParseIsr != NULL)
+    if (ElmoOps.ParseIsr != NULL)
     {
         ElmoOps.ParseIsr();
     }
     Interrupt_clearACKGroup(INT_Elmo_CAN_0_INTERRUPT_ACK_GROUP);
 }
 
-/// @brief 
-/// @param  
-/// @return 
+/// @brief
+/// @param
+/// @return
 
 __weak __interrupt void INT_Elmo_CAN_1_ISR(void)
 {
-
 }
+
+__weak __interrupt void INT_EPWM0_ISR(void)
+{
+    // 50us 节拍：读取“上一周期”ADC结果（RESULT 在转换完成时更新）
+    // 快速采样：EPWM1 SOCA 触发，每 50us 更新一次
+    glob_value.measure.adc_cdg1 = ADC_readResult(ADC_C_RESULT_BASE, ADC_C_CDG1);
+    glob_value.measure.adc_cdg2 = ADC_readResult(ADC_A_RESULT_BASE, ADC_A_CDG2);
+    glob_value.measure.cdg1_volt = LowPassFilter(glob_value.measure.cdg1_volt, (float)glob_value.measure.adc_cdg1);
+    glob_value.measure.cdg2_volt = LowPassFilter(glob_value.measure.cdg2_volt, (float)glob_value.measure.adc_cdg2);
+
+    // 慢速采样：默认由 EPWM2 SOCA 触发
+    // 用 20 分频（50us * 20 = 1ms）把慢速通道“取数/刷新”节拍化。
+    static uint16_t slow_div = 0;
+    slow_div++;
+    if (slow_div >= 20U)
+    {
+        slow_div = 0U;
+
+        // NOTE:PWR和BATT硬件接反了，软件上做了对应调整
+        glob_value.measure.adc_batt = ADC_readResult(ADC_D_RESULT_BASE, ADC_D_BATT);
+        glob_value.measure.adc_pwr = ADC_readResult(ADC_A_RESULT_BASE, ADC_A_PWR);
+
+        glob_value.measure.adc_temp = ADC_readResult(ADC_D_RESULT_BASE, ADC_D_Temp);
+    }
+
+    // 清 ePWM 中断标志 + PIE ACK
+    EPWM_clearEventTriggerInterruptFlag(myEPWM0_BASE);
+    Interrupt_clearACKGroup(INT_myEPWM0_INTERRUPT_ACK_GROUP);
+}
+
+// __weak __interrupt void INT_EPWM1_ISR(void)
+// {
+//     EPWM_clearEventTriggerInterruptFlag(myEPWM1_BASE);
+//     Interrupt_clearACKGroup(INT_myEPWM1_INTERRUPT_ACK_GROUP);
+// }
+
+//__weak __interrupt void INT_ADC_A_1_ISR(void)
+//{
+//    // Clear ADCA INT1 flag and acknowledge PIE Group 1.
+//    ADC_clearInterruptStatus(ADC_A_BASE, ADC_INT_NUMBER1);
+//    if(ADC_getInterruptOverflowStatus(ADC_A_BASE, ADC_INT_NUMBER1))
+//    {
+//        ADC_clearInterruptOverflowStatus(ADC_A_BASE, ADC_INT_NUMBER1);
+//        ADC_clearInterruptStatus(ADC_A_BASE, ADC_INT_NUMBER1);
+//    }
+//    Interrupt_clearACKGroup(INT_ADC_A_1_INTERRUPT_ACK_GROUP);
+//}

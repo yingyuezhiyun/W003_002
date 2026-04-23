@@ -264,17 +264,6 @@ void ADC_A_init(){
 	//
 	ADC_setupSOC(ADC_A_BASE, ADC_SOC_NUMBER1, ADC_TRIGGER_EPWM2_SOCA, ADC_CH_ADCIN2_ADCIN3, 64U);
 	ADC_setInterruptSOCTrigger(ADC_A_BASE, ADC_SOC_NUMBER1, ADC_INT_SOC_TRIGGER_NONE);
-	//
-	// ADC Interrupt 1 Configuration
-	// 		Source	: ADC_SOC_NUMBER0
-	// 		Interrupt Source: enabled
-	// 		Continuous Mode	: disabled
-	//
-	//
-	ADC_setInterruptSource(ADC_A_BASE, ADC_INT_NUMBER1, ADC_SOC_NUMBER0);
-	ADC_clearInterruptStatus(ADC_A_BASE, ADC_INT_NUMBER1);
-	ADC_disableContinuousMode(ADC_A_BASE, ADC_INT_NUMBER1);
-	ADC_enableInterrupt(ADC_A_BASE, ADC_INT_NUMBER1);
 }
 
 void ADC_C_init(){
@@ -543,6 +532,9 @@ void EPWM_init(){
     EPWM_disableRisingEdgeDelayCountShadowLoadMode(myEPWM0_BASE);	
     EPWM_setFallingEdgeDelayCountShadowLoadMode(myEPWM0_BASE, EPWM_FED_LOAD_ON_CNTR_ZERO);	
     EPWM_disableFallingEdgeDelayCountShadowLoadMode(myEPWM0_BASE);	
+    EPWM_enableInterrupt(myEPWM0_BASE);	
+    EPWM_setInterruptSource(myEPWM0_BASE, EPWM_INT_TBCTR_ZERO);	
+    EPWM_setInterruptEventCount(myEPWM0_BASE, 1);	
     EPWM_enableADCTrigger(myEPWM0_BASE, EPWM_SOC_A);	
     EPWM_setADCTriggerSource(myEPWM0_BASE, EPWM_SOC_A, EPWM_SOC_TBCTR_ZERO);	
     EPWM_setADCTriggerEventPrescale(myEPWM0_BASE, EPWM_SOC_A, 1);	
@@ -807,11 +799,6 @@ void myINPUTXBARINPUT2_init(){
 //*****************************************************************************
 void INTERRUPT_init(){
 	
-	// Interrupt Settings for INT_ADC_A_1
-	// ISR need to be defined for the registered interrupts
-	Interrupt_register(INT_ADC_A_1, &INT_ADC_A_1_ISR);
-	Interrupt_enable(INT_ADC_A_1);
-	
 	// Interrupt Settings for INT_Elmo_CAN_0
 	// ISR need to be defined for the registered interrupts
 	Interrupt_register(INT_Elmo_CAN_0, &INT_Elmo_CAN_0_ISR);
@@ -831,6 +818,11 @@ void INTERRUPT_init(){
 	// ISR need to be defined for the registered interrupts
 	Interrupt_register(INT_CPU_TIMER0, &INT_CPU_TIMER0_ISR);
 	Interrupt_enable(INT_CPU_TIMER0);
+	
+	// Interrupt Settings for INT_myEPWM0
+	// ISR need to be defined for the registered interrupts
+	Interrupt_register(INT_myEPWM0, &INT_EPWM0_ISR);
+	Interrupt_enable(INT_myEPWM0);
 	
 	// Interrupt Settings for INT_ECAT_ISR_XINT
 	// ISR need to be defined for the registered interrupts

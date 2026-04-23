@@ -264,11 +264,11 @@ extern "C"
 #define ADC_A_SAMPLE_WINDOW_CDG2 320
 #define ADC_A_TRIGGER_SOURCE_CDG2 ADC_TRIGGER_EPWM1_SOCA
 #define ADC_A_CHANNEL_CDG2 ADC_CH_ADCIN4_ADCIN5
-#define ADC_A_BATT ADC_SOC_NUMBER1
-#define ADC_A_FORCE_BATT ADC_FORCE_SOC1
-#define ADC_A_SAMPLE_WINDOW_BATT 320
-#define ADC_A_TRIGGER_SOURCE_BATT ADC_TRIGGER_EPWM2_SOCA
-#define ADC_A_CHANNEL_BATT ADC_CH_ADCIN2_ADCIN3
+#define ADC_A_PWR ADC_SOC_NUMBER1
+#define ADC_A_FORCE_PWR ADC_FORCE_SOC1
+#define ADC_A_SAMPLE_WINDOW_PWR 320
+#define ADC_A_TRIGGER_SOURCE_PWR ADC_TRIGGER_EPWM2_SOCA
+#define ADC_A_CHANNEL_PWR ADC_CH_ADCIN2_ADCIN3
 void ADC_A_init();
 
 #define ADC_C_BASE ADCC_BASE
@@ -287,11 +287,11 @@ void ADC_C_init();
 #define ADC_D_SAMPLE_WINDOW_Temp 320
 #define ADC_D_TRIGGER_SOURCE_Temp ADC_TRIGGER_EPWM2_SOCA
 #define ADC_D_CHANNEL_Temp ADC_CH_ADCIN2_ADCIN3
-#define ADC_D_PWR ADC_SOC_NUMBER2
-#define ADC_D_FORCE_PWR ADC_FORCE_SOC2
-#define ADC_D_SAMPLE_WINDOW_PWR 320
-#define ADC_D_TRIGGER_SOURCE_PWR ADC_TRIGGER_EPWM2_SOCA
-#define ADC_D_CHANNEL_PWR ADC_CH_ADCIN14_ADCIN15
+#define ADC_D_BATT ADC_SOC_NUMBER2
+#define ADC_D_FORCE_BATT ADC_FORCE_SOC2
+#define ADC_D_SAMPLE_WINDOW_BATT 320
+#define ADC_D_TRIGGER_SOURCE_BATT ADC_TRIGGER_EPWM2_SOCA
+#define ADC_D_CHANNEL_BATT ADC_CH_ADCIN14_ADCIN15
 void ADC_D_init();
 
 
@@ -337,7 +337,7 @@ void CPU_TIMER0_init();
 #define myEPWM0_DBFED 0
 #define myEPWM0_TZA_ACTION EPWM_TZ_ACTION_HIGH_Z
 #define myEPWM0_TZB_ACTION EPWM_TZ_ACTION_HIGH_Z
-#define myEPWM0_INTERRUPT_SOURCE EPWM_INT_TBCTR_DISABLED
+#define myEPWM0_INTERRUPT_SOURCE EPWM_INT_TBCTR_ZERO
 #define myEPWM1_BASE EPWM2_BASE
 #define myEPWM1_TBPRD 25000
 #define myEPWM1_COUNTER_MODE EPWM_COUNTER_MODE_UP
@@ -433,12 +433,6 @@ void myINPUTXBARINPUT2_init();
 //
 //*****************************************************************************
 
-// Interrupt Settings for INT_ADC_A_1
-// ISR need to be defined for the registered interrupts
-#define INT_ADC_A_1 INT_ADCA1
-#define INT_ADC_A_1_INTERRUPT_ACK_GROUP INTERRUPT_ACK_GROUP1
-extern __interrupt void INT_ADC_A_1_ISR(void);
-
 // Interrupt Settings for INT_Elmo_CAN_0
 // ISR need to be defined for the registered interrupts
 #define INT_Elmo_CAN_0 INT_CANA0
@@ -461,6 +455,12 @@ extern __interrupt void INT_CPU_TIMER2_ISR(void);
 #define INT_CPU_TIMER0 INT_TIMER0
 #define INT_CPU_TIMER0_INTERRUPT_ACK_GROUP INTERRUPT_ACK_GROUP1
 extern __interrupt void INT_CPU_TIMER0_ISR(void);
+
+// Interrupt Settings for INT_myEPWM0
+// ISR need to be defined for the registered interrupts
+#define INT_myEPWM0 INT_EPWM1
+#define INT_myEPWM0_INTERRUPT_ACK_GROUP INTERRUPT_ACK_GROUP3
+extern __interrupt void INT_EPWM0_ISR(void);
 
 // Interrupt Settings for INT_ECAT_ISR_XINT
 // ISR need to be defined for the registered interrupts

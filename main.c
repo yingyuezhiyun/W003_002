@@ -80,6 +80,9 @@ void main(void)
         // 处理 Elmo 轮询任务
         Elmo_Poll();
 
+        // 处理数据计算
+        Data_handle();
+
         // 处理状态显示
         Status_handle();
 

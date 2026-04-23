@@ -22,6 +22,11 @@ void Status_handle();
 /// @brief 故障处理入口。
 void Fault_handle();
 
+void Data_handle();
+
+
+float LowPassFilter(float Out, float In);
+
 #ifdef __cplusplus
 }
 #endif
