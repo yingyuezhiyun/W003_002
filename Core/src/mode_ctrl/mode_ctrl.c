@@ -20,11 +20,7 @@ void ModeHSM_Init(Mode_Ctx_t *ctx)
     ctx->nextCmd.cmd = MODE_CMD_NONE;
 
     ctx->calibSubState = CALIB_SUB_NONE;
-
     ctx->calibStepState.val = 0;
-    // ctx->errors.val = 0;
-    // ctx->locks.content.calib = 1;// 初始化时 默认未标定，标定完成后才解锁
-    // ctx->locks.content.key = 0;
 }
 
 /// @brief 运行状态机。
@@ -167,97 +163,32 @@ uint8_t Mode_HSM_Request_CMD(Mode_Command_Type cmd, float param)
     }
     if (glob_value.valveParam.locks.content.key == 0 && glob_value.valveParam.locks.content.calib == 0) // 按键未锁定，且未处于标定状态时，允许执行其他命令
     {
-        ctx->nextCmd.cmd = cmd;
-        result = 1;
         switch (cmd)
         {
         case MODE_CMD_SET_HOLD:
         case MODE_CMD_FULL_CLOSE:
         case MODE_CMD_FULL_OPEN:
+            ctx->nextCmd.cmd = cmd;
+            result = 1;
             ctx->hsm->next = &Mode_Position; // 位置模式下执行
             break;
         case MODE_CMD_SET_POSITION_PERCENT:
+            ctx->nextCmd.cmd = cmd;
+            result = 1;
             ctx->nextCmd.positionPercent = param;
             ctx->hsm->next = &Mode_Position; // 位置模式下执行
             break;
         case MODE_CMD_SET_PRESSURE_PERCENT:
+            ctx->nextCmd.cmd = cmd;
+            result = 1;
             ctx->nextCmd.pressurePercent = param;
             ctx->hsm->next = &Mode_Press; // 压力模式下执行
             break;
         default:
-            ctx->nextCmd.cmd = MODE_CMD_NONE;
-            result = 0;
             break;
         }
     }
     return result;
 
-#if 0
-    Mode_Ctx_t *ctx = &glob_value.modeCtx;
-    if (cmd == MODE_CMD_SET_KEY_UNLOCK) // 解除按键锁定，只改变状态不执行动作，避免死锁
-    {
-        ctx->locks.content.key = 0;
-    }
-    if (cmd == MODE_CMD_FAULT) // 进入故障模式
-    {
-        ctx->hsm->next = &Mode_Root;
-        ctx->nextCmd.cmd = cmd;
-        return 1;
-    }
-    if (ctx->calibSubState > CALIB_SUB_NONE && ctx->calibSubState < CALIB_SUB_DONE) // 处于标定未完成状态，禁止执行任何命令
-    {
-        return 0;
-    }
-    else if (glob_value.valveParam.locks.content.calib && cmd != MODE_CMD_CALIB) // 标定失败或未进行标定，且目标模式不是标定模式
-    {
-        return 0;
-    }
-    ctx->nextCmd.cmd = cmd;
-    switch (cmd)
-    {
-    case MODE_CMD_CALIB:
-        glob_value.valveParam.locks.content.calib = 1; // 锁定标定，直到标定完成后解锁
-        ctx->hsm->next = &Mode_Calib; // 直接切换至标定模式执行
-        break;
-    case MODE_CMD_SET_KEY_LOCK:
-        glob_value.valveParam.locks.content.key = 1;
-        ctx->hsm->next = &Mode_Position; // 位置模式下执行
-        break;
-    case MODE_CMD_SET_KEY_UNLOCK:
-        glob_value.valveParam.locks.content.key = 0;
-        ctx->hsm->next = &Mode_Position; // 位置模式下执行
-        break;
-    default:
-        ctx->nextCmd.cmd = MODE_CMD_NONE;
-        break;
-    }
-    if (glob_value.valveParam.locks.content.key == 0 && ctx->nextCmd.cmd == MODE_CMD_NONE) // 按键未锁定，且不是标定及按键锁定命令时
-    {
-        ctx->nextCmd.cmd = cmd;
-        switch (cmd)
-        {
-        case MODE_CMD_SET_HOLD:
-        case MODE_CMD_FULL_CLOSE:
-        case MODE_CMD_FULL_OPEN:
-            ctx->hsm->next = &Mode_Position; // 位置模式下执行
-            break;
-        case MODE_CMD_SET_POSITION_PERCENT:
-            ctx->nextCmd.positionPercent = param;
-            ctx->hsm->next = &Mode_Position; // 位置模式下执行
-            break;
-        case MODE_CMD_SET_PRESSURE_PERCENT:
-            ctx->nextCmd.pressurePercent = param;
-            ctx->hsm->next = &Mode_Press; // 压力模式下执行
-            break;
-        default:
-            ctx->nextCmd.cmd = MODE_CMD_NONE;
-            break;
-        }
-    }
-    if (cmd != ctx->nextCmd.cmd)
-    {
-        return 0;
-    }
-    return 1;
-#endif
+
 }

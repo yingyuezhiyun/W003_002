@@ -24,7 +24,6 @@
 #define AT24C512_WAIT_TIMEOUT (200000UL)
 
 // 自测默认使用 EEPROM 末尾 256 字节，避免覆盖正常参数区。
-// 如你的项目已经占用该区域，请修改这里的地址。
 #define PARAM_STORE_SELFTEST_ADDR (0xFF00U)
 #define PARAM_STORE_SELFTEST_MAX_LEN (256U)
 
@@ -58,9 +57,13 @@ static uint32_t ParamStore_Checksum32(const uint8_t *data, uint16_t length)
     return sum;
 }
 
+/// @note C28x：直接把结构体/uint32 强转成 uint8_t* 会丢失每个 16-bit word 的高 8 位。
+///       这里固定按 little-endian 的字节顺序（低字节在前）进行校验。
+
 /// @brief 对“16-bit word 镜像数据”按字节计算 32 位校验和。
-/// @note C28x 上常见的坑：直接把结构体/uint32 强转成 uint8_t* 会丢失每个 16-bit word 的高 8 位。
-///       这里固定按 little-endian 的字节顺序（低字节在前）喂入校验。
+/// @param words 数据指针。
+/// @param wordCount 数据长度。
+/// @return 校验和。
 static uint32_t ParamStore_Checksum32_WordImage(const uint16_t *words, uint16_t wordCount)
 {
     uint16_t i;

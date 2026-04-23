@@ -78,7 +78,8 @@ typedef struct
         uint32_t ki;
         uint32_t kd;
         uint32_t kf;
-    } Press_Ctrl; // 压力控制参数
+    } Press_Ctrl;   // 压力控制参数
+    uint8_t remain; 
 } Param_Config_t;
 
 typedef struct

@@ -9,6 +9,9 @@
 #include <string.h>
 #include <math.h>
 
+static uint32_t lastRootLoopTick = 0U;
+#define ROOT_MODE_PERIOD_MS (10U) // 10ms
+
 static MODE_EXEC_t Mode_Root_Execute(Mode_Ctx_t *ctx);
 
 HsmState_t Mode_Root = {
@@ -26,6 +29,11 @@ HsmState_t Mode_Root = {
 /// @return
 static MODE_EXEC_t Mode_Root_Execute(Mode_Ctx_t *ctx)
 {
+    if (glob_value.tick0p1ms - lastRootLoopTick < ROOT_MODE_PERIOD_MS * TICK_PER_MS)
+    {
+        return MODE_EXEC_IGNORED;
+    }
+    lastRootLoopTick = glob_value.tick0p1ms;
     switch (ctx->Cmd.cmd)
     {
     case MODE_CMD_SET_KEY_LOCK:
