@@ -4,7 +4,7 @@
 
 SHELL = cmd.exe
 
-CG_TOOL_ROOT := D:/software/ti/ccs1281/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS
+CG_TOOL_ROOT := D:/Software Data/ti/ccs1281/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS
 
 GEN_OPTS__FLAG := --cmd_file="syscfg/board.opt" --cmd_file="syscfg/c2000ware_libraries.opt" 
 GEN_CMDS__FLAG := 
@@ -13,10 +13,23 @@ ORDERED_OBJS += \
 "./syscfg/board.obj" \
 "./syscfg/c2000ware_libraries.obj" \
 "./main.obj" \
+"./Core/src/communication/commu_core.obj" \
+"./Core/src/communication/host_rs232.obj" \
+"./Core/src/communication/serviceport.obj" \
+"./Core/src/dsp_it.obj" \
+"./Core/src/func_exec.obj" \
+"./Core/src/param_store.obj" \
+"./Core/src/elmo/elmo_can.obj" \
+"./Core/src/elmo/elmo_ctrl.obj" \
+"./Core/src/elmo/elmo_rs232.obj" \
+"./Core/src/mode_ctrl/mode_calib.obj" \
+"./Core/src/mode_ctrl/mode_ctrl.obj" \
+"./Core/src/mode_ctrl/mode_position.obj" \
+"./Core/src/mode_ctrl/mode_press.obj" \
+"./Core/src/mode_ctrl/mode_root.obj" \
 "./ECAT/9252_HW.obj" \
 "./ECAT/PIC32_EtherCAT_Slave.obj" \
 "./ECAT/SPIDriver.obj" \
-"./ECAT/c2000_timer1_isr.obj" \
 "./ECAT/src/coeappl.obj" \
 "./ECAT/src/ecatappl.obj" \
 "./ECAT/src/ecatcoe.obj" \
@@ -32,7 +45,7 @@ ORDERED_OBJS += \
 "./device/F2837xD_CodeStartBranch.obj" \
 "./device/device.obj" \
 "../2837xD_RAM_lnk_cpu1.cmd" \
-"D:/software/ti/c2000/C2000Ware_6_00_01_00/driverlib/f2837xd/driverlib/ccs/Debug/driverlib.lib" \
+"D:/Software Data/ti/c2000/C2000Ware_6_00_01_00/driverlib/f2837xd/driverlib/ccs/Debug/driverlib.lib" \
 $(GEN_CMDS__FLAG) \
 -llibc.a \
 
@@ -44,10 +57,18 @@ RMDIR := RMDIR /S/Q
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include subdir_vars.mk
+-include Core/src/communication/subdir_vars.mk
+-include Core/src/subdir_vars.mk
+-include Core/src/elmo/subdir_vars.mk
+-include Core/src/mode_ctrl/subdir_vars.mk
 -include ECAT/subdir_vars.mk
 -include ECAT/src/subdir_vars.mk
 -include device/subdir_vars.mk
 -include subdir_rules.mk
+-include Core/src/communication/subdir_rules.mk
+-include Core/src/subdir_rules.mk
+-include Core/src/elmo/subdir_rules.mk
+-include Core/src/mode_ctrl/subdir_rules.mk
 -include ECAT/subdir_rules.mk
 -include ECAT/src/subdir_rules.mk
 -include device/subdir_rules.mk
@@ -161,15 +182,15 @@ all: $(OBJS) $(CMD_SRCS) $(LIB_SRCS) $(GEN_CMDS)
 F28377D.out: $(OBJS) $(CMD_SRCS) $(LIB_SRCS) $(GEN_CMDS)
 	@echo 'Building target: "$@"'
 	@echo 'Invoking: C2000 Linker'
-	"D:/software/ti/ccs1281/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/bin/cl2000" -v28 -ml -mt --cla_support=cla1 --float_support=fpu32 --tmu_support=tmu0 --vcu_support=vcu2 -O2 --define=DEBUG --define=CPU1 --diag_suppress=10063 --diag_warning=225 --diag_wrap=off --display_error_number --abi=eabi -z -m"F28377D.map" --heap_size=0x200 --stack_size=0x3F8 --warn_sections -i"D:/software/ti/ccs1281/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/lib" -i"D:/software/ti/ccs1281/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include" --reread_libs --define=RAM --diag_wrap=off --display_error_number --xml_link_info="F28377D_linkInfo.xml" --entry_point=code_start --rom_model -o "F28377D.out" $(ORDERED_OBJS)
+	"D:/Software Data/ti/ccs1281/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/bin/cl2000" -v28 -ml -mt --cla_support=cla1 --float_support=fpu32 --tmu_support=tmu0 --vcu_support=vcu2 -O2 --define=DEBUG --define=CPU1 --diag_suppress=10063 --diag_warning=225 --diag_wrap=off --display_error_number --abi=eabi -z -m"F28377D.map" --heap_size=0x200 --stack_size=0x3F8 --warn_sections -i"D:/Software Data/ti/ccs1281/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/lib" -i"D:/Software Data/ti/ccs1281/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include" --reread_libs --define=RAM --diag_wrap=off --display_error_number --xml_link_info="F28377D_linkInfo.xml" --entry_point=code_start --rom_model -o "F28377D.out" $(ORDERED_OBJS)
 	@echo 'Finished building target: "$@"'
 	@echo ' '
 
 # Other Targets
 clean:
 	-$(RM) $(GEN_MISC_FILES__QUOTED)$(GEN_FILES__QUOTED)$(EXE_OUTPUTS__QUOTED)
-	-$(RM) "syscfg\board.obj" "syscfg\c2000ware_libraries.obj" "main.obj" "ECAT\9252_HW.obj" "ECAT\PIC32_EtherCAT_Slave.obj" "ECAT\SPIDriver.obj" "ECAT\c2000_timer1_isr.obj" "ECAT\src\coeappl.obj" "ECAT\src\ecatappl.obj" "ECAT\src\ecatcoe.obj" "ECAT\src\ecateoe.obj" "ECAT\src\ecatfoe.obj" "ECAT\src\ecatslv.obj" "ECAT\src\emcy.obj" "ECAT\src\eoeappl.obj" "ECAT\src\foeappl.obj" "ECAT\src\mailbox.obj" "ECAT\src\objdef.obj" "ECAT\src\sdoserv.obj" "device\F2837xD_CodeStartBranch.obj" "device\device.obj" 
-	-$(RM) "syscfg\board.d" "syscfg\c2000ware_libraries.d" "main.d" "ECAT\9252_HW.d" "ECAT\PIC32_EtherCAT_Slave.d" "ECAT\SPIDriver.d" "ECAT\c2000_timer1_isr.d" "ECAT\src\coeappl.d" "ECAT\src\ecatappl.d" "ECAT\src\ecatcoe.d" "ECAT\src\ecateoe.d" "ECAT\src\ecatfoe.d" "ECAT\src\ecatslv.d" "ECAT\src\emcy.d" "ECAT\src\eoeappl.d" "ECAT\src\foeappl.d" "ECAT\src\mailbox.d" "ECAT\src\objdef.d" "ECAT\src\sdoserv.d" "device\device.d" 
+	-$(RM) "syscfg\board.obj" "syscfg\c2000ware_libraries.obj" "main.obj" "Core\src\communication\commu_core.obj" "Core\src\communication\host_rs232.obj" "Core\src\communication\serviceport.obj" "Core\src\dsp_it.obj" "Core\src\func_exec.obj" "Core\src\param_store.obj" "Core\src\elmo\elmo_can.obj" "Core\src\elmo\elmo_ctrl.obj" "Core\src\elmo\elmo_rs232.obj" "Core\src\mode_ctrl\mode_calib.obj" "Core\src\mode_ctrl\mode_ctrl.obj" "Core\src\mode_ctrl\mode_position.obj" "Core\src\mode_ctrl\mode_press.obj" "Core\src\mode_ctrl\mode_root.obj" "ECAT\9252_HW.obj" "ECAT\PIC32_EtherCAT_Slave.obj" "ECAT\SPIDriver.obj" "ECAT\src\coeappl.obj" "ECAT\src\ecatappl.obj" "ECAT\src\ecatcoe.obj" "ECAT\src\ecateoe.obj" "ECAT\src\ecatfoe.obj" "ECAT\src\ecatslv.obj" "ECAT\src\emcy.obj" "ECAT\src\eoeappl.obj" "ECAT\src\foeappl.obj" "ECAT\src\mailbox.obj" "ECAT\src\objdef.obj" "ECAT\src\sdoserv.obj" "device\F2837xD_CodeStartBranch.obj" "device\device.obj" 
+	-$(RM) "syscfg\board.d" "syscfg\c2000ware_libraries.d" "main.d" "Core\src\communication\commu_core.d" "Core\src\communication\host_rs232.d" "Core\src\communication\serviceport.d" "Core\src\dsp_it.d" "Core\src\func_exec.d" "Core\src\param_store.d" "Core\src\elmo\elmo_can.d" "Core\src\elmo\elmo_ctrl.d" "Core\src\elmo\elmo_rs232.d" "Core\src\mode_ctrl\mode_calib.d" "Core\src\mode_ctrl\mode_ctrl.d" "Core\src\mode_ctrl\mode_position.d" "Core\src\mode_ctrl\mode_press.d" "Core\src\mode_ctrl\mode_root.d" "ECAT\9252_HW.d" "ECAT\PIC32_EtherCAT_Slave.d" "ECAT\SPIDriver.d" "ECAT\src\coeappl.d" "ECAT\src\ecatappl.d" "ECAT\src\ecatcoe.d" "ECAT\src\ecateoe.d" "ECAT\src\ecatfoe.d" "ECAT\src\ecatslv.d" "ECAT\src\emcy.d" "ECAT\src\eoeappl.d" "ECAT\src\foeappl.d" "ECAT\src\mailbox.d" "ECAT\src\objdef.d" "ECAT\src\sdoserv.d" "device\device.d" 
 	-$(RM) "device\F2837xD_CodeStartBranch.d" 
 	-$(RMDIR) $(GEN_MISC_DIRS__QUOTED)
 	-@echo 'Finished clean'

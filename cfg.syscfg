@@ -146,6 +146,12 @@ can1.msgObj5.flags           = ["CAN_MSG_OBJ_RX_INT_ENABLE","CAN_MSG_OBJ_USE_ID_
 const divider3 = system.clockTree["EPWMCLKDIV"];
 scripting.suppress("ePWM TZFRC and TZCLR events will sometimes be missed when EPWMCLKDIV is divide by 2\\. Always program EPWMCLKDIV to divide by 1 if using TZFRC or TZCLR register\\. Please refer to the F2837xD Silicon Errata for more details\\.", divider3, "EPWMCLK");
 
+const multiplier4         = system.clockTree["PLL_IMULT"];
+multiplier4.multiplyValue = 20;
+
+const mux8       = system.clockTree["XTAL_OR_X1"];
+mux8.inputSelect = "X1";
+
 cputimer1.enableInterrupt          = true;
 cputimer1.emulationMode            = "CPUTIMER_EMULATIONMODE_RUNFREE";
 cputimer1.registerInterrupts       = true;

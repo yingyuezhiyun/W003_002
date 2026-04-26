@@ -125,6 +125,10 @@ GEN_OPTS__QUOTED :=
 # Every subdirectory with source files must be described here
 SUBDIRS := \
 . \
+Core/src/communication \
+Core/src \
+Core/src/elmo \
+Core/src/mode_ctrl \
 ECAT \
 ECAT/src \
 device \

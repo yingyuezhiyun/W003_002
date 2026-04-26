@@ -91,7 +91,10 @@ static uint8_t elmoCanWaitFreeTxObj(void)
 static void elmoCanSendObj(const uint8_t *msgData)
 {
 	uint8_t objId = elmoCanWaitFreeTxObj();
-	CAN_sendMessage(Elmo_CAN_BASE, objId, 8U, (uint16_t *)msgData);
+	if (objId >= ELMO_CAN_TX_OBJ_FIRST && objId <= ELMO_CAN_TX_OBJ_LAST)
+	{
+		CAN_sendMessage(Elmo_CAN_BASE, objId, 8U, (uint16_t *)msgData);
+	}
 }
 
 // 发送 SDO 读请求

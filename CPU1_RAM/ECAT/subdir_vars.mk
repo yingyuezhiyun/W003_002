@@ -8,37 +8,31 @@ SHELL = cmd.exe
 C_SRCS += \
 ../ECAT/9252_HW.c \
 ../ECAT/PIC32_EtherCAT_Slave.c \
-../ECAT/SPIDriver.c \
-../ECAT/c2000_timer1_isr.c 
+../ECAT/SPIDriver.c 
 
 C_DEPS += \
 ./ECAT/9252_HW.d \
 ./ECAT/PIC32_EtherCAT_Slave.d \
-./ECAT/SPIDriver.d \
-./ECAT/c2000_timer1_isr.d 
+./ECAT/SPIDriver.d 
 
 OBJS += \
 ./ECAT/9252_HW.obj \
 ./ECAT/PIC32_EtherCAT_Slave.obj \
-./ECAT/SPIDriver.obj \
-./ECAT/c2000_timer1_isr.obj 
+./ECAT/SPIDriver.obj 
 
 OBJS__QUOTED += \
 "ECAT\9252_HW.obj" \
 "ECAT\PIC32_EtherCAT_Slave.obj" \
-"ECAT\SPIDriver.obj" \
-"ECAT\c2000_timer1_isr.obj" 
+"ECAT\SPIDriver.obj" 
 
 C_DEPS__QUOTED += \
 "ECAT\9252_HW.d" \
 "ECAT\PIC32_EtherCAT_Slave.d" \
-"ECAT\SPIDriver.d" \
-"ECAT\c2000_timer1_isr.d" 
+"ECAT\SPIDriver.d" 
 
 C_SRCS__QUOTED += \
 "../ECAT/9252_HW.c" \
 "../ECAT/PIC32_EtherCAT_Slave.c" \
-"../ECAT/SPIDriver.c" \
-"../ECAT/c2000_timer1_isr.c" 
+"../ECAT/SPIDriver.c" 
 
 

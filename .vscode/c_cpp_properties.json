@@ -6,8 +6,8 @@
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/*",
                 "${workspaceFolder}/device/**",
-                "D:\\software\\ti\\ccs1281\\ccs\\tools\\compiler\\ti-cgt-c2000_22.6.1.LTS\\include",
-                "D:\\software\\ti\\ccs1281\\ccs\\tools\\compiler\\ti-cgt-c2000_22.6.1.LTS\\include\\*"
+                "D:\\Software\\ti\\ccs1281\\ccs\\tools\\compiler\\ti-cgt-c2000_22.6.1.LTS\\include",
+                "D:\\Software\\ti\\ccs1281\\ccs\\tools\\compiler\\ti-cgt-c2000_22.6.1.LTS\\include\\*"
             ],
             "defines": [
                 "CPU1",               

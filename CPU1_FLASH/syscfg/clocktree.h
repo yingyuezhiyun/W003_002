@@ -47,7 +47,7 @@
 //
 //*****************************************************************************
 //
-// Input Clock to SYSPLL (OSCCLK)	= 10 MHz    (XTAL provides OSCCLK)
+// Input Clock to SYSPLL (OSCCLK)	= 20 MHz    (X1 provides OSCCLK)
 //
 //##### SYSPLL ENABLED #####
 //
@@ -66,16 +66,16 @@
 //
 //*****************************************************************************
 //
-//	Input Clock to SYSPLL (OSCCLK) = XTAL = 10 MHz
+//	Input Clock to SYSPLL (OSCCLK) = X1 = 20 MHz
 //
-#define DEVICE_OSCSRC_FREQ          10000000U
+#define DEVICE_OSCSRC_FREQ          20000000U
 //
 // Define to pass to SysCtl_setClock(). Will configure the clock as follows:
 // SYSPLL ENABLED
-// SYSCLK = 200 MHz = 10 MHz (OSCCLK) * (40 (IMULT) + 0 (FMULT)) / 2 (SYSCLKDIVSEL)	
-#define DEVICE_SYSCLK_FREQ          ((DEVICE_OSCSRC_FREQ * (40 + 0)) / 2)
+// SYSCLK = 200 MHz = 20 MHz (OSCCLK) * (20 (IMULT) + 0 (FMULT)) / 2 (SYSCLKDIVSEL)	
+#define DEVICE_SYSCLK_FREQ          ((DEVICE_OSCSRC_FREQ * (20 + 0)) / 2)
 //
-#define DEVICE_SETCLOCK_CFG         (SYSCTL_OSCSRC_XTAL | SYSCTL_IMULT(40) | \
+#define DEVICE_SETCLOCK_CFG         (SYSCTL_OSCSRC_XTAL | SYSCTL_IMULT(20) | \
 									 SYSCTL_FMULT_NONE | SYSCTL_SYSDIV(2)| \
 									 SYSCTL_PLL_ENABLE)
 
@@ -93,12 +93,12 @@
 //
 //*****************************************************************************
 //
-// Input Clock to AUXOSCCLK	= 10 MHz (XTAL provides AUXOSCCLK)  
+// Input Clock to AUXOSCCLK	= 20 MHz (X1 provides AUXOSCCLK)  
 //
 //##### AUXPLL DISABLED #####
 //
-// AUXPLLRAWCLK				= 200 MHz (Output of AUXPLL if enabled)
-// AUXPLLCLK				= 5 MHz 
+// AUXPLLRAWCLK				= 400 MHz (Output of AUXPLL if enabled)
+// AUXPLLCLK				= 10 MHz 
 //
 //*****************************************************************************
 //
@@ -106,13 +106,13 @@
 //
 //*****************************************************************************
 //
-//	Input Clock to AUXPLL (AUXOSCCLK) = XTAL = 10 MHz
+//	Input Clock to AUXPLL (AUXOSCCLK) = X1 = 20 MHz
 //
-#define DEVICE_AUXOSCSRC_FREQ 		10000000U
+#define DEVICE_AUXOSCSRC_FREQ 		20000000U
 //
 // Define to pass to SysCtl_setAuxClock(). Will configure the clock as follows:
 // AUXPLL DISABLED
-// AUXPLLCLK = 5 MHz = 10 MHz (XTAL) / 2 (AUXCLKDIVSEL)
+// AUXPLLCLK = 10 MHz = 20 MHz (X1) / 2 (AUXCLKDIVSEL)
 #define DEVICE_AUXCLK_FREQ			(DEVICE_AUXOSCSRC_FREQ  / 2) 
 //
 #define DEVICE_SETAUXCLOCK_CFG      (SYSCTL_AUXPLL_OSCSRC_XTAL | SYSCTL_AUXPLL_IMULT(20) | \

@@ -12,7 +12,7 @@ SYSCFG_SRCS += \
 ../cfg.syscfg 
 
 LIB_SRCS += \
-D:/software/ti/c2000/C2000Ware_6_00_01_00/driverlib/f2837xd/driverlib/ccs/Debug/driverlib.lib 
+D:/Software\ Data/ti/c2000/C2000Ware_6_00_01_00/driverlib/f2837xd/driverlib/ccs/Debug/driverlib.lib 
 
 C_SRCS += \
 ./syscfg/board.c \
@@ -47,6 +47,8 @@ GEN_MISC_FILES += \
 ./syscfg/board.cmd.genlibs \
 ./syscfg/board.json \
 ./syscfg/pinmux.csv \
+./syscfg/epwm.dot \
+./syscfg/adc.dot \
 ./syscfg/c2000ware_libraries.cmd.genlibs \
 ./syscfg/c2000ware_libraries.h \
 ./syscfg/clocktree.h 
@@ -64,6 +66,8 @@ GEN_MISC_FILES__QUOTED += \
 "syscfg\board.cmd.genlibs" \
 "syscfg\board.json" \
 "syscfg\pinmux.csv" \
+"syscfg\epwm.dot" \
+"syscfg\adc.dot" \
 "syscfg\c2000ware_libraries.cmd.genlibs" \
 "syscfg\c2000ware_libraries.h" \
 "syscfg\clocktree.h" 
