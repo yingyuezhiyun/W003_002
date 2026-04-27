@@ -104,14 +104,14 @@ __weak __interrupt void INT_EPWM0_ISR(void)
     // 快速采样：EPWM1 SOCA 触发，每 50us 更新一次
     glob_value.measure.adc_cdg1 = ADC_readResult(ADC_C_RESULT_BASE, ADC_C_CDG1);
     glob_value.measure.adc_cdg2 = ADC_readResult(ADC_A_RESULT_BASE, ADC_A_CDG2);
-    glob_value.measure.cdg1_volt = LowPassFilter(glob_value.measure.cdg1_volt, (float)glob_value.measure.adc_cdg1);
-    glob_value.measure.cdg2_volt = LowPassFilter(glob_value.measure.cdg2_volt, (float)glob_value.measure.adc_cdg2);
+    CDG1_LPF_Update();
+    CDG2_LPF_Update();
 
     // 慢速采样：默认由 EPWM2 SOCA 触发
-    // 用 20 分频（50us * 20 = 1ms）把慢速通道“取数/刷新”节拍化。
+    // 用 200 分频（50us * 200 = 10ms）把慢速通道“取数/刷新”节拍化。
     static uint16_t slow_div = 0;
     slow_div++;
-    if (slow_div >= 20U)
+    if (slow_div >= 200U)
     {
         slow_div = 0U;
 

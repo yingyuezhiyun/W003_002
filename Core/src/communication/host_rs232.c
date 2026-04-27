@@ -122,7 +122,6 @@ static uint8_t set_setpoint_func(const char *arg, printf_t pprintf)
 
 static uint8_t activate_func(const char *arg, printf_t pprintf)
 {
-	float value;
 	uint8_t ok;
 	if (gHost.setpointType == UART_SETPOINT_PRESSURE)
 	{
@@ -297,7 +296,7 @@ static Command_t commands[] = {
 	CMD_PARAM_ENTRY("XABSPOS", set_xabspos_func),
 	CMD_FUNC_ENTRY("XSTOP", set_xstop_func),
 	CMD_FUNC_ENTRY("SA", save_params_func),
-	{NULL, 0, NULL, NULL, DT_NONE, 0},
+	{NULL, CMD_NONE, NULL, NULL, DT_NONE},
 };
 
 static Command_t* get_ex_cmd()
@@ -306,7 +305,7 @@ static Command_t* get_ex_cmd()
 		CMD_READ_EX_FLOAT("TEST1", "TEST1+%.2f", 0.1 * 5 + 1),
 		CMD_READ_EX_INT("TEST2", "TEST2%u", 42 + 33),
 		CMD_READ_EX_STR("TEST3", "TEST3:%s", "Hello, World!"),
-		{NULL, 0, NULL, NULL, DT_NONE, 0},
+		{NULL, CMD_NONE, NULL, NULL, DT_NONE},
 	};
 
 	Command_t* cmd = malloc(sizeof(ex_cmds));

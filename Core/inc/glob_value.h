@@ -71,6 +71,10 @@ typedef struct
         uint8_t CDG_Mode; // CDG 模式选择 0:自动 1:CDG1 2:CDG2
         float CDG1_Range; // CDG1 量程（满刻度对应的压力值）
         float CDG2_Range; // CDG2 量程（满刻度对应的压力值）
+        float CDG1_adc_k; // CDG1 ADC 转换系数（电压值 = ADC值 * adc_k + adc_b）
+        float CDG2_adc_k; // CDG2 ADC 转换系数（电压值 = ADC值 * adc_k + adc_b）
+        float CDG1_adc_b; // CDG1 ADC 转换偏移（电压值 = ADC值 * adc_k + adc_b）
+        float CDG2_adc_b; // CDG2 ADC 转换偏移（电压值 = ADC值 * adc_k + adc_b）
     } CDG_cfg;
     struct
     {
@@ -88,12 +92,12 @@ typedef struct
     volatile uint16_t adc_cdg2; ///< ADC CDG2 值
     volatile uint16_t adc_batt; ///< ADC 电池电压值
     volatile uint16_t adc_temp; ///< ADC 温度值
-    volatile uint16_t adc_pwr;  ///< ADC 功率值
+    volatile uint16_t adc_pwr;  ///< ADC 供电电压值
     float batt_voltage;         ///< 电池电压（根据 adc_batt 计算得出）
     float temperature;          ///< 温度（根据 adc_temp 计算得出）
-    float power;                ///< 功率（根据 adc_pwr 计算得出）
-    float cdg1_volt;              ///< CDG1 电压（根据 adc_cdg1 计算得出）
-    float cdg2_volt;              ///< CDG2 电压（根据 adc_cdg2 计算得出）
+    float power_voltage;        ///< 供电电压（根据 adc_pwr 计算得出）
+    float cdg1_volt;            ///< CDG1 电压（根据 adc_cdg1 计算得出）
+    float cdg2_volt;            ///< CDG2 电压（根据 adc_cdg2 计算得出）
 } measure_t;                    // 测量值
 
 typedef struct

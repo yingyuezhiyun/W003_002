@@ -12,6 +12,7 @@
 #include "Core/inc/mode_ctrl.h"
 #include "Core/inc/func_exec.h"
 #include "host_rs232.h"
+#include "param_store.h"
 
 #if ECAT_ENABLE
 #include "ECAT/9252_HW.h"

@@ -147,8 +147,6 @@ char *TrimUpper(char *text)
 char *TrimSpace(char *text)
 {
 	char *start;
-	size_t len;
-	char *p;
 	if (text == NULL)
 	{
 		return NULL;

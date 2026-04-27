@@ -20,6 +20,7 @@ typedef enum
     CMD_FUNC,  // 函数命令，调用 func 处理
     CMD_PARAM, // 参数命令，调用 func 处理，且传入参数字符串
     CMD_READ,  // 读取命令，回复 fmt 格式化的响应
+    CMD_NONE,  // 无效命令
 } CMD_Type_t;
 
 typedef enum
@@ -33,7 +34,7 @@ typedef enum
     DT_EX_STR,   // 直接存储字符串（指针或数组）
 } DataType_t;
 
-typedef void (*printf_t)(char *format, ...);
+typedef void (*printf_t)(const char *format, ...);
 typedef UART_ResponseCode_t (*CommandFunc)(const char *arg, printf_t pprintf);
 typedef struct
 {
