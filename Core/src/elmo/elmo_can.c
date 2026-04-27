@@ -162,6 +162,7 @@ static void elmoCanProcess(const uint8_t *msgData, uint8_t msgLen, ElmoFeedbackP
 	{
 	case ELMO_IDX_ENABLE_FB:
 		fb->en = ((msgData[4] & 0x1U) != 0U) ? 1U : 0U;
+		fb->detect = 1U; // 只要收到任何反馈，就认为设备已检测到
 		break;
 
 	case ELMO_IDX_POS_FB:

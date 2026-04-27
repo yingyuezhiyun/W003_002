@@ -76,6 +76,7 @@ static void elmoRs232ParseLine(char *line, ElmoFeedbackParam *fb)
 	else if (strncmp(line, "SO", 2) == 0)
 	{
 		fb->en = (strtol(payload, NULL, 10) != 0) ? 1U : 0U;
+		fb->detect = 1U;
 	}
 	else if (strncmp(line, "EC", 2) == 0)
 	{

@@ -6,29 +6,30 @@
 // Elmo 下发设置参数结构体
 typedef struct
 {
-    volatile uint8_t en;          // 使能位，0=无效，1=有效
-    volatile uint32_t spd_set;    // 速度给定
-    volatile uint32_t ac_set;     // 加速度给定
-    volatile uint32_t dc_set;     // 减速度给定
-    volatile int32_t rel_pos_set; // 相对位置给定
-    volatile int32_t abs_pos_set; // 绝对位置给定
+    volatile uint8_t en;           // 使能位，0=无效，1=有效
+    volatile uint32_t spd_set;     // 速度给定
+    volatile uint32_t ac_set;      // 加速度给定
+    volatile uint32_t dc_set;      // 减速度给定
+    volatile int32_t rel_pos_set;  // 相对位置给定
+    volatile int32_t abs_pos_set;  // 绝对位置给定
     volatile uint32_t stop_dc_set; // 停止命令的减速度设置
 } ElmoSetParam;
 
 // Elmo 查询反馈参数结构体
 typedef struct
 {
-    volatile int32_t pos_fed;     // 位置反馈
-    volatile int32_t spd_fed;     // 速度反馈
-    volatile float iq_fed;        // 电流反馈
-    volatile int32_t ec;          // 错误码反馈
-    volatile uint8_t en;          // 使能状态反馈
-    volatile uint32_t spd_set;    // 速度给定 反馈
-    volatile uint32_t ac_set;     // 加速度给定 反馈
-    volatile uint32_t dc_set;     // 减速度给定 反馈
-    volatile int32_t rel_pos_set; // 相对位置给定 反馈
-    volatile int32_t abs_pos_set; // 绝对位置给定 反馈
+    volatile int32_t pos_fed;      // 位置反馈
+    volatile int32_t spd_fed;      // 速度反馈
+    volatile float iq_fed;         // 电流反馈
+    volatile int32_t ec;           // 错误码反馈
+    volatile uint8_t en;           // 使能状态反馈
+    volatile uint32_t spd_set;     // 速度给定 反馈
+    volatile uint32_t ac_set;      // 加速度给定 反馈
+    volatile uint32_t dc_set;      // 减速度给定 反馈
+    volatile int32_t rel_pos_set;  // 相对位置给定 反馈
+    volatile int32_t abs_pos_set;  // 绝对位置给定 反馈
     volatile uint32_t stop_dc_set; // 停止命令的减速度设置 反馈
+    uint8_t detect;                // 设备检测标志，0=未检测到设备，1=已检测到设备
 } ElmoFeedbackParam;
 
 typedef struct
@@ -81,10 +82,8 @@ typedef struct
     ElmoCtrl *ctrl;                        //  ElmoCtrl 内部接口结构体
 } ElmoOpsTable;
 
-
-
-extern  ElmoCtrl ElmoCanCtrl;
-extern  ElmoCtrl ElmoRs232Ctrl;
+extern ElmoCtrl ElmoCanCtrl;
+extern ElmoCtrl ElmoRs232Ctrl;
 
 // 当前启用的操作表（调用形式：ElmoOps.init()）
 extern ElmoOpsTable ElmoOps;

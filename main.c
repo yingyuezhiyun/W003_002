@@ -24,7 +24,12 @@ glob_value_t glob_value = {
     .tick0p1ms = 0,
     .set = {.locks.content.calib = 1, .locks.content.key = 0, .positionPercent = 0.0f, .pressurePercent = 0.0f},
     .middleData = {.fullClosePos = 0, .fullOpenPos = 0, .stroke = 1},
-    .paramCfg = {.Pos_limit.I = 8, .Pos_limit.spd = 1000},
+    .paramCfg = {
+        .Pos_limit.I = 8,
+        .Pos_limit.spd = 1000,
+        .temp.high_threshold = 85.0f,
+        .temp.low_threshold = -10.0f,
+    },
     .modeCtx = {0},
     .status = {.errors.val = 0, .state.val = 0},
 };
@@ -38,10 +43,8 @@ void main(void)
     Interrupt_initVectorTable();
 
     Board_init();
-    
-    // 从 EEPROM 加载配置参数，失败则设置错误标志
-    glob_value.status.errors.content.epprom = !ParamStore_LoadConfig(&glob_value.paramCfg);
 
+  
     // 初始化运行模式控制
     ModeHSM_Init(&glob_value.modeCtx);
     // 初始化RS232串口通信
@@ -62,6 +65,11 @@ void main(void)
 
     EINT; // 开启全局中断
     ERTM; // Enable Global realtime interrupt
+
+    DEVICE_DELAY_US(1000);
+
+    BIT_Init();
+
 
     while (1)
     {
@@ -88,8 +96,8 @@ void main(void)
         // 处理状态显示
         Status_handle();
 
-        // 处理故障
-        Fault_handle();
+        // 处理BIT
+        BIT_handle();
 
         asm(" NOP");
     }

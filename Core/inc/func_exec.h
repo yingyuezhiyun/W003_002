@@ -19,8 +19,10 @@ void Elmo_Poll();
 /// @brief 处理状态显示,LED 灯等。
 void Status_handle();
 
-/// @brief 故障处理入口。
-void Fault_handle();
+/// @brief BIT处理入口。
+void BIT_handle();
+
+void BIT_Init();
 
 
 /// @brief 数据处理入口。

@@ -25,6 +25,7 @@ ElmoOpsTable ElmoOps = {
 		.rel_pos_set = 0,
 		.ac_set = 0,
 		.dc_set = 0,
+		.detect = 0,
 	},
 	.set = {
 		.en = 0U,

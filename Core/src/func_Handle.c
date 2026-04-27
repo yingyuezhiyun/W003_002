@@ -4,6 +4,7 @@
 #include "Core/inc/host_rs232.h"
 #include "Core/inc/elmo_ctrl.h"
 #include "Core/inc/mode_ctrl.h"
+#include "param_store.h"
 
 #include "driverlib.h"
 #include "device.h"
@@ -49,6 +50,7 @@ void Data_handle()
     {
         return;
     }
+    lastUpdateTick = glob_value.tick0p1ms;
 
     switch (middleData->CDG_RangeSel)
     {
@@ -86,7 +88,6 @@ void Data_handle()
     valvePositionPercent_Update();
 }
 
-
 /// @brief 更新 CDG 电压和 CDG 模式相关的计算。
 void CDG_Volt_Update()
 {
@@ -96,7 +97,6 @@ void CDG_Volt_Update()
     middle_data_t *middleData = &glob_value.middleData;
     setparam_t *set = &glob_value.set;
 
-
 #if (CDG_ADC_CALIB_EN)
     float vadc1 = (float)measure->adc_cdg1 * paramCfg->CDG_cfg.CDG1_adc_k + paramCfg->CDG_cfg.CDG1_adc_b;
 #else
@@ -104,14 +104,12 @@ void CDG_Volt_Update()
 #endif
     measure->cdg1_volt = vadc1 * 0.0309275743F + measure->cdg1_volt * 0.969072402F;
 
-
 #if (CDG_ADC_CALIB_EN)
     float vadc2 = (float)measure->adc_cdg2 * paramCfg->CDG_cfg.CDG2_adc_k + paramCfg->CDG_cfg.CDG2_adc_b;
 #else
     float vadc2 = (float)(measure->adc_cdg2 - ADC_OFFSET) / ADC_SCALE * 15.0f;
 #endif
     measure->cdg2_volt = vadc2 * 0.0309275743F + measure->cdg2_volt * 0.969072402F;
-
 
     const float UP_THRESHOLD = 0.99f;
     const float DOWN_THRESHOLD = 0.9f;
@@ -177,6 +175,34 @@ void Status_handle()
         return;
     }
     GPIO_writePin(FAULT_LED, 0);
+
+    if (status->state.content.rs232_connected)
+    {
+        GPIO_writePin(RS232_LED, 1);
+    }
+    else
+    {
+        GPIO_writePin(RS232_LED, 0);
+    }
+
+    // if (status->state.content.ecat_connected)
+    // {
+    //     GPIO_writePin(ECAT_LED, 1);
+    // }
+    // else
+    // {
+    //     GPIO_writePin(ECAT_LED, 0);
+    // }
+
+    if (status->errors.content.pwr == 0)
+    {
+        GPIO_writePin(BATT_LED, 1);
+    }
+    else
+    {
+        GPIO_writePin(BATT_LED, 0);
+    }
+
     if (locks->content.calib)
     {
         GPIO_writePin(POS_OPEN_LED, 0);
@@ -228,9 +254,98 @@ void Status_handle()
     }
 }
 
-/*********************************************************************** 故障处理 ****************************************************************/
+/*********************************************************************** BIT处理 ****************************************************************/
 
-/// @brief 故障处理入口（预留）。
-void Fault_handle()
+#define FAULT_PERIOD_MS (10) // 10ms
+
+/// @brief BIT处理入口。
+void BIT_handle()
 {
+    static uint32_t lastUpdateTick = 0U;
+    Status_t *status = &glob_value.status;
+    measure_t *measure = &glob_value.measure;
+    Param_Config_t *paramCfg = &glob_value.paramCfg;
+    if (glob_value.tick0p1ms - lastUpdateTick < FAULT_PERIOD_MS * TICK_PER_MS)
+    {
+        return;
+    }
+    lastUpdateTick = glob_value.tick0p1ms;
+
+    // 供电状态检测
+    if (measure->power_voltage >= 22.7f && measure->power_voltage <= 25.3f)
+    {
+        status->errors.content.pwr = 0; // 供电正常
+        measure->powerType = PWR_TYPE_EXTERNAL;
+    }
+    else if (measure->power_voltage < 23.0f &&
+             measure->batt_voltage >= 16.8f && measure->batt_voltage <= 22.0f)
+    {
+        status->errors.content.pwr = 0; // 供电正常
+        measure->powerType = PWR_TYPE_BATTERY;
+    }
+    else
+    {
+        status->errors.content.pwr = 1; // 供电错误
+        measure->powerType = PWR_TYPE_NONE;
+    }
+
+    // 温度过高或过低
+    if (measure->temperature >= paramCfg->temp.high_threshold)
+    {
+        status->errors.content.high_temp = 1; // 高温错误
+    }
+    else if (measure->temperature <= paramCfg->temp.low_threshold)
+    {
+        status->errors.content.low_temp = 1; // 低温错误
+    }
+    else
+    {
+        status->errors.content.high_temp = 0; // 温度正常
+        status->errors.content.low_temp = 0;  // 温度正常
+    }
+
+    // if (status->errors.val != 0)
+    // {
+    //     Mode_HSM_Request_CMD(MODE_CMD_FAULT, 0);
+    // }
+}
+
+/// @brief BIT初始化，
+void BIT_Init()
+{
+    Status_t *status = &glob_value.status;
+    // 初始化错误状态
+    status->errors.val = 0;
+
+    // 从 EEPROM 加载配置参数，失败则设置错误标志
+    status->errors.content.epprom = !ParamStore_LoadConfig(&glob_value.paramCfg);
+
+    uint8_t loop = 100;
+    while (loop-- > 0)
+    {
+        ElmoOps.reqEn();
+#if (ELMO_CONTROL_IF == ELMO_IF_RS232) // RS232 模式下通过串口接收数据，轮询解析
+        // 轮询解析 Elmo接收数据
+        if ((ElmoOps != NULL) && (ElmoOps->Parse != NULL))
+        {
+            ElmoOps->Parse();
+        }
+#endif
+
+        if (ElmoOps.fb.detect == 1U)
+        {
+            break;
+        }
+        DEVICE_DELAY_US(10000); // 等待 10ms 后重试
+    }
+    if (ElmoOps.fb.detect == 0U)
+    {
+        status->errors.content.elmo = 1; // Elmo 设备未检测到错误
+    }
+    else
+    {
+        status->errors.content.elmo = 0; // Elmo 设备正常
+    }
+    
+
 }

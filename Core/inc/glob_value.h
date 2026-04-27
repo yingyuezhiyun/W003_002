@@ -17,6 +17,13 @@ typedef enum
     CDG_RANGE_BIG = 1U,   // 大量程
 } CDG_Range_Sel_t;
 
+typedef enum
+{
+    PWR_TYPE_NONE = 0U,     // 供电类型未知或无效
+    PWR_TYPE_BATTERY = 1U,  // 电池供电
+    PWR_TYPE_EXTERNAL = 2U, // 外部电源供电
+} PWR_TYPE_t;
+
 /// @brief 状态信息
 typedef struct
 {
@@ -31,6 +38,8 @@ typedef struct
             uint8_t low_temp : 1;  ///< 低温错误
             uint8_t high_temp : 1; ///< 高温错误
             uint8_t epprom : 1;    ///< EEPROM 错误
+            uint8_t pwr : 1;       ///< 供电错误
+            uint8_t elmo : 1;      ///< Elmo 错误
         } content;
         uint8_t val;
     } errors; // 错误状态
@@ -60,6 +69,11 @@ typedef struct
         float CDG1_adc_b; // CDG1 ADC 转换偏移（电压值 = ADC值 * adc_k + adc_b）
         float CDG2_adc_b; // CDG2 ADC 转换偏移（电压值 = ADC值 * adc_k + adc_b）
     } CDG_cfg;
+    struct
+    {
+        float high_threshold; // 高温错误阈值
+        float low_threshold;  // 低温错误阈值
+    } temp;
     struct
     {
         int32_t kp;
@@ -93,6 +107,7 @@ typedef struct
     volatile float cdg_value;       ///< CDG 计算得到的压力值（根据 cdg1_volt 或 cdg2_volt 计算得出，取决于 CDG 模式）
     volatile float positionPercent; ///< 位置百分比（0~100%），根据elmo反馈的当前位置与行程计算得出
     volatile float pressurePercent; ///< 压力百分比（0~100%），根据压力传感器反馈值计算得出
+    PWR_TYPE_t powerType;           ///< 供电类型（根据 power_voltage 和 batt_voltage 判断得出）
 } measure_t;                        // 测量值
 
 typedef struct
