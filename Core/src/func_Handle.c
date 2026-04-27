@@ -23,8 +23,9 @@
 /// @brief 更新阀门位置百分比（根据elmo反馈的当前位置与行程计算得出）。
 void valvePositionPercent_Update()
 {
-
-    float valvePositionPercent = (float)(ElmoOps.fb.pos_fed - glob_value.valveParam.fullClosePos) / glob_value.valveParam.stroke * 100.0f;
+    measure_t *measure = &glob_value.measure;
+    middle_data_t *middleData = &glob_value.middleData;
+    float valvePositionPercent = (float)(ElmoOps.fb.pos_fed - middleData->fullClosePos) / middleData->stroke * 100.0f;
     if (valvePositionPercent < 0.0f)
     {
         valvePositionPercent = 0.0f;
@@ -33,38 +34,38 @@ void valvePositionPercent_Update()
     {
         valvePositionPercent = 100.0f;
     }
-    glob_value.valveParam.positionPercent = valvePositionPercent;
+    measure->positionPercent = valvePositionPercent;
 }
 
 void Data_handle()
 {
     static uint32_t lastUpdateTick = 0U;
     static uint16_t updateCount = 0U;
+    measure_t *measure = &glob_value.measure;
+    Locks_t *locks = &glob_value.set.locks;
     if (glob_value.tick0p1ms - lastUpdateTick < DATA_UPDATE_PERIOD_MS * TICK_PER_MS)
     {
         return;
     }
 
-
-    if (updateCount >= 4)// 10ms 更新一次
+    if (updateCount >= 4) // 10ms 更新一次
     {
         updateCount = 0;
         // 计算供电电压
-        glob_value.measure.power_voltage = (float)(glob_value.measure.adc_pwr - ADC_OFFSET) / ADC_SCALE * 30.0f;
+        measure->power_voltage = (float)(measure->adc_pwr - ADC_OFFSET) / ADC_SCALE * 30.0f;
         // 计算电池电压
-        glob_value.measure.batt_voltage = (float)(glob_value.measure.adc_batt - ADC_OFFSET) / ADC_SCALE * 30.0f;
+        measure->batt_voltage = (float)(measure->adc_batt - ADC_OFFSET) / ADC_SCALE * 30.0f;
 
-        // (float)(glob_value.measure.monitor_v - ADC_OFFSET) / ADC_SCALE * 5.0f;
+        // (float)(measure->monitor_v - ADC_OFFSET) / ADC_SCALE * 5.0f;
 
         // 计算温度
-        float vadc = (float)(glob_value.measure.adc_temp - ADC_OFFSET) / ADC_SCALE * 3.0f;
+        float vadc = (float)(measure->adc_temp - ADC_OFFSET) / ADC_SCALE * 3.0f;
         float Rntc = 15000.0f / vadc * 5.0f - 25000.0f;
-        glob_value.measure.temperature = 1.0f / (logf(Rntc / NTC_R25) / NTC_BETA + 1.0f / 298.15f) - 273.15f;
+        measure->temperature = 1.0f / (logf(Rntc / NTC_R25) / NTC_BETA + 1.0f / 298.15f) - 273.15f;
     }
     updateCount++;
 
-
-    if (glob_value.valveParam.locks.content.calib)// 校准标定中不更新位置百分比
+    if (locks->content.calib) // 校准标定中不更新位置百分比
     {
         // glob_value.valveParam.positionPercent = 50;
         return;
@@ -76,27 +77,52 @@ void Data_handle()
 /// @brief CDG1 电压低通滤波更新。
 void CDG1_LPF_Update()
 {
-
+    measure_t *measure = &glob_value.measure;
+    Param_Config_t *paramCfg = &glob_value.paramCfg;
 #if (CDG_ADC_CALIB_EN)
-    float vadc = (float)glob_value.measure.adc_cdg1 * glob_value.paramCfg.CDG_cfg.CDG1_adc_k + glob_value.paramCfg.CDG_cfg.CDG1_adc_b;
+    float vadc = (float)measure->adc_cdg1 * paramCfg->CDG_cfg.CDG1_adc_k + paramCfg->CDG_cfg.CDG1_adc_b;
 #else
-    float vadc = (float)(glob_value.measure.adc_cdg1 - ADC_OFFSET) / ADC_SCALE * 15.0f;
+    float vadc = (float)(measure->adc_cdg1 - ADC_OFFSET) / ADC_SCALE * 15.0f;
 #endif
-    glob_value.measure.cdg1_volt = vadc * 0.0309275743F + glob_value.measure.cdg1_volt * 0.969072402F;
-
+    measure->cdg1_volt = vadc * 0.0309275743F + measure->cdg1_volt * 0.969072402F;
 }
 
 /// @brief CDG2 电压低通滤波更新。
 void CDG2_LPF_Update()
 {
-
+    measure_t *measure = &glob_value.measure;
+    Param_Config_t *paramCfg = &glob_value.paramCfg;
 #if (CDG_ADC_CALIB_EN)
-    float vadc = (float)glob_value.measure.adc_cdg2 * glob_value.paramCfg.CDG_cfg.CDG2_adc_k + glob_value.paramCfg.CDG_cfg.CDG2_adc_b;
+    float vadc = (float)measure->adc_cdg2 * paramCfg->CDG_cfg.CDG2_adc_k + paramCfg->CDG_cfg.CDG2_adc_b;
 #else
-    float vadc = (float)(glob_value.measure.adc_cdg2 - ADC_OFFSET) / ADC_SCALE * 15.0f;
+    float vadc = (float)(measure->adc_cdg2 - ADC_OFFSET) / ADC_SCALE * 15.0f;
 #endif
-    glob_value.measure.cdg2_volt = vadc * 0.0309275743F + glob_value.measure.cdg2_volt * 0.969072402F;
+    measure->cdg2_volt = vadc * 0.0309275743F + measure->cdg2_volt * 0.969072402F;
     
+}
+
+void CDG_Range_Update()
+{
+    switch (glob_value.set.CDG_Mode)
+    {
+    case GAUGE_CDG1:
+        // glob_value.measure.cdg_value = glob_value.measure.cdg1_volt * 10.0;
+        // glob_value.PressCtrl.cdg_volt = glob_value.measure.cdg1_volt;
+        // glob_value.PressCtrl.CDG_RANGE = 1;
+        // glob_value.PressCtrl.PressTarget = (uint32_t)(glob_value.modeCtx.Cmd.pressurePercent * 0.01f * 67108862.5f);
+        break;
+    case GAUGE_CDG2:
+        // glob_value.measure.cdg_value = glob_value.measure.cdg2_volt * 10.0 * glob_value.paramCfg.CDG_cfg.CDG2_Range / glob_value.paramCfg.CDG_cfg.CDG1_Range;
+        // glob_value.PressCtrl.cdg_volt = glob_value.measure.cdg2_volt;
+        // glob_value.PressCtrl.CDG_RANGE = 0;
+        // glob_value.PressCtrl.PressTarget = (uint32_t)(glob_value.modeCtx.Cmd.pressurePercent * 0.01f * 67108862.5f * glob_value.paramCfg.CDG_cfg.CDG1_Range / glob_value.paramCfg.CDG_cfg.CDG2_Range);
+        break;
+    case GAUGE_AUTO:
+
+    default:
+        break;
+    }
+
 }
 
 /*********************************************************************** 状态显示 ****************************************************************/
@@ -105,6 +131,10 @@ void CDG2_LPF_Update()
 /// @brief 处理状态显示,LED 灯等。
 void Status_handle()
 {
+    Mode_Ctx_t *ctx = &glob_value.modeCtx;
+    Status_t *status = &glob_value.status;
+    Locks_t *locks = &glob_value.set.locks;
+    measure_t *measure = &glob_value.measure;
 
     uint32_t nowTick = glob_value.tick0p1ms;
     static uint32_t lastToggleTick = 0U;
@@ -115,7 +145,7 @@ void Status_handle()
     }
     //  GPIO_writePin(FAULT_LED, 1);
 
-    if (glob_value.status.errors.val != 0)
+    if (status->errors.val != 0)
     {
         GPIO_writePin(FAULT_LED, 1);
         // todo: 根据不同错误类型显示不同的状态（闪烁频率、灯的组合等）
@@ -124,7 +154,7 @@ void Status_handle()
         return;
     }
     GPIO_writePin(FAULT_LED, 0);
-    if (glob_value.valveParam.locks.content.calib)
+    if (locks->content.calib)
     {
         GPIO_writePin(POS_OPEN_LED, 0);
         GPIO_writePin(POS_OPEN_TTL_OUT, 1);
@@ -136,12 +166,12 @@ void Status_handle()
     }
 
     // 模式指示
-    if (glob_value.modeCtx.hsm->type == MODE_POSITION)
+    if (ctx->hsm->type == MODE_POSITION)
     {
         GPIO_writePin(POS_LED, 1);
         GPIO_writePin(PRE_LED, 0);
     }
-    else if (glob_value.modeCtx.hsm->type == MODE_PRESSURE)
+    else if (ctx->hsm->type == MODE_PRESSURE)
     {
         GPIO_writePin(POS_LED, 0);
         GPIO_writePin(PRE_LED, 1);
@@ -153,7 +183,7 @@ void Status_handle()
     }
 
     // 阀门开度指示
-    if (glob_value.valveParam.positionPercent > 99.0f)
+    if (measure->positionPercent > 99.0f)
     {
         GPIO_writePin(POS_OPEN_LED, 1);
         GPIO_writePin(POS_OPEN_TTL_OUT, 0);
@@ -163,7 +193,7 @@ void Status_handle()
         GPIO_writePin(POS_OPEN_LED, 0);
         GPIO_writePin(POS_OPEN_TTL_OUT, 1);
     }
-    if (glob_value.valveParam.positionPercent < 1.0f)
+    if (measure->positionPercent < 1.0f)
     {
         GPIO_writePin(POS_CLOSE_LED, 1);
         GPIO_writePin(POS_CLOSE_TTL_OUT, 0);

@@ -62,7 +62,7 @@ static MODE_EXEC_t Mode_Calib_Enter(Mode_Ctx_t *ctx)
 static MODE_EXEC_t Mode_Calib_Execute(Mode_Ctx_t *ctx)
 {
     Param_Config_t *cfg = &glob_value.paramCfg;
-    Valve_Param_t *valveParam = &glob_value.valveParam;
+    middle_data_t *middleData = &glob_value.middleData;
     if (ctx->calibSubState >= CALIB_SUB_DONE)
     {
         return MODE_EXEC_DONE;
@@ -94,7 +94,7 @@ static MODE_EXEC_t Mode_Calib_Execute(Mode_Ctx_t *ctx)
     case CALIB_SUB_WAIT_MIN_END:
         if ((fabs(ElmoOps.fb.spd_fed) < cfg->Pos_limit.spd) && (fabs(ElmoOps.fb.iq_fed) > cfg->Pos_limit.I)) // 速度足够慢且电流足够大，认为到达端点
         {
-            valveParam->fullClosePos = ElmoOps.fb.pos_fed;
+            middleData->fullClosePos = ElmoOps.fb.pos_fed;
             // 先关闭电机，等待电流刷新后再反向运动
             ElmoOps.setEnable(0);
             ctx->calibStepState.content.seek_min = 1;
@@ -125,7 +125,7 @@ static MODE_EXEC_t Mode_Calib_Execute(Mode_Ctx_t *ctx)
     case CALIB_SUB_WAIT_MAX_END:
         if ((fabs(ElmoOps.fb.spd_fed) < cfg->Pos_limit.spd) && (fabs(ElmoOps.fb.iq_fed) > cfg->Pos_limit.I)) // 速度足够慢且电流足够大，认为到达端点
         {
-            valveParam->fullOpenPos = ElmoOps.fb.pos_fed;
+            middleData->fullOpenPos = ElmoOps.fb.pos_fed;
             ElmoOps.setEnable(0);
             DEVICE_DELAY_US(100000);
             ctx->calibStepState.content.seek_max = 1;
@@ -134,7 +134,7 @@ static MODE_EXEC_t Mode_Calib_Execute(Mode_Ctx_t *ctx)
         break;
     case CALIB_SUB_VERIFY_RANGE:
     {
-        int32_t stroke = valveParam->fullOpenPos - valveParam->fullClosePos;
+        int32_t stroke = middleData->fullOpenPos - middleData->fullClosePos;
         if (stroke > MODE_CALIB_STROKE_THREAD)
         {
             //
@@ -142,9 +142,9 @@ static MODE_EXEC_t Mode_Calib_Execute(Mode_Ctx_t *ctx)
             DEVICE_DELAY_US(100000);
             ElmoOps.setSpd(MODE_NORMAL_SPEED);
             DEVICE_DELAY_US(5000);
-            valveParam->fullClosePos += stroke * 0.02f;
-            valveParam->fullOpenPos -= stroke * 0.02f;
-            valveParam->stroke = stroke * 0.96f;
+            middleData->fullClosePos += stroke * 0.02f;
+            middleData->fullOpenPos -= stroke * 0.02f;
+            middleData->stroke = stroke * 0.96f;
             ctx->calibSubState = CALIB_SUB_DONE;
             ctx->calibStepState.content.calib_done = 1;
             Mode_HSM_Request_CMD(MODE_CMD_CALIB_DONE, 0.0f); // 标定完成后保持全开位置

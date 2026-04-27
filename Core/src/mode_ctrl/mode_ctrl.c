@@ -116,6 +116,9 @@ void ModeHSM_Run_0p1msISR(Mode_Ctx_t *ctx)
 uint8_t Mode_HSM_Request_CMD(Mode_Command_Type cmd, float param)
 {
     Mode_Ctx_t *ctx = &glob_value.modeCtx;
+    Locks_t *locks = &glob_value.set.locks;
+    setparam_t *set = &glob_value.set;
+
     uint8_t result = 0;
     switch (cmd)
     {
@@ -129,7 +132,7 @@ uint8_t Mode_HSM_Request_CMD(Mode_Command_Type cmd, float param)
         {
             break;
         }        
-        glob_value.valveParam.locks.content.calib = 1; // 锁定标定，直到标定完成后解锁
+        locks->content.calib = 1; // 锁定标定，直到标定完成后解锁
         ctx->hsm->next = &Mode_Calib; // 直接切换至标定模式执行
         ctx->nextCmd.cmd = cmd;
         result = 1;
@@ -137,12 +140,12 @@ uint8_t Mode_HSM_Request_CMD(Mode_Command_Type cmd, float param)
     case MODE_CMD_CALIB_DONE:
         ctx->hsm->next = &Mode_Root;
         ctx->nextCmd.cmd = cmd;
-        glob_value.valveParam.locks.content.calib = 0; // 解锁标定，允许切换模式
+        locks->content.calib = 0; // 解锁标定，允许切换模式
         result = 1;
         break;
     case MODE_CMD_SET_KEY_LOCK:
-        glob_value.valveParam.locks.content.key = 1;// 锁定按键，直到收到解除按键锁定命令
-        if (glob_value.valveParam.locks.content.calib == 0)
+        locks->content.key = 1;// 锁定按键，直到收到解除按键锁定命令
+        if (locks->content.calib == 0)
         {
             ctx->hsm->next = &Mode_Root;
             ctx->nextCmd.cmd = cmd;
@@ -150,8 +153,8 @@ uint8_t Mode_HSM_Request_CMD(Mode_Command_Type cmd, float param)
         }
         break;
     case MODE_CMD_SET_KEY_UNLOCK:
-        glob_value.valveParam.locks.content.key = 0;// 解除按键锁定
-        if (glob_value.valveParam.locks.content.calib == 0)
+        locks->content.key = 0;// 解除按键锁定
+        if (locks->content.calib == 0)
         {
             ctx->hsm->next = &Mode_Root;
             ctx->nextCmd.cmd = cmd;
@@ -161,7 +164,7 @@ uint8_t Mode_HSM_Request_CMD(Mode_Command_Type cmd, float param)
     default:
         break;
     }
-    if (glob_value.valveParam.locks.content.key == 0 && glob_value.valveParam.locks.content.calib == 0) // 按键未锁定，且未处于标定状态时，允许执行其他命令
+    if (locks->content.key == 0 && locks->content.calib == 0) // 按键未锁定，且未处于标定状态时，允许执行其他命令
     {
         switch (cmd)
         {
@@ -182,6 +185,7 @@ uint8_t Mode_HSM_Request_CMD(Mode_Command_Type cmd, float param)
             ctx->nextCmd.cmd = cmd;
             result = 1;
             ctx->nextCmd.pressurePercent = param;
+            set->pressurePercent = param;
             ctx->hsm->next = &Mode_Press; // 压力模式下执行
             break;
         default:

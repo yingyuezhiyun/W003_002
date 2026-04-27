@@ -22,7 +22,8 @@
 
 glob_value_t glob_value = {
     .tick0p1ms = 0,
-    .valveParam = {.locks.content.calib=1, .fullOpenPos = 0, .fullClosePos = 0, .stroke = 0, .positionPercent = 0.0f, .pressurePercent = 0.0f},
+    .set = {.locks.content.calib = 1, .locks.content.key = 0, .positionPercent = 0.0f, .pressurePercent = 0.0f},
+    .middleData = {.fullClosePos = 0, .fullOpenPos = 0, .stroke = 1},
     .paramCfg = {.Pos_limit.I = 8, .Pos_limit.spd = 1000},
     .modeCtx = {0},
     .status = {.errors.val = 0, .state.val = 0},

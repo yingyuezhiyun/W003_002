@@ -66,6 +66,8 @@ static MODE_EXEC_t Mode_Root_Execute(Mode_Ctx_t *ctx)
 /// @param percent 位置百分比（0.0~100.0）。函数内部会自动限制范围。
 void Set_Position_Percent(float percent)
 {
+    middle_data_t *middleData = &glob_value.middleData;
+    setparam_t *set = &glob_value.set;
     if (percent < 0.0f)
     {
         percent = 0.0f;
@@ -74,8 +76,8 @@ void Set_Position_Percent(float percent)
     {
         percent = 100.0f;
     }
-    Valve_Param_t *valveParam = &glob_value.valveParam;
-    int32_t posF = ((float)valveParam->fullClosePos + (percent * 0.01f) * valveParam->stroke + 0.5f);
+    set->positionPercent = percent;
+    int32_t posF = ((float)middleData->fullClosePos + (percent * 0.01f) * middleData->stroke + 0.5f);
     if (ElmoOps.setAbsPos != NULL)
     {
         ElmoOps.setAbsPos(posF);

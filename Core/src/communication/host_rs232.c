@@ -165,19 +165,19 @@ static uint8_t set_pressure_func(const char *arg, printf_t pprintf)
 
 static uint8_t gauge_auto_func(const char *arg, printf_t pprintf)
 {
-	glob_value.paramCfg.CDG_cfg.CDG_Mode = GAUGE_AUTO;
+	glob_value.set.CDG_Mode = GAUGE_AUTO;
 	return RC_SUCCESS;
 }
 
 static uint8_t gauge_cdg1_func(const char *arg, printf_t pprintf)
 {
-	glob_value.paramCfg.CDG_cfg.CDG_Mode = GAUGE_CDG1;
+	glob_value.set.CDG_Mode = GAUGE_CDG1;
 	return RC_SUCCESS;
 }
 
 static uint8_t gauge_cdg2_func(const char *arg, printf_t pprintf)
 {
-	glob_value.paramCfg.CDG_cfg.CDG_Mode = GAUGE_CDG2;
+	glob_value.set.CDG_Mode = GAUGE_CDG2;
 	return RC_SUCCESS;
 }
 
@@ -186,7 +186,7 @@ static uint8_t set_scale1_func(const char *arg, printf_t pprintf)
 	float value;
 	if (ParseFloatValue(arg, &value) && (value > 0.0f))
 	{
-		glob_value.paramCfg.CDG_cfg.CDG1_Range = value;
+		glob_value.set.CDG1_Range = value;
 		return RC_SUCCESS;
 	}
 	return RC_PARAM_ERROR;
@@ -197,7 +197,7 @@ static uint8_t set_scale2_func(const char *arg, printf_t pprintf)
 	float value;
 	if (ParseFloatValue(arg, &value) && (value > 0.0f))
 	{
-		glob_value.paramCfg.CDG_cfg.CDG2_Range = value;
+		glob_value.set.CDG2_Range = value;
 		return RC_SUCCESS;
 	}
 	return RC_PARAM_ERROR;
@@ -282,13 +282,13 @@ static Command_t commands[] = {
 	CMD_PARAM_ENTRY("N2", set_scale2_func),
 	CMD_FUNC_ENTRY("J4", calib_func),
 	CMD_READ_FLOAT("R1", "S1+%.2f", gHost.setpointValue),
-	CMD_READ_FLOAT("R5", "P+%.2f", glob_value.valveParam.pressurePercent),
-	CMD_READ_FLOAT("R6", "V+%.2f", glob_value.valveParam.positionPercent),
+	CMD_READ_FLOAT("R5", "P+%.2f", glob_value.measure.pressurePercent),
+	CMD_READ_FLOAT("R6", "V+%.2f", glob_value.measure.positionPercent),
 	CMD_READ_CSTR("R38", "IQ+3-" HOST_RS232_VERSION " " HOST_RS232_VERSION_DATE),
 	CMD_READ_INT("R26", "T1%u", gHost.setpointType),
 	CMD_READ_CSTR("GSN", "SN:" HOST_RS232_SERIAL_NUMBER),
-	CMD_READ_FLOAT("RN1", "N1%.2f", glob_value.paramCfg.CDG_cfg.CDG1_Range),
-	CMD_READ_FLOAT("RN2", "N2%.2f", glob_value.paramCfg.CDG_cfg.CDG2_Range),
+	CMD_READ_FLOAT("RN1", "N1%.2f", glob_value.set.CDG1_Range),
+	CMD_READ_FLOAT("RN2", "N2%.2f", glob_value.set.CDG2_Range),
 	CMD_FUNC_ENTRY("RESET", reset_func),
 
 	CMD_PARAM_ENTRY("XRELPOS", set_xrelpos_func),
