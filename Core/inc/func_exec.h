@@ -29,11 +29,9 @@ void Data_handle();
 /// @brief 阀门位置百分比更新。
 void valvePositionPercent_Update();
 
-/// @brief CDG1 电压低通滤波更新。
-void CDG1_LPF_Update();
+/// @brief 更新 CDG 电压和 CDG 模式相关的计算。
+void CDG_Volt_Update();
 
-/// @brief CDG2 电压低通滤波更新。
-void CDG2_LPF_Update();
 
 #ifdef __cplusplus
 }

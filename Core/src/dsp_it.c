@@ -8,6 +8,7 @@
 #include "Core/inc/elmo_ctrl.h"
 #include "Core/inc/mode_ctrl.h"
 #include "Core/inc/func_exec.h"
+#include "LibCtrl/PressCtrlAPI.h"
 
 #if ECAT_ENABLE
 #include "ECAT/9252_HW.h"
@@ -104,8 +105,15 @@ __weak __interrupt void INT_EPWM0_ISR(void)
     // 快速采样：EPWM1 SOCA 触发，每 50us 更新一次
     glob_value.measure.adc_cdg1 = ADC_readResult(ADC_C_RESULT_BASE, ADC_C_CDG1);
     glob_value.measure.adc_cdg2 = ADC_readResult(ADC_A_RESULT_BASE, ADC_A_CDG2);
-    CDG1_LPF_Update();
-    CDG2_LPF_Update();
+    CDG_Volt_Update();
+    Mode_Ctx_t *ctx = &glob_value.modeCtx;
+    middle_data_t *middleData = &glob_value.middleData;
+    if (ctx->hsm->type == MODE_PRESSURE)
+    {
+        //todo :输入压力算法
+        // ProcessWithDA(middleData->cdg_volt);
+    }
+    
 
     // 慢速采样：默认由 EPWM2 SOCA 触发
     // 用 200 分频（50us * 200 = 10ms）把慢速通道“取数/刷新”节拍化。

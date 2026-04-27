@@ -42,10 +42,22 @@ void Data_handle()
     static uint32_t lastUpdateTick = 0U;
     static uint16_t updateCount = 0U;
     measure_t *measure = &glob_value.measure;
+    middle_data_t *middleData = &glob_value.middleData;
+    setparam_t *set = &glob_value.set;
     Locks_t *locks = &glob_value.set.locks;
     if (glob_value.tick0p1ms - lastUpdateTick < DATA_UPDATE_PERIOD_MS * TICK_PER_MS)
     {
         return;
+    }
+
+    switch (middleData->CDG_RangeSel)
+    {
+    case CDG_RANGE_BIG:
+        measure->cdg_value = middleData->cdg_volt * 10.0f /* * set->CDG1_Range / set->CDG1_Range */;
+        break;
+    case CDG_RANGE_SMALL:
+        measure->cdg_value = middleData->cdg_volt * 10.0f * set->CDG2_Range / set->CDG1_Range;
+        break;
     }
 
     if (updateCount >= 4) // 10ms 更新一次
@@ -74,55 +86,66 @@ void Data_handle()
     valvePositionPercent_Update();
 }
 
-/// @brief CDG1 电压低通滤波更新。
-void CDG1_LPF_Update()
+
+/// @brief 更新 CDG 电压和 CDG 模式相关的计算。
+void CDG_Volt_Update()
 {
+
     measure_t *measure = &glob_value.measure;
     Param_Config_t *paramCfg = &glob_value.paramCfg;
-#if (CDG_ADC_CALIB_EN)
-    float vadc = (float)measure->adc_cdg1 * paramCfg->CDG_cfg.CDG1_adc_k + paramCfg->CDG_cfg.CDG1_adc_b;
-#else
-    float vadc = (float)(measure->adc_cdg1 - ADC_OFFSET) / ADC_SCALE * 15.0f;
-#endif
-    measure->cdg1_volt = vadc * 0.0309275743F + measure->cdg1_volt * 0.969072402F;
-}
+    middle_data_t *middleData = &glob_value.middleData;
+    setparam_t *set = &glob_value.set;
 
-/// @brief CDG2 电压低通滤波更新。
-void CDG2_LPF_Update()
-{
-    measure_t *measure = &glob_value.measure;
-    Param_Config_t *paramCfg = &glob_value.paramCfg;
-#if (CDG_ADC_CALIB_EN)
-    float vadc = (float)measure->adc_cdg2 * paramCfg->CDG_cfg.CDG2_adc_k + paramCfg->CDG_cfg.CDG2_adc_b;
-#else
-    float vadc = (float)(measure->adc_cdg2 - ADC_OFFSET) / ADC_SCALE * 15.0f;
-#endif
-    measure->cdg2_volt = vadc * 0.0309275743F + measure->cdg2_volt * 0.969072402F;
-    
-}
 
-void CDG_Range_Update()
-{
-    switch (glob_value.set.CDG_Mode)
+#if (CDG_ADC_CALIB_EN)
+    float vadc1 = (float)measure->adc_cdg1 * paramCfg->CDG_cfg.CDG1_adc_k + paramCfg->CDG_cfg.CDG1_adc_b;
+#else
+    float vadc1 = (float)(measure->adc_cdg1 - ADC_OFFSET) / ADC_SCALE * 15.0f;
+#endif
+    measure->cdg1_volt = vadc1 * 0.0309275743F + measure->cdg1_volt * 0.969072402F;
+
+
+#if (CDG_ADC_CALIB_EN)
+    float vadc2 = (float)measure->adc_cdg2 * paramCfg->CDG_cfg.CDG2_adc_k + paramCfg->CDG_cfg.CDG2_adc_b;
+#else
+    float vadc2 = (float)(measure->adc_cdg2 - ADC_OFFSET) / ADC_SCALE * 15.0f;
+#endif
+    measure->cdg2_volt = vadc2 * 0.0309275743F + measure->cdg2_volt * 0.969072402F;
+
+
+    const float UP_THRESHOLD = 0.99f;
+    const float DOWN_THRESHOLD = 0.9f;
+    switch (set->CDG_Mode)
     {
     case GAUGE_CDG1:
-        // glob_value.measure.cdg_value = glob_value.measure.cdg1_volt * 10.0;
-        // glob_value.PressCtrl.cdg_volt = glob_value.measure.cdg1_volt;
-        // glob_value.PressCtrl.CDG_RANGE = 1;
-        // glob_value.PressCtrl.PressTarget = (uint32_t)(glob_value.modeCtx.Cmd.pressurePercent * 0.01f * 67108862.5f);
+        middleData->CDG_RangeSel = CDG_RANGE_BIG;
+        middleData->cdg_volt = measure->cdg1_volt;
         break;
     case GAUGE_CDG2:
-        // glob_value.measure.cdg_value = glob_value.measure.cdg2_volt * 10.0 * glob_value.paramCfg.CDG_cfg.CDG2_Range / glob_value.paramCfg.CDG_cfg.CDG1_Range;
-        // glob_value.PressCtrl.cdg_volt = glob_value.measure.cdg2_volt;
-        // glob_value.PressCtrl.CDG_RANGE = 0;
-        // glob_value.PressCtrl.PressTarget = (uint32_t)(glob_value.modeCtx.Cmd.pressurePercent * 0.01f * 67108862.5f * glob_value.paramCfg.CDG_cfg.CDG1_Range / glob_value.paramCfg.CDG_cfg.CDG2_Range);
+        middleData->CDG_RangeSel = CDG_RANGE_SMALL;
+        middleData->cdg_volt = measure->cdg2_volt;
         break;
     case GAUGE_AUTO:
-
+        if (measure->cdg2_volt / 10.0 >= UP_THRESHOLD)
+        {
+            middleData->CDG_RangeSel = CDG_RANGE_BIG;
+        }
+        else if (measure->cdg1_volt / 10.0 <= DOWN_THRESHOLD)
+        {
+            middleData->CDG_RangeSel = CDG_RANGE_SMALL;
+        }
+        if (middleData->CDG_RangeSel == CDG_RANGE_BIG)
+        {
+            middleData->cdg_volt = measure->cdg1_volt;
+        }
+        else
+        {
+            middleData->cdg_volt = measure->cdg2_volt;
+        }
+        break;
     default:
         break;
     }
-
 }
 
 /*********************************************************************** 状态显示 ****************************************************************/

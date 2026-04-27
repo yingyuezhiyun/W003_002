@@ -11,6 +11,12 @@ typedef enum
     GAUGE_CDG2 = 2U, // 小量程
 } GaugeMode_t;
 
+typedef enum
+{
+    CDG_RANGE_SMALL = 0U, // 小量程
+    CDG_RANGE_BIG = 1U,   // 大量程
+} CDG_Range_Sel_t;
+
 /// @brief 状态信息
 typedef struct
 {
@@ -91,11 +97,11 @@ typedef struct
 
 typedef struct
 {
-    int32_t fullOpenPos;  ///< 全开绝对位置（用于 FULL_OPEN 与百分比换算的 100% 端点）
-    int32_t fullClosePos; ///< 全关绝对位置（用于 FULL_CLOSE 与百分比换算的 0% 端点）
-    int32_t stroke;       ///< 行程（fullOpenPos - fullClosePos，用于百分比换算）
-    int16_t CDG_RANGE;    ///< CDG 量程选择 1：大量程 0：小量程
-    float cdg_volt;       ///< CDG 电压（根据 cdg1_volt 或 cdg2_volt 计算得出，取决于 CDG 模式）
+    int32_t fullOpenPos;          ///< 全开绝对位置（用于 FULL_OPEN 与百分比换算的 100% 端点）
+    int32_t fullClosePos;         ///< 全关绝对位置（用于 FULL_CLOSE 与百分比换算的 0% 端点）
+    int32_t stroke;               ///< 行程（fullOpenPos - fullClosePos，用于百分比换算）
+    CDG_Range_Sel_t CDG_RangeSel; ///< CDG 量程选择 1：大量程 0：小量程
+    volatile float cdg_volt;      ///< CDG 电压（根据 cdg1_volt 或 cdg2_volt 计算得出，取决于 CDG 模式）
 } middle_data_t;
 
 typedef struct
@@ -118,7 +124,7 @@ typedef union
 typedef struct
 {
     Locks_t locks;         // 锁定状态
-    uint8_t CDG_Mode;      // CDG 模式选择 0:自动 1:CDG1 2:CDG2
+    GaugeMode_t CDG_Mode;  // CDG 模式选择 0:自动 1:CDG1 2:CDG2
     float CDG1_Range;      // CDG1 量程（满刻度对应的压力值）
     float CDG2_Range;      // CDG2 量程（满刻度对应的压力值）
     float positionPercent; ///< 位置百分比（0~100%）
