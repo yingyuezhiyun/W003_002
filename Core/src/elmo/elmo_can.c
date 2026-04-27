@@ -84,6 +84,7 @@ static uint8_t elmoCanWaitFreeTxObj(void)
 		DEVICE_DELAY_US(ELMO_CAN_TX_WAIT_STEP_US);
 		loop_us -= ELMO_CAN_TX_WAIT_STEP_US;
 	} while (loop_us > 0);
+	return 0;
 }
 
 /// @brief 发送CAN消息。
@@ -295,7 +296,7 @@ static void elmoCanStop(void)
 	elmoCanSendSDOWrite(ELMO_IDX_ST_CMD, 1U, 0U, 4U);
 }
 
-// 请求位置反馈		
+// 请求位置反馈
 static void elmoCanReqPos(void)
 {
 	elmoCanSendSDORequest(ELMO_IDX_POS_FB, 1U, 0x40U);
@@ -379,7 +380,7 @@ static void elmoCanOnRxIsr(ElmoFeedbackParam *fb)
 	CAN_clearGlobalInterruptStatus(Elmo_CAN_BASE, CAN_GLOBAL_INT_CANINT0);
 }
 
-const ElmoCtrl ElmoCanCtrl = {
+ElmoCtrl ElmoCanCtrl = {
 
 	.setEnable = elmoCanSetEnable,
 	.setSpd = elmoCanSetSpd,

@@ -77,7 +77,7 @@ struct HsmState_s
     const char *name;         ///< 模式名称（调试/日志用）
     Mode_Type type;           ///< 模式类型
     const HsmState_t *parent; ///< 父状态指针（实现继承，NULL表示根状态）
-    const HsmState_t *next;   /// 下一个状态指针
+    HsmState_t *next;   /// 下一个状态指针
     HsmHandler enter;         ///< 进入模式回调
     HsmHandler execute;       ///< 周期执行回调
     HsmHandler exit;          ///< 退出模式回调

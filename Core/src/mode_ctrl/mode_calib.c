@@ -43,7 +43,7 @@ static MODE_EXEC_t Mode_Calib_Enter(Mode_Ctx_t *ctx)
 {
 
     ctx->calibSubState = CALIB_SUB_INIT;
-    ctx->calibStepState.val = 0U;    
+    ctx->calibStepState.val = 0U;
     ElmoOps.setEnable(1);
     DEVICE_DELAY_US(100000);
     ElmoOps.setSpd(MODE_CALIB_SPEED);
@@ -133,10 +133,11 @@ static MODE_EXEC_t Mode_Calib_Execute(Mode_Ctx_t *ctx)
         }
         break;
     case CALIB_SUB_VERIFY_RANGE:
+    {
         int32_t stroke = valveParam->fullOpenPos - valveParam->fullClosePos;
         if (stroke > MODE_CALIB_STROKE_THREAD)
         {
-            // 
+            //
             ElmoOps.setEnable(1);
             DEVICE_DELAY_US(100000);
             ElmoOps.setSpd(MODE_NORMAL_SPEED);
@@ -148,13 +149,15 @@ static MODE_EXEC_t Mode_Calib_Execute(Mode_Ctx_t *ctx)
             ctx->calibStepState.content.calib_done = 1;
             Mode_HSM_Request_CMD(MODE_CMD_CALIB_DONE, 0.0f); // 标定完成后保持全开位置
         }
+
         else
         {
             ctx->calibSubState = CALIB_SUB_FAILED;
             ctx->calibStepState.content.verify_failed = 1;
             Mode_HSM_Request_CMD(MODE_CMD_FAULT, 0.0f); // 校验行程失败，进入故障模式
         }
-        break;
+    }
+    break;
     case CALIB_SUB_DONE:
 
         break;
@@ -165,7 +168,6 @@ static MODE_EXEC_t Mode_Calib_Execute(Mode_Ctx_t *ctx)
     }
     return MODE_EXEC_DONE;
 }
-
 
 /// @brief 退出标定模式回调。
 /// @param ctx 模式上下文。

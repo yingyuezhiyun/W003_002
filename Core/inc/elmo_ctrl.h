@@ -81,15 +81,10 @@ typedef struct
     ElmoCtrl *ctrl;                        //  ElmoCtrl 内部接口结构体
 } ElmoOpsTable;
 
-// Elmo 描述结构体
-typedef struct
-{
-    const char *name;        // 名称
-    const ElmoOpsTable *ops; // 操作表
-} ElmoBackend;
 
-extern const ElmoCtrl ElmoCanCtrl;
-extern const ElmoCtrl ElmoRs232Ctrl;
+
+extern  ElmoCtrl ElmoCanCtrl;
+extern  ElmoCtrl ElmoRs232Ctrl;
 
 // 当前启用的操作表（调用形式：ElmoOps.init()）
 extern ElmoOpsTable ElmoOps;

@@ -266,7 +266,7 @@ static void elmoRs232ReqSetStopDc(void)
 	elmoRs232Send("SD;\r");
 }
 
-const ElmoCtrl ElmoRs232Ctrl = {
+ElmoCtrl ElmoRs232Ctrl = {
 
 	.setEnable = elmoRs232SetEnable,
 	.setSpd = elmoRs232SpdSet,

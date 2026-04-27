@@ -306,7 +306,10 @@ void SCI_Parse(SCI_RX_t *sci)
 				if (sci->get_ex_cmd_func != NULL && ex_cmd == NULL)
 				{
 					ex_cmd = sci->get_ex_cmd_func();
-					insert_command_entry(&commands_list_head, ex_cmd);
+					if (ex_cmd != NULL)
+					{
+						insert_command_entry(&commands_list_head, ex_cmd);
+					}
 				}
 				/* 从 readPos 到 i-1 是一行数据 */
 				if (i > readPos)

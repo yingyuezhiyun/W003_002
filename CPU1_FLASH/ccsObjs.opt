@@ -33,5 +33,5 @@
 "./device/F2837xD_CodeStartBranch.obj"
 "./device/device.obj"
 "../2837xD_FLASH_lnk_cpu1.cmd"
-"D:/Software/ti/c2000/C2000Ware_6_00_01_00/driverlib/f2837xd/driverlib/ccs/Debug/driverlib.lib"
+"D:/software/ti/c2000/C2000Ware_6_00_01_00/driverlib/f2837xd/driverlib/ccs/Debug/driverlib.lib"
 -llibc.a
