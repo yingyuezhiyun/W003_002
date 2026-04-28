@@ -35,16 +35,6 @@ typedef enum
     MODE_CMD_CALIB_DONE,           ///< 标定完成（仅用于状态机内部传递标定完成事件）
 } Mode_Command_Type;
 
-// /// @brief LED 指示灯模式。
-// typedef enum
-// {
-//     MODE_LED_OFF = 0,         ///< 熄灭
-//     MODE_LED_SOLID = 1,       ///< 常亮
-//     MODE_LED_SLOW_BLINK = 2,  ///< 慢闪
-//     MODE_LED_FAST_BLINK = 3,  ///< 快闪
-//     MODE_LED_DOUBLE_BLINK = 4 ///< 双闪
-// } Mode_LedPattern_t;
-
 /// @brief 标定子状态。
 typedef enum
 {
@@ -77,7 +67,7 @@ struct HsmState_s
     const char *name;         ///< 模式名称（调试/日志用）
     Mode_Type type;           ///< 模式类型
     const HsmState_t *parent; ///< 父状态指针（实现继承，NULL表示根状态）
-    HsmState_t *next;   /// 下一个状态指针
+    HsmState_t *next;         /// 下一个状态指针
     HsmHandler enter;         ///< 进入模式回调
     HsmHandler execute;       ///< 周期执行回调
     HsmHandler exit;          ///< 退出模式回调
@@ -95,18 +85,7 @@ typedef struct
 /// @brief 模式控制上下文。
 struct Mode_Ctx_s
 {
-    HsmState_t *hsm; ///< 状态机指针
-    // uint8_t lock;             ///< 模式切换锁
-    // union
-    // {
-    //     struct
-    //     {
-    //         uint8_t calib : 1;  ///< 标定锁，最高优先级
-    //         uint8_t key : 1;    ///< 按键锁
-    //         uint8_t transt : 1; ///< 模式切换锁，正在切换模式时为1
-    //     } content;
-    //     uint8_t val;
-    // } locks;                // 锁定状态
+    HsmState_t *hsm;        ///< 状态机指针
     uint8_t transt_lock;    ///< 模式切换锁，正在切换模式时为
     Mode_Command_t Cmd;     ///< 命令参数
     Mode_Command_t nextCmd; ///< 下一个命令（用于在状态机中传递命令参数）

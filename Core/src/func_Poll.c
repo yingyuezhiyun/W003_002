@@ -60,7 +60,7 @@ key_ttl_state_t key_ttl_state = {
     .all_key_down_cnt = 0,
 };
 
-#define KEY_TTL_POLL_PERIOD_MS (10U)
+
 /// @brief 处理按键/TTL 等本地输入轮询任务。
 void Key_TTL_Poll()
 {
@@ -133,7 +133,7 @@ void Key_TTL_Poll()
 
 /************************************************************************ elmo状态轮询 **************************************************************/
 
-#define ELMO_POLL_PERIOD_MS (10U) // 10ms
+
 
 /// @brief 处理 Elmo 轮询任务。
 void Elmo_Poll()

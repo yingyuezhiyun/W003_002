@@ -5,7 +5,7 @@
 #include "Core/inc/elmo_ctrl.h"
 #include "LibCtrl/PressCtrlAPI.h"
 
-#define POSITION_MODE_PERIOD_MS (9U) // 9ms
+
 static uint32_t lastPressLoopTick = 0U;
 
 static MODE_EXEC_t Mode_Press_Enter(Mode_Ctx_t *ctx);
@@ -41,7 +41,7 @@ static MODE_EXEC_t Mode_Press_Enter(Mode_Ctx_t *ctx)
 /// @return MODE_EXEC_t。
 static MODE_EXEC_t Mode_Press_ISR_Execute(Mode_Ctx_t *ctx)
 {
-    if (glob_value.tick0p1ms - lastPressLoopTick >= POSITION_MODE_PERIOD_MS * TICK_PER_MS)
+    if (glob_value.tick0p1ms - lastPressLoopTick >= MODE_PRESS_PERIOD_MS * TICK_PER_MS)
     {
         return MODE_EXEC_IGNORED;
     }
@@ -61,9 +61,9 @@ static MODE_EXEC_t Mode_Press_ISR_Execute(Mode_Ctx_t *ctx)
     }
     pressCtrl->PosAct = (float)(ElmoOps.fb.pos_fed - middleData->fullClosePos) / middleData->stroke * 0xe1d80a;
     //todo : 压力算法调用
-    // PressCtrl(pressCtrl->PressTarget, pressCtrl->PosAct, &pressCtrl->OutPos,middleData->CDG_RangeSel);
+    PressCtrl(pressCtrl->PressTarget, pressCtrl->PosAct, &pressCtrl->OutPos,middleData->CDG_RangeSel);
 
-    Set_Position_Percent(pressCtrl->PosAct * 100.0f / 0xe1d80a);
+    // Set_Position_Percent(pressCtrl->PosAct * 100.0f / 0xe1d80a);
 
     return MODE_EXEC_DONE;
 }

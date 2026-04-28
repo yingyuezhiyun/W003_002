@@ -19,7 +19,7 @@
 #define NTC_BETA (3950.0f)
 #define NTC_R25 (10000.0f)
 
-#define DATA_UPDATE_PERIOD_MS (2.5) // 2.5ms
+
 
 /// @brief 更新阀门位置百分比（根据elmo反馈的当前位置与行程计算得出）。
 void valvePositionPercent_Update()
@@ -256,7 +256,7 @@ void Status_handle()
 
 /*********************************************************************** BIT处理 ****************************************************************/
 
-#define FAULT_PERIOD_MS (10) // 10ms
+
 
 /// @brief BIT处理入口。
 void BIT_handle()
@@ -267,7 +267,7 @@ void BIT_handle()
     measure_t *measure = &glob_value.measure;
     Param_Config_t *paramCfg = &glob_value.paramCfg;
     Locks_t *locks = &glob_value.set.locks;
-    if (glob_value.tick0p1ms - lastUpdateTick < FAULT_PERIOD_MS * TICK_PER_MS)
+    if (glob_value.tick0p1ms - lastUpdateTick < BIT_PERIOD_MS * TICK_PER_MS)
     {
         return;
     }
@@ -309,7 +309,7 @@ void BIT_handle()
     if (locks->content.calib == 0 && fabsf(ElmoOps.fb.iq_fed) > 8.0f) // todo 电路阈值
     {
         motor_stall_count++;
-        if (motor_stall_count > 10) // 连续超过3次（100ms）认为是电机堵转
+        if (motor_stall_count > 10) // 连续超过10次（100ms）认为是电机堵转
         {
             status->errors.content.motor_stall = 1; // 电机堵转错误
         }
@@ -364,3 +364,4 @@ void BIT_Init()
     
 
 }
+

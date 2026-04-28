@@ -260,8 +260,8 @@ static Command_t commands[] = {
 	CMD_FUNC_ENTRY("RESET", reset_func),								// 复位
 	CMD_PARAM_ENTRY("PK", set_pressctrl_kp_param),						// 设置压力控制 KP 参数
 	CMD_PARAM_ENTRY("PI", set_pressctrl_ki_param),						// 设置压力控制 KI 参数
-	// CMD_READ_INT32("QS", "SV%ld", g_dwPosSV),								// 查询压力控制中间量
-	// CMD_READ_INT32("QP", "PV%ld", g_dwPosPV),								// 读取压力控制中间量
+	CMD_READ_INT32("QS", "SV%ld", g_dwPosSV),								// 查询压力控制中间量
+	CMD_READ_INT32("QP", "PV%ld", g_dwPosPV),								// 读取压力控制中间量
 
 
 	CMD_FUNC_ENTRY("SA", save_params_func),

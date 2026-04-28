@@ -7,17 +7,6 @@
 #include <stddef.h>
 #include <math.h>
 
-//
-#define MODE_CALIB_TIMEOUT_MS (120000UL)
-
-#define MODE_CALIB_PERIOD_MS (10U) // 10ms
-
-#define MODE_CALIB_SPEED (400000)
-#define MODE_NORMAL_SPEED (2000000)
-
-#define MODE_CALIB_MIN_POS (-3000000)
-#define MODE_CALIB_MAX_POS (3000000)
-#define MODE_CALIB_STROKE_THREAD (1700000)
 
 static uint32_t lastCalibLoopTick = 0U;
 static uint32_t CalibStartTick = 0U;

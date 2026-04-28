@@ -733,34 +733,34 @@ bool ParamStore_LoadConfig(Param_Config_t *cfg)
 /// @param cfg 参数配置指针
 void UpdatePressCtrlParams(Param_Config_t *cfg)
 {
-    // g_lKp = cfg->Press_Ctrl.kp;
-    // g_lKi = cfg->Press_Ctrl.ki;
-    // g_lPosClosed = cfg->Press_Ctrl.PosClosed;
-    // g_lUpBaseStep = cfg->Press_Ctrl.UpBaseStep;
-    // g_lDownBaseStep = cfg->Press_Ctrl.DownBaseStep;
-    // g_lMinSpeed = cfg->Press_Ctrl.MinSpeed;
-    // g_lMaxSpeed = cfg->Press_Ctrl.MaxSpeed;
-    // g_lMidSpeed = cfg->Press_Ctrl.MidSpeed;
-    // g_lDownK = cfg->Press_Ctrl.DownK;
-    // g_lDownKMax = cfg->Press_Ctrl.DownKMax;
-    // g_lDownKmin = cfg->Press_Ctrl.DownKmin;
+    g_lKp = cfg->Press_Ctrl.kp;
+    g_lKi = cfg->Press_Ctrl.ki;
+    g_lPosClosed = cfg->Press_Ctrl.PosClosed;
+    g_lUpBaseStep = cfg->Press_Ctrl.UpBaseStep;
+    g_lDownBaseStep = cfg->Press_Ctrl.DownBaseStep;
+    g_lMinSpeed = cfg->Press_Ctrl.MinSpeed;
+    g_lMaxSpeed = cfg->Press_Ctrl.MaxSpeed;
+    g_lMidSpeed = cfg->Press_Ctrl.MidSpeed;
+    g_lDownK = cfg->Press_Ctrl.DownK;
+    g_lDownKMax = cfg->Press_Ctrl.DownKMax;
+    g_lDownKmin = cfg->Press_Ctrl.DownKmin;
 }
 
 /// @brief 加载压力控制参数
 /// @param cfg 参数配置指针
 void LoadPressCtrlParams(Param_Config_t *cfg)
 {
-    // cfg->Press_Ctrl.kp = g_lKp;
-    // cfg->Press_Ctrl.ki = g_lKi;
-    // cfg->Press_Ctrl.PosClosed = g_lPosClosed;
-    // cfg->Press_Ctrl.UpBaseStep = g_lUpBaseStep;
-    // cfg->Press_Ctrl.DownBaseStep = g_lDownBaseStep;
-    // cfg->Press_Ctrl.MinSpeed = g_lMinSpeed;
-    // cfg->Press_Ctrl.MaxSpeed = g_lMaxSpeed;
-    // cfg->Press_Ctrl.MidSpeed = g_lMidSpeed;
-    // cfg->Press_Ctrl.DownK = g_lDownK;
-    // cfg->Press_Ctrl.DownKMax = g_lDownKMax;
-    // cfg->Press_Ctrl.DownKmin = g_lDownKmin;
+    cfg->Press_Ctrl.kp = g_lKp;
+    cfg->Press_Ctrl.ki = g_lKi;
+    cfg->Press_Ctrl.PosClosed = g_lPosClosed;
+    cfg->Press_Ctrl.UpBaseStep = g_lUpBaseStep;
+    cfg->Press_Ctrl.DownBaseStep = g_lDownBaseStep;
+    cfg->Press_Ctrl.MinSpeed = g_lMinSpeed;
+    cfg->Press_Ctrl.MaxSpeed = g_lMaxSpeed;
+    cfg->Press_Ctrl.MidSpeed = g_lMidSpeed;
+    cfg->Press_Ctrl.DownK = g_lDownK;
+    cfg->Press_Ctrl.DownKMax = g_lDownKMax;
+    cfg->Press_Ctrl.DownKmin = g_lDownKmin;
 }
 
 

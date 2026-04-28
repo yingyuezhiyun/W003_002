@@ -4,7 +4,7 @@
 #include "board.h"
 #include "Core/inc/elmo_ctrl.h"
 
-#define POSITION_MODE_PERIOD_MS (20U) // 20ms
+
 
 static uint32_t lastPositionLoopTick = 0U;
 
@@ -42,7 +42,7 @@ static MODE_EXEC_t Mode_Position_Enter(Mode_Ctx_t *ctx)
 /// @return MODE_EXEC_t。
 static MODE_EXEC_t Mode_Position_Execute(Mode_Ctx_t *ctx)
 {
-    if (glob_value.tick0p1ms - lastPositionLoopTick < POSITION_MODE_PERIOD_MS * TICK_PER_MS)
+    if (glob_value.tick0p1ms - lastPositionLoopTick < MODE_POSITION_PERIOD_MS * TICK_PER_MS)
     {
         return MODE_EXEC_IGNORED;
     }

@@ -81,7 +81,7 @@ typedef struct
 #define CMD_READ_EX_INT32(key, fmt, var) {key, CMD_READ, NULL, fmt, DT_EX_INT32, .value.ivalue = var}
 #define CMD_READ_EX_STR(key, fmt, var) {key, CMD_READ, NULL, fmt, DT_EX_STR, .value.svalue = var}
 
-#if 0
+
 #define SET_PRESSCTRL_PARAMS(func, param)                  \
     static uint8_t func(const char *arg, printf_t pprintf) \
     {                                                      \
@@ -94,19 +94,7 @@ typedef struct
         }                                                  \
         return RC_PARAM_ERROR;                             \
     }
-#else
-#define SET_PRESSCTRL_PARAMS(func, param)                  \
-    static uint8_t func(const char *arg, printf_t pprintf) \
-    {                                                      \
-        float value;                                       \
-        if (ParseFloatValue(arg, &value))                  \
-        {                                                  \
-            LoadPressCtrlParams(&glob_value.paramCfg);     \
-            return RC_SUCCESS;                             \
-        }                                                  \
-        return RC_PARAM_ERROR;                             \
-    }
-#endif
+
 
 #define SET_OBJECT_PARAMS(func, param)                     \
     static uint8_t func(const char *arg, printf_t pprintf) \

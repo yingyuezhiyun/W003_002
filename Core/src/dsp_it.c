@@ -111,7 +111,7 @@ __weak __interrupt void INT_EPWM0_ISR(void)
     if (ctx->hsm->type == MODE_PRESSURE)
     {
         //todo :输入压力算法
-        // ProcessWithDA(middleData->cdg_volt);
+        ProcessWithDA(middleData->cdg_volt);
     }
     
 
