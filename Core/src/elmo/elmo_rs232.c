@@ -275,6 +275,7 @@ ElmoCtrl ElmoRs232Ctrl = {
 	.setDc = elmoRs232DcSet,
 	.setRelPos = elmoRs232RelPosSet,
 	.setAbsPos = elmoRs232AbsPosSet,
+	.setAbsPosIsr = elmoRs232AbsPosSet,
 	.setStopDc = elmoRs232SetStopDc,
 	.stop = elmoRs232Stop,
 	.reqSetSpd = elmoRs232ReqSetSpd,

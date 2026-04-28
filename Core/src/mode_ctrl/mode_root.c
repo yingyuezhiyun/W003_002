@@ -83,3 +83,24 @@ void Set_Position_Percent(float percent)
         ElmoOps.setAbsPos(posF);
     }
 }
+
+
+void Set_Position_Percent_Isr(float percent)
+{
+    middle_data_t *middleData = &glob_value.middleData;
+    setparam_t *set = &glob_value.set;
+    if (percent < 0.0f)
+    {
+        percent = 0.0f;
+    }
+    else if (percent > 100.0f)
+    {
+        percent = 100.0f;
+    }
+    set->positionPercent = percent;
+    int32_t posF = ((float)middleData->fullClosePos + (percent * 0.01f) * middleData->stroke + 0.5f);
+    if (ElmoOps.setAbsPosIsr != NULL)
+    {
+        ElmoOps.setAbsPosIsr(posF);
+    }
+}

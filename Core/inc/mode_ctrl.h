@@ -116,3 +116,4 @@ void ModeHSM_Run(Mode_Ctx_t *ctx);
 void ModeHSM_Run_0p1msISR(Mode_Ctx_t *ctx);
 uint8_t Mode_HSM_Request_CMD(Mode_Command_Type cmd, float param);
 void Set_Position_Percent(float percent);
+void Set_Position_Percent_Isr(float percent);

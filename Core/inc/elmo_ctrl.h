@@ -40,6 +40,7 @@ typedef struct
     void (*setDc)(int32_t dcVal);            // 减速度给定
     void (*setRelPos)(int32_t posVal);       // 相对位置给定
     void (*setAbsPos)(int32_t posVal);       // 绝对位置给定
+    void (*setAbsPosIsr)(int32_t posVal);    // 绝对位置给定 (中断中设置)
     void (*setStopDc)(int32_t dcVal);        // 停止命令的减速度设置
     void (*stop)(void);                      // 停止
     void (*reqSetSpd)(void);                 // 请求 速度给定
@@ -66,7 +67,7 @@ typedef struct
     void (*setDc)(int32_t dcVal);          // 减速度给定
     void (*setRelPos)(int32_t posVal);     // 相对位置给定
     void (*setAbsPos)(int32_t posVal);     // 绝对位置给定
-    void (*setAbsPosOnce)(int32_t posVal); // 绝对位置给定
+    void (*setAbsPosIsr)(int32_t posVal); // 绝对位置给定
     void (*setStopDc)(int32_t dcVal);      // 停止命令的减速度设置
     void (*stop)(void);                    // 停止
     void (*reqPos)(void);                  // 请求位置反馈

@@ -97,12 +97,12 @@ static void elmoSetAbsPos(int32_t posVal)
 
 /// @brief 设置绝对位置（直接设置 不做反馈检测）
 /// @param posVal
-static void elmoSetAbsPosOnce(int32_t posVal)
+static void elmosetAbsPosIsr(int32_t posVal)
 {
 	ElmoOps.set.abs_pos_set = posVal;
-	if (ElmoOps.ctrl->setAbsPos != NULL)
+	if (ElmoOps.ctrl->setAbsPosIsr != NULL)
 	{
-		ElmoOps.ctrl->setAbsPos(posVal);
+		ElmoOps.ctrl->setAbsPosIsr(posVal);
 	}
 }
 
@@ -172,7 +172,7 @@ void ElmoCtrl_Init(void)
 	ElmoOps.setEnable = elmoSetEnable;
 	ElmoOps.setSpd = elmoSetSpd;
 	ElmoOps.setAbsPos = elmoSetAbsPos;
-	ElmoOps.setAbsPosOnce = elmoSetAbsPosOnce;
+	ElmoOps.setAbsPosIsr = elmosetAbsPosIsr;
 	ElmoOps.setRelPos = elmoSetRelPos;
 	ElmoOps.setAc = elmoSetAc;
 	ElmoOps.setDc = elmoSetDc;
