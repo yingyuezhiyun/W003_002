@@ -2,6 +2,7 @@
 #include "glob_value.h"
 #include "Core/inc/func_exec.h"
 #include "Core/inc/host_rs232.h"
+#include "Core/inc/serviceport.h"
 #include "Core/inc/elmo_ctrl.h"
 #include "Core/inc/mode_ctrl.h"
 
@@ -11,13 +12,15 @@
 #include "math.h"
 #include "func_exec.h"
 
-
 /*********************************************************************** 串口数据处理 ****************************************************************/
 
 /// @brief 处理串口解析轮询任务。
 void SCI_Poll()
 {
     HostRs232_Poll();
+
+    ServicePort_Poll();
+    
 
 #if (ELMO_CONTROL_IF == ELMO_IF_RS232) // RS232 模式下通过串口接收数据，轮询解析
     // 轮询解析 Elmo接收数据
@@ -86,21 +89,21 @@ void Key_TTL_Poll()
         state->last_pos_close_key = state->pos_close_key;
         state->last_pos_open_key = state->pos_open_key;
     }
-    else if (state->pos_open_key != state->last_pos_open_key)// 全开按键状态变化，执行相应命令
+    else if (state->pos_open_key != state->last_pos_open_key) // 全开按键状态变化，执行相应命令
     {
         if (state->pos_open_key == 0) // 按键有效时为低电平
         {
-            Mode_HSM_Request_CMD(MODE_CMD_FULL_OPEN, 0.0f);            
-        }        
+            Mode_HSM_Request_CMD(MODE_CMD_FULL_OPEN, 0.0f);
+        }
         state->last_pos_open_key = state->pos_open_key;
         state->all_key_down_cnt = 0;
     }
-    else if (state->pos_close_key != state->last_pos_close_key)// 全关按键状态变化，执行相应命令
+    else if (state->pos_close_key != state->last_pos_close_key) // 全关按键状态变化，执行相应命令
     {
         if (state->pos_close_key == 0) // 按键有效时为低电平
         {
             Mode_HSM_Request_CMD(MODE_CMD_FULL_CLOSE, 0.0f);
-        }        
+        }
         state->last_pos_close_key = state->pos_close_key;
         state->all_key_down_cnt = 0;
     }
@@ -108,7 +111,6 @@ void Key_TTL_Poll()
     {
         state->all_key_down_cnt = 0;
     }
-
 
     ///**************TTL 功能************************/
     if (state->pos_close_ttl_in == 1) // （电路反向设计）外部TTL 输入有效时为低电平，内部为高电平
@@ -118,7 +120,7 @@ void Key_TTL_Poll()
     }
     else if (state->last_pos_close_ttl_in != state->pos_close_ttl_in)
     {
-        Mode_HSM_Request_CMD(MODE_CMD_SET_KEY_UNLOCK, 0.0f);// TTL 输入无效，执行按键解锁命令
+        Mode_HSM_Request_CMD(MODE_CMD_SET_KEY_UNLOCK, 0.0f); // TTL 输入无效，执行按键解锁命令
         state->last_pos_close_ttl_in = state->pos_close_ttl_in;
     }
 #if 0 // 目前不使用外部 全开TTL 输入控制全开，避免误触发导致安全风险
@@ -127,12 +129,9 @@ void Key_TTL_Poll()
         Mode_HSM_Request_CMD(MODE_CMD_FULL_OPEN, 0.0f);
     }
 #endif
-
 }
 
-
 /************************************************************************ elmo状态轮询 **************************************************************/
-
 
 #define ELMO_POLL_PERIOD_MS (10U) // 10ms
 
@@ -173,31 +172,31 @@ void Elmo_Poll()
             }
             break;
         case 1:
-            // 轮询读取错误码
-            if (ElmoOps.reqEc)
-            {
-                ElmoOps.reqEc();
-            }
-            break;
-        case 2:
             // 轮询读取速度
             if (ElmoOps.reqSpd)
             {
                 ElmoOps.reqSpd();
             }
             break;
-        case 3:
+        case 2:
             // 轮询读取使能状态
             if (ElmoOps.reqEn)
             {
                 ElmoOps.reqEn();
             }
             break;
+        // case 3:
+        //     // 轮询读取错误码
+        //     if (ElmoOps.reqEc)
+        //     {
+        //         ElmoOps.reqEc();
+        //     }
+        //     break;
         default:
             break;
         }
         subCount++;
-        if (subCount >= 4U)
+        if (subCount >= 3U)
         {
             subCount = 0U;
         }

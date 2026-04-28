@@ -7,6 +7,7 @@
 #include "glob_cfg.h"
 #include <string.h>
 #include <limits.h>
+#include "LibCtrl/PressCtrlAPI.h"
 
 #ifndef AT24C512_I2C_BASE
 #ifdef e2_i2c_BASE
@@ -650,7 +651,7 @@ bool ParamStore_LoadWordImage(uint16_t address, void *data, uint16_t wordCount)
 /// @brief 将模式配置保存到参数区（带头信息与校验）。
 /// @param cfg 待保存的模式配置指针。
 /// @return true 表示保存成功，false 表示保存失败。
-bool ParamStore_SaveConfig(const Param_Config_t *cfg)
+bool ParamStore_SaveConfig(Param_Config_t *cfg)
 {
     ParamStore_ConfigBlob_t blob = {0};
     uint16_t cfgWordCount;
@@ -665,7 +666,7 @@ bool ParamStore_SaveConfig(const Param_Config_t *cfg)
     cfgWordCount = (uint16_t)(sizeof(Param_Config_t) / sizeof(uint16_t));
     cfgBytes = (uint16_t)((uint32_t)cfgWordCount * 2UL);
     blobWordCount = (uint16_t)(sizeof(ParamStore_ConfigBlob_t) / sizeof(uint16_t));
-
+    LoadPressCtrlParams(cfg);
     blob.magic = PARAM_STORE_CFG_MAGIC;
     // blob.version = PARAM_STORE_CFG_VERSION;
     blob.payloadLen = cfgBytes;
@@ -722,8 +723,49 @@ bool ParamStore_LoadConfig(Param_Config_t *cfg)
     }
 
     *cfg = blob.cfg;
+    UpdatePressCtrlParams(cfg);
     return true;
 }
+
+
+
+/// @brief 更新压力控制参数
+/// @param cfg 参数配置指针
+void UpdatePressCtrlParams(Param_Config_t *cfg)
+{
+    // g_lKp = cfg->Press_Ctrl.kp;
+    // g_lKi = cfg->Press_Ctrl.ki;
+    // g_lPosClosed = cfg->Press_Ctrl.PosClosed;
+    // g_lUpBaseStep = cfg->Press_Ctrl.UpBaseStep;
+    // g_lDownBaseStep = cfg->Press_Ctrl.DownBaseStep;
+    // g_lMinSpeed = cfg->Press_Ctrl.MinSpeed;
+    // g_lMaxSpeed = cfg->Press_Ctrl.MaxSpeed;
+    // g_lMidSpeed = cfg->Press_Ctrl.MidSpeed;
+    // g_lDownK = cfg->Press_Ctrl.DownK;
+    // g_lDownKMax = cfg->Press_Ctrl.DownKMax;
+    // g_lDownKmin = cfg->Press_Ctrl.DownKmin;
+}
+
+/// @brief 加载压力控制参数
+/// @param cfg 参数配置指针
+void LoadPressCtrlParams(Param_Config_t *cfg)
+{
+    // cfg->Press_Ctrl.kp = g_lKp;
+    // cfg->Press_Ctrl.ki = g_lKi;
+    // cfg->Press_Ctrl.PosClosed = g_lPosClosed;
+    // cfg->Press_Ctrl.UpBaseStep = g_lUpBaseStep;
+    // cfg->Press_Ctrl.DownBaseStep = g_lDownBaseStep;
+    // cfg->Press_Ctrl.MinSpeed = g_lMinSpeed;
+    // cfg->Press_Ctrl.MaxSpeed = g_lMaxSpeed;
+    // cfg->Press_Ctrl.MidSpeed = g_lMidSpeed;
+    // cfg->Press_Ctrl.DownK = g_lDownK;
+    // cfg->Press_Ctrl.DownKMax = g_lDownKMax;
+    // cfg->Press_Ctrl.DownKmin = g_lDownKmin;
+}
+
+
+
+
 
 /// @brief EEPROM 自写自读测试：写入固定模式数据，再读回逐字节比对。
 /// @return true 表示读写一致，false 表示写入/读取失败或数据不一致。
@@ -791,3 +833,5 @@ bool ParamStore_SelfTest(void)
 
     return true;
 }
+
+

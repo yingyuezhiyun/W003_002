@@ -27,10 +27,11 @@ typedef enum
 {
     DT_NONE,     // 无数据
     DT_FLOAT,    // dataPtr 指向 float
-    DT_INT,      // dataPtr 指向 int
+    DT_INT16,    // dataPtr 指向 int16_t
+    DT_INT32,    // dataPtr 指向 int32_t
     DT_STR,      // dataPtr 指向 char *
     DT_EX_FLOAT, // 直接存储 float 值
-    DT_EX_INT,   // 直接存储 int 值
+    DT_EX_INT32, // 直接存储 int 值
     DT_EX_STR,   // 直接存储字符串（指针或数组）
 } DataType_t;
 
@@ -45,19 +46,13 @@ typedef struct
     DataType_t dataType; // dataPtr 的类型
     union
     {
-        void *dataPtr; // 指向实际数据的指针（或字符串常量）
-        float fvalue;  // 直接存储 float 值
-        int ivalue;    // 直接存储 int 值
-        char *svalue;  // 直接存储字符串（指针或数组）
-    } value;           //
+        void *dataPtr;  // 指向实际数据的指针（或字符串常量）
+        float fvalue;   // 直接存储 float 值
+        int32_t ivalue; // 直接存储 int 值
+        char *svalue;   // 直接存储字符串（指针或数组）
+    } value;            //
 
 } Command_t;
-
-typedef enum
-{
-    UART_SETPOINT_POSITION = 0U,
-    UART_SETPOINT_PRESSURE = 1U,
-} UART_SetpointType_t;
 
 #define RX_BUF_SIZE 96U
 #define RX_IDLE_TIMEOUT_MS 1000U
@@ -78,12 +73,52 @@ typedef struct
 #define CMD_FUNC_ENTRY(key, fn) {key, CMD_FUNC, fn, NULL, DT_NONE, 0}
 #define CMD_PARAM_ENTRY(key, fn) {key, CMD_PARAM, fn, NULL, DT_NONE, 0}
 #define CMD_READ_FLOAT(key, fmt, varptr) {key, CMD_READ, NULL, fmt, DT_FLOAT, .value.dataPtr = (void *)&varptr}
-#define CMD_READ_INT(key, fmt, varptr) {key, CMD_READ, NULL, fmt, DT_INT, .value.dataPtr = (void *)&varptr}
+#define CMD_READ_INT16(key, fmt, varptr) {key, CMD_READ, NULL, fmt, DT_INT16, .value.dataPtr = (void *)&varptr}
+#define CMD_READ_INT32(key, fmt, varptr) {key, CMD_READ, NULL, fmt, DT_INT32, .value.dataPtr = (void *)&varptr}
 #define CMD_READ_CSTR(key, text) {key, CMD_READ, NULL, text, DT_STR, 0}
 #define CMD_READ_STR(key, fmt, varptr) {key, CMD_READ, NULL, fmt, DT_STR, .value.dataPtr = (void *)varptr}
 #define CMD_READ_EX_FLOAT(key, fmt, var) {key, CMD_READ, NULL, fmt, DT_EX_FLOAT, .value.fvalue = var}
-#define CMD_READ_EX_INT(key, fmt, var) {key, CMD_READ, NULL, fmt, DT_EX_INT, .value.ivalue = var}
+#define CMD_READ_EX_INT32(key, fmt, var) {key, CMD_READ, NULL, fmt, DT_EX_INT32, .value.ivalue = var}
 #define CMD_READ_EX_STR(key, fmt, var) {key, CMD_READ, NULL, fmt, DT_EX_STR, .value.svalue = var}
+
+#if 0
+#define SET_PRESSCTRL_PARAMS(func, param)                  \
+    static uint8_t func(const char *arg, printf_t pprintf) \
+    {                                                      \
+        float value;                                       \
+        if (ParseFloatValue(arg, &value))                  \
+        {                                                  \
+            param = value;                                 \
+            LoadPressCtrlParams(&glob_value.paramCfg);     \
+            return RC_SUCCESS;                             \
+        }                                                  \
+        return RC_PARAM_ERROR;                             \
+    }
+#else
+#define SET_PRESSCTRL_PARAMS(func, param)                  \
+    static uint8_t func(const char *arg, printf_t pprintf) \
+    {                                                      \
+        float value;                                       \
+        if (ParseFloatValue(arg, &value))                  \
+        {                                                  \
+            LoadPressCtrlParams(&glob_value.paramCfg);     \
+            return RC_SUCCESS;                             \
+        }                                                  \
+        return RC_PARAM_ERROR;                             \
+    }
+#endif
+
+#define SET_OBJECT_PARAMS(func, param)                     \
+    static uint8_t func(const char *arg, printf_t pprintf) \
+    {                                                      \
+        float value;                                       \
+        if (ParseFloatValue(arg, &value))                  \
+        {                                                  \
+            param = value;                                 \
+            return RC_SUCCESS;                             \
+        }                                                  \
+        return RC_PARAM_ERROR;                             \
+    }
 
 bool ParseFloatValue(const char *text, float *value);
 bool ParseLongValue(const char *text, long *value);

@@ -24,6 +24,12 @@ typedef enum
     PWR_TYPE_EXTERNAL = 2U, // 外部电源供电
 } PWR_TYPE_t;
 
+typedef enum
+{
+    SETPOINT_TYPE_POSITION = 0U,
+    SETPOINT_TYPE_PRESSURE = 1U,
+} Setpoint_Type_t;
+
 /// @brief 状态信息
 typedef struct
 {
@@ -31,15 +37,16 @@ typedef struct
     {
         struct
         {
-            uint8_t calib : 1;     ///< 标定错误
-            uint8_t pos : 1;       ///< 位置错误
-            uint8_t press : 1;     ///< 压力错误
-            uint8_t hold : 1;      ///< 保持错误
-            uint8_t low_temp : 1;  ///< 低温错误
-            uint8_t high_temp : 1; ///< 高温错误
-            uint8_t epprom : 1;    ///< EEPROM 错误
-            uint8_t pwr : 1;       ///< 供电错误
-            uint8_t elmo : 1;      ///< Elmo 错误
+            uint8_t calib : 1;       ///< 标定错误
+            uint8_t pos : 1;         ///< 位置错误
+            uint8_t press : 1;       ///< 压力错误
+            uint8_t hold : 1;        ///< 保持错误
+            uint8_t low_temp : 1;    ///< 低温错误
+            uint8_t high_temp : 1;   ///< 高温错误
+            uint8_t epprom : 1;      ///< EEPROM 错误
+            uint8_t pwr : 1;         ///< 供电错误
+            uint8_t elmo : 1;        ///< Elmo 错误
+            uint8_t motor_stall : 1; ///< 电机堵转
         } content;
         uint8_t val;
     } errors; // 错误状态
@@ -144,6 +151,8 @@ typedef struct
     float CDG2_Range;      // CDG2 量程（满刻度对应的压力值）
     float positionPercent; ///< 位置百分比（0~100%）
     float pressurePercent; ///< 压力百分比（0~100%）
+    Setpoint_Type_t setpointType;   ///< 设置点类型（0：位置 1：压力）
+    float setpointValue;            ///< 设置点值
     Press_Ctrl PressCtrl;  ///< 压力控制参数
 } setparam_t;
 

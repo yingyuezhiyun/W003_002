@@ -209,9 +209,13 @@ void DispatchLine(char *line, commandsEntry_t *commands_list_head, printf_t ppri
 					case DT_FLOAT:
 						pprintf((char *)cmd[i].fmt, *(float *)cmd[i].value.dataPtr);
 						pprintf("\r\n");
+						break;					
+					case DT_INT16:
+						pprintf((char *)cmd[i].fmt, *(int16_t *)cmd[i].value.dataPtr);
+						pprintf("\r\n");
 						break;
-					case DT_INT:
-						pprintf((char *)cmd[i].fmt, *(int *)cmd[i].value.dataPtr);
+					case DT_INT32:
+						pprintf((char *)cmd[i].fmt, *(int32_t *)cmd[i].value.dataPtr);
 						pprintf("\r\n");
 						break;
 					case DT_STR:
@@ -222,7 +226,7 @@ void DispatchLine(char *line, commandsEntry_t *commands_list_head, printf_t ppri
 						pprintf((char *)cmd[i].fmt, cmd[i].value.fvalue);
 						pprintf("\r\n");
 						break;
-					case DT_EX_INT:
+					case DT_EX_INT32:
 						pprintf((char *)cmd[i].fmt, cmd[i].value.ivalue);
 						pprintf("\r\n");
 						break;
@@ -300,7 +304,7 @@ void SCI_Parse(SCI_RX_t *sci)
 				if (commands_list_head == NULL)
 				{
 					insert_command_entry(&commands_list_head, cmd);
-				}		
+				}
 				if (sci->get_ex_cmd_func != NULL && ex_cmd == NULL)
 				{
 					ex_cmd = sci->get_ex_cmd_func();

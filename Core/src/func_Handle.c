@@ -262,9 +262,11 @@ void Status_handle()
 void BIT_handle()
 {
     static uint32_t lastUpdateTick = 0U;
+    static uint8_t motor_stall_count = 0;
     Status_t *status = &glob_value.status;
     measure_t *measure = &glob_value.measure;
     Param_Config_t *paramCfg = &glob_value.paramCfg;
+    Locks_t *locks = &glob_value.set.locks;
     if (glob_value.tick0p1ms - lastUpdateTick < FAULT_PERIOD_MS * TICK_PER_MS)
     {
         return;
@@ -302,6 +304,19 @@ void BIT_handle()
     {
         status->errors.content.high_temp = 0; // 温度正常
         status->errors.content.low_temp = 0;  // 温度正常
+    }
+
+    if (locks->content.calib == 0 && fabsf(ElmoOps.fb.iq_fed) > 8.0f) // todo 电路阈值
+    {
+        motor_stall_count++;
+        if (motor_stall_count > 10) // 连续超过3次（100ms）认为是电机堵转
+        {
+            status->errors.content.motor_stall = 1; // 电机堵转错误
+        }
+    }
+    else
+    {
+        motor_stall_count = 0;
     }
 
     // if (status->errors.val != 0)

@@ -21,6 +21,9 @@
 
 
 
+#define HOST_VERSION "1.1.0"
+#define HOST_SERIAL_NUMBER "L202602"
+
 // typedef char INT8;
 
 

@@ -12,6 +12,7 @@
 #include "Core/inc/mode_ctrl.h"
 #include "Core/inc/func_exec.h"
 #include "host_rs232.h"
+#include "serviceport.h"
 #include "param_store.h"
 
 #if ECAT_ENABLE
@@ -49,6 +50,9 @@ void main(void)
     ModeHSM_Init(&glob_value.modeCtx);
     // 初始化RS232串口通信
     HostRs232_Init();
+
+    ServicePortInit();
+    
 
 #if ECAT_ENABLE
     // 初始化 EtherCAT
