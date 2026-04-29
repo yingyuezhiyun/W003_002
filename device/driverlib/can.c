@@ -43,6 +43,43 @@
 
 //*****************************************************************************
 //
+// CAN_waitForBusyBitClear
+//
+//*****************************************************************************
+//! \brief Wait for CAN interface busy bit to clear with timeout
+//!
+//! \param base is the base address of the CAN module
+//! \param cmdRegOffset is the offset to the command register (CAN_O_IF1CMD or CAN_O_IF2CMD)
+//!
+//! This function waits for the busy bit in the CAN interface command register
+//! to clear. It includes a timeout mechanism to prevent infinite waiting.
+//! Timeout value: approximately 1ms at 200MHz system clock
+//!
+//! \return true if busy bit cleared successfully, false if timeout occurred
+//
+//*****************************************************************************
+static bool
+CAN_waitForBusyBitClear(uint32_t base, uint32_t cmdRegOffset)
+{
+    uint32_t timeout = 200000U;  // Approximately 1ms at 200MHz
+    
+    while((HWREGH(base + cmdRegOffset) & CAN_IF1CMD_BUSY) == CAN_IF1CMD_BUSY)
+    {
+        if(timeout == 0U)
+        {
+            //
+            // Timeout occurred
+            //
+            return false;
+        }
+        timeout--;
+    }
+    
+    return true;
+}
+
+//*****************************************************************************
+//
 // CAN_initModule
 //
 //*****************************************************************************
@@ -222,11 +259,14 @@ CAN_clearInterruptStatus(uint32_t base, uint32_t intClr)
     else
     {
         //
-        // Wait to be sure that this interface is not busy.
+        // Wait to be sure that this interface is not busy with timeout.
         //
-        while((HWREGH(base + CAN_O_IF1CMD) & CAN_IF1CMD_BUSY) ==
-              CAN_IF1CMD_BUSY)
+        if(!CAN_waitForBusyBitClear(base, CAN_O_IF1CMD))
         {
+            //
+            // Timeout occurred, return early
+            //
+            return;
         }
 
         //
@@ -239,11 +279,14 @@ CAN_clearInterruptStatus(uint32_t base, uint32_t intClr)
                                         (intClr & CAN_IF1CMD_MSG_NUM_M));
 
         //
-        // Wait to be sure that this interface is not busy.
+        // Wait to be sure that this interface is not busy with timeout.
         //
-        while((HWREGH(base + CAN_O_IF1CMD) & CAN_IF1CMD_BUSY) ==
-              CAN_IF1CMD_BUSY)
+        if(!CAN_waitForBusyBitClear(base, CAN_O_IF1CMD))
         {
+            //
+            // Timeout occurred
+            //
+            return;
         }
     }
 }
@@ -271,10 +314,14 @@ CAN_setupMessageObject(uint32_t base, uint32_t objID, uint32_t msgID,
     ASSERT(msgLen <= 8U);
 
     //
-    // Wait for busy bit to clear
+    // Wait for busy bit to clear with timeout
     //
-    while((HWREGH(base + CAN_O_IF1CMD) & CAN_IF1CMD_BUSY) == CAN_IF1CMD_BUSY)
+    if(!CAN_waitForBusyBitClear(base, CAN_O_IF1CMD))
     {
+        //
+        // Timeout occurred, return early
+        //
+        return;
     }
 
     switch(msgType)
@@ -465,10 +512,14 @@ CAN_sendMessage(uint32_t base, uint32_t objID, uint16_t msgLen,
                                      (objID & CAN_IF1CMD_MSG_NUM_M));
 
     //
-    // Wait for busy bit to clear
+    // Wait for busy bit to clear with timeout
     //
-    while((HWREGH(base + CAN_O_IF1CMD) & CAN_IF1CMD_BUSY) == CAN_IF1CMD_BUSY)
+    if(!CAN_waitForBusyBitClear(base, CAN_O_IF1CMD))
     {
+        //
+        // Timeout occurred, return early
+        //
+        return;
     }
 
     //
@@ -540,10 +591,14 @@ CAN_sendMessage_16bit(uint32_t base, uint32_t objID, uint16_t msgLen,
                                      (objID & CAN_IF1CMD_MSG_NUM_M));
 
     //
-    // Wait for busy bit to clear
+    // Wait for busy bit to clear with timeout
     //
-    while((HWREGH(base + CAN_O_IF1CMD) & CAN_IF1CMD_BUSY) == CAN_IF1CMD_BUSY)
+    if(!CAN_waitForBusyBitClear(base, CAN_O_IF1CMD))
     {
+        //
+        // Timeout occurred, return early
+        //
+        return;
     }
 
     //
@@ -615,10 +670,14 @@ CAN_sendMessage_32bit(uint32_t base, uint32_t objID, uint16_t msgLen,
                                      (objID & CAN_IF1CMD_MSG_NUM_M));
 
     //
-    // Wait for busy bit to clear
+    // Wait for busy bit to clear with timeout
     //
-    while((HWREGH(base + CAN_O_IF1CMD) & CAN_IF1CMD_BUSY) == CAN_IF1CMD_BUSY)
+    if(!CAN_waitForBusyBitClear(base, CAN_O_IF1CMD))
     {
+        //
+        // Timeout occurred, return early
+        //
+        return;
     }
 
     //
@@ -690,10 +749,14 @@ CAN_sendMessage_updateDLC(uint32_t base, uint32_t objID, uint16_t msgLen,
                                      (objID & CAN_IF1CMD_MSG_NUM_M));
 
     //
-    // Wait for busy bit to clear
+    // Wait for busy bit to clear with timeout
     //
-    while((HWREGH(base + CAN_O_IF1CMD) & CAN_IF1CMD_BUSY) == CAN_IF1CMD_BUSY)
+    if(!CAN_waitForBusyBitClear(base, CAN_O_IF1CMD))
     {
+        //
+        // Timeout occurred, return early
+        //
+        return;
     }
 
     //
@@ -719,10 +782,14 @@ CAN_sendMessage_updateDLC(uint32_t base, uint32_t objID, uint16_t msgLen,
         (CAN_IF1CMD_CONTROL | CAN_IF1CMD_DIR | (objID & CAN_IF1CMD_MSG_NUM_M));
 
     //
-    // Wait for busy bit to clear
+    // Wait for busy bit to clear with timeout
     //
-    while((HWREGH(base + CAN_O_IF1CMD) & CAN_IF1CMD_BUSY) == CAN_IF1CMD_BUSY)
+    if(!CAN_waitForBusyBitClear(base, CAN_O_IF1CMD))
     {
+        //
+        // Timeout occurred, return early
+        //
+        return;
     }
 
     //
@@ -735,10 +802,14 @@ CAN_sendMessage_updateDLC(uint32_t base, uint32_t objID, uint16_t msgLen,
                                      (objID & CAN_IF1CMD_MSG_NUM_M));
 
     //
-    // Wait for busy bit to clear
+    // Wait for busy bit to clear with timeout
     //
-    while((HWREGH(base + CAN_O_IF1CMD) & CAN_IF1CMD_BUSY) == CAN_IF1CMD_BUSY)
+    if(!CAN_waitForBusyBitClear(base, CAN_O_IF1CMD))
     {
+        //
+        // Timeout occurred, return early
+        //
+        return;
     }
 
     //
@@ -808,10 +879,14 @@ CAN_sendRemoteRequestMessage(uint32_t base, uint32_t objID)
                                      (objID & CAN_IF1CMD_MSG_NUM_M));
 
     //
-    // Wait for busy bit to clear
+    // Wait for busy bit to clear with timeout
     //
-    while((HWREGH(base + CAN_O_IF1CMD) & CAN_IF1CMD_BUSY) == CAN_IF1CMD_BUSY)
+    if(!CAN_waitForBusyBitClear(base, CAN_O_IF1CMD))
     {
+        //
+        // Timeout occurred, return early
+        //
+        return;
     }
 
     //
@@ -867,10 +942,14 @@ CAN_readMessage(uint32_t base, uint32_t objID,
      (uint32_t)CAN_IF2CMD_ARB);
 
     //
-    // Wait for busy bit to clear
+    // Wait for busy bit to clear with timeout
     //
-    while((HWREGH(base + CAN_O_IF2CMD) & CAN_IF2CMD_BUSY) == CAN_IF2CMD_BUSY)
+    if(!CAN_waitForBusyBitClear(base, CAN_O_IF2CMD))
     {
+        //
+        // Timeout occurred, return failure
+        //
+        return false;
     }
 
     //
@@ -898,11 +977,14 @@ CAN_readMessage(uint32_t base, uint32_t objID,
                                         (objID & CAN_IF2CMD_MSG_NUM_M));
 
         //
-        // Wait for busy bit to clear
+        // Wait for busy bit to clear with timeout
         //
-        while((HWREGH(base + CAN_O_IF2CMD) & CAN_IF2CMD_BUSY) ==
-               CAN_IF2CMD_BUSY)
+        if(!CAN_waitForBusyBitClear(base, CAN_O_IF2CMD))
         {
+            //
+            // Timeout occurred
+            //
+            return false;
         }
     }
     else
@@ -969,10 +1051,16 @@ CAN_transferMessage(uint32_t base, uint16_t interface, uint32_t objID,
                     bool direction)
 {
     uint32_t cmdMaskReg;
+    uint32_t cmdRegOffset;
 
     ASSERT(CAN_isBaseValid(base));
     ASSERT((objID >= 1U) && (objID <= 32U));
     ASSERT((interface == 1U) || (interface == 2U));
+
+    //
+    // Determine the command register offset based on interface
+    //
+    cmdRegOffset = (interface == 2U) ? CAN_O_IF2CMD : CAN_O_IF1CMD;
 
     //
     // This is always a read to the Message object as this call is setting a
@@ -985,26 +1073,32 @@ CAN_transferMessage(uint32_t base, uint16_t interface, uint32_t objID,
     (direction ? CAN_IF1CMD_DIR : 0U);
 
     //
-    // Ensure this IF isn't busy
+    // Ensure this IF isn't busy with timeout
     //
-    while((HWREGH(base + ((interface == 2U) ? CAN_O_IF2CMD : CAN_O_IF1CMD)) &
-          CAN_IF1CMD_BUSY) == CAN_IF1CMD_BUSY)
+    if(!CAN_waitForBusyBitClear(base, cmdRegOffset))
     {
+        //
+        // Timeout occurred, return early
+        //
+        return;
     }
 
     //
     // Set up the request for data from the message object. Transfer the
     // message object to the message object specified by objID.
     //
-    HWREG_BP(base + ((interface == 2U) ? CAN_O_IF2CMD : CAN_O_IF1CMD)) =
+    HWREG_BP(base + cmdRegOffset) =
                                 (cmdMaskReg | (objID & CAN_IF1CMD_MSG_NUM_M));
 
     //
-    // Wait for busy bit to clear
+    // Wait for busy bit to clear with timeout
     //
-    while((HWREGH(base + ((interface == 2U) ? CAN_O_IF2CMD : CAN_O_IF1CMD)) &
-          CAN_IF1CMD_BUSY) == CAN_IF1CMD_BUSY)
+    if(!CAN_waitForBusyBitClear(base, cmdRegOffset))
     {
+        //
+        // Timeout occurred
+        //
+        return;
     }
 }
 
@@ -1023,10 +1117,14 @@ CAN_clearMessage(uint32_t base, uint32_t objID)
     ASSERT((objID >= 1U) && (objID <= 32U));
 
     //
-    // Wait for busy bit to clear
+    // Wait for busy bit to clear with timeout
     //
-    while((HWREGH(base + CAN_O_IF1CMD) & CAN_IF1CMD_BUSY) == CAN_IF1CMD_BUSY)
+    if(!CAN_waitForBusyBitClear(base, CAN_O_IF1CMD))
     {
+        //
+        // Timeout occurred, return early
+        //
+        return;
     }
 
     //
@@ -1058,10 +1156,14 @@ CAN_disableMessageObject(uint32_t base, uint32_t objID)
     ASSERT((objID >= 1U) && (objID <= 32U));
 
     //
-    // Wait for busy bit to clear
+    // Wait for busy bit to clear with timeout
     //
-    while((HWREGH(base + CAN_O_IF1CMD) & CAN_IF1CMD_BUSY) == CAN_IF1CMD_BUSY)
+    if(!CAN_waitForBusyBitClear(base, CAN_O_IF1CMD))
     {
+        //
+        // Timeout occurred, return early
+        //
+        return;
     }
 
     //
@@ -1099,10 +1201,14 @@ CAN_disableAllMessageObjects(uint32_t base)
     for(objID = 0x01UL; objID <= 0x20UL; objID++)
     {
       //
-      // Wait for busy bit to clear
+      // Wait for busy bit to clear with timeout
       //
-      while((HWREGH(base + CAN_O_IF1CMD) & CAN_IF1CMD_BUSY) == CAN_IF1CMD_BUSY)
+      if(!CAN_waitForBusyBitClear(base, CAN_O_IF1CMD))
       {
+          //
+          // Timeout occurred, return early
+          //
+          return;
       }
 
       //

@@ -105,6 +105,8 @@ SCI_writeCharArray(uint32_t base, const uint16_t * const array,
     ASSERT(SCI_isBaseValid(base));
 
     uint16_t i;
+    uint32_t timeout;
+    
     //
     // Check if FIFO enhancement is enabled.
     //
@@ -117,10 +119,24 @@ SCI_writeCharArray(uint32_t base, const uint16_t * const array,
         for(i = 0U; i < length; i++)
         {
             //
-            // Wait until space is available in the transmit FIFO.
+            // Wait until space is available in the transmit FIFO with timeout
+            // Timeout value: approximately 10ms at 200MHz system clock
             //
-            while(SCI_getTxFIFOStatus(base) == SCI_FIFO_TX16)
+            timeout = 2000000U;
+            while((SCI_getTxFIFOStatus(base) == SCI_FIFO_TX16) && (timeout > 0U))
             {
+                timeout--;
+            }
+            
+            //
+            // Check for timeout
+            //
+            if(timeout == 0U)
+            {
+                //
+                // Timeout occurred, return early
+                //
+                return;
             }
 
             //
@@ -138,10 +154,24 @@ SCI_writeCharArray(uint32_t base, const uint16_t * const array,
         for(i = 0U; i < length; i++)
         {
             //
-            // Wait until space is available in the transmit buffer.
+            // Wait until space is available in the transmit buffer with timeout
+            // Timeout value: approximately 10ms at 200MHz system clock
             //
-            while(!SCI_isSpaceAvailableNonFIFO(base))
+            timeout = 2000000U;
+            while(!SCI_isSpaceAvailableNonFIFO(base) && (timeout > 0U))
             {
+                timeout--;
+            }
+            
+            //
+            // Check for timeout
+            //
+            if(timeout == 0U)
+            {
+                //
+                // Timeout occurred, return early
+                //
+                return;
             }
 
             //
@@ -166,6 +196,8 @@ SCI_readCharArray(uint32_t base, uint16_t * const array, uint16_t length)
     ASSERT(SCI_isBaseValid(base));
 
     uint16_t i;
+    uint32_t timeout;
+    
     //
     // Check if FIFO enhancement is enabled.
     //
@@ -178,10 +210,24 @@ SCI_readCharArray(uint32_t base, uint16_t * const array, uint16_t length)
         for(i = 0U; i < length; i++)
         {
             //
-            // Wait until a character is available in the receive FIFO.
+            // Wait until a character is available in the receive FIFO with timeout
+            // Timeout value: approximately 10ms at 200MHz system clock
             //
-            while(SCI_getRxFIFOStatus(base) == SCI_FIFO_RX0)
+            timeout = 2000000U;
+            while((SCI_getRxFIFOStatus(base) == SCI_FIFO_RX0) && (timeout > 0U))
             {
+                timeout--;
+            }
+            
+            //
+            // Check for timeout
+            //
+            if(timeout == 0U)
+            {
+                //
+                // Timeout occurred, return early
+                //
+                return;
             }
 
             //
@@ -200,10 +246,24 @@ SCI_readCharArray(uint32_t base, uint16_t * const array, uint16_t length)
         for(i = 0U; i < length; i++)
         {
             //
-            // Wait until a character is available in the receive buffer.
+            // Wait until a character is available in the receive buffer with timeout
+            // Timeout value: approximately 10ms at 200MHz system clock
             //
-            while(!SCI_isDataAvailableNonFIFO(base))
+            timeout = 2000000U;
+            while(!SCI_isDataAvailableNonFIFO(base) && (timeout > 0U))
             {
+                timeout--;
+            }
+            
+            //
+            // Check for timeout
+            //
+            if(timeout == 0U)
+            {
+                //
+                // Timeout occurred, return early
+                //
+                return;
             }
 
             //

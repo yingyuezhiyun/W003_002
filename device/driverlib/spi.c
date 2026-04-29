@@ -347,6 +347,7 @@ SPI_pollingFIFOTransaction(uint32_t base, uint16_t charLength,
     uint16_t i = 0;
     uint16_t txBuffer_pos = 0;
     uint16_t rxBuffer_pos = 0;
+    uint32_t timeout;
 
     //
     // Number of transactions is based on numOfSixteenWords
@@ -365,10 +366,25 @@ SPI_pollingFIFOTransaction(uint32_t base, uint16_t charLength,
         }
 
         //
-        // Wait till SPI Receive FIFO buffer is full
+        // Wait till SPI Receive FIFO buffer is full with timeout
+        // Timeout value: approximately 10ms at 200MHz system clock
         //
-        while(SPI_getRxFIFOStatus(base) < SPI_FIFO_RXFULL)
+        timeout = 2000000U;
+        while((SPI_getRxFIFOStatus(base) < SPI_FIFO_RXFULL) && (timeout > 0U))
         {
+            timeout--;
+        }
+        
+        //
+        // Check for timeout
+        //
+        if(timeout == 0U)
+        {
+            //
+            // Timeout occurred, disable FIFO and return
+            //
+            SPI_disableFIFO(base);
+            return;
         }
 
         //
@@ -401,10 +417,25 @@ SPI_pollingFIFOTransaction(uint32_t base, uint16_t charLength,
     }
 
     //
-    // Wait till SPI Receive FIFO buffer remaining words
+    // Wait till SPI Receive FIFO buffer remaining words with timeout
+    // Timeout value: approximately 10ms at 200MHz system clock
     //
-    while((uint16_t)SPI_getRxFIFOStatus(base) < remainingWords)
+    timeout = 2000000U;
+    while(((uint16_t)SPI_getRxFIFOStatus(base) < remainingWords) && (timeout > 0U))
     {
+        timeout--;
+    }
+    
+    //
+    // Check for timeout
+    //
+    if(timeout == 0U)
+    {
+        //
+        // Timeout occurred, disable FIFO and return
+        //
+        SPI_disableFIFO(base);
+        return;
     }
 
     //

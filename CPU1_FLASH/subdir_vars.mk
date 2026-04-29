@@ -11,9 +11,6 @@ CMD_SRCS += \
 SYSCFG_SRCS += \
 ../cfg.syscfg 
 
-LIB_SRCS += \
-D:/software/ti/c2000/C2000Ware_6_00_01_00/driverlib/f2837xd/driverlib/ccs/Debug/driverlib.lib 
-
 C_SRCS += \
 ./syscfg/board.c \
 ./syscfg/c2000ware_libraries.c \
