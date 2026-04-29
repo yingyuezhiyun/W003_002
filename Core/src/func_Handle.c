@@ -19,8 +19,6 @@
 #define NTC_BETA (3950.0f)
 #define NTC_R25 (10000.0f)
 
-
-
 /// @brief 更新阀门位置百分比（根据elmo反馈的当前位置与行程计算得出）。
 void valvePositionPercent_Update()
 {
@@ -256,8 +254,6 @@ void Status_handle()
 
 /*********************************************************************** BIT处理 ****************************************************************/
 
-
-
 /// @brief BIT处理入口。
 void BIT_handle()
 {
@@ -328,6 +324,7 @@ void BIT_handle()
 /// @brief BIT初始化，
 void BIT_Init()
 {
+
     Status_t *status = &glob_value.status;
     // 初始化错误状态
     status->errors.val = 0;
@@ -335,6 +332,9 @@ void BIT_Init()
     // 从 EEPROM 加载配置参数，失败则设置错误标志
     status->errors.content.epprom = !ParamStore_LoadConfig(&glob_value.paramCfg);
 
+    // Elmo 控制器初始化
+    ElmoCtrl_Init();
+    DEVICE_DELAY_US(1000);
     uint8_t loop = 100;
     while (loop-- > 0)
     {
@@ -346,7 +346,6 @@ void BIT_Init()
             ElmoOps->Parse();
         }
 #endif
-
         if (ElmoOps.fb.detect == 1U)
         {
             break;
@@ -361,7 +360,22 @@ void BIT_Init()
     {
         status->errors.content.elmo = 0; // Elmo 设备正常
     }
-    
 
+#if ECAT_ENABLE
+    // 初始化 EtherCAT
+    status->errors.content.ecat = HW_Init(); // EtherCAT 初始化失败则设置错误标志
+    if (status->errors.content.ecat == 0)
+    {
+        MainInit();
+        //启动定时器2，EtherCAT用    
+        CPUTimer_startTimer(CPUTIMER2_BASE);
+    }
+#endif
+
+    // 初始化运行模式控制
+    ModeHSM_Init(&glob_value.modeCtx);
+    // 初始化RS232串口通信
+    HostRs232_Init();
+
+    ServicePortInit();
 }
-

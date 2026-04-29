@@ -25,7 +25,7 @@ __weak __interrupt void ECAT_Lan9252IrqIsr(void)
     // LAN9252 IRQ is level/edge depending on config;  falling edge.
     PDI_Isr();
 #endif
-    Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP1);
+    Interrupt_clearACKGroup(INT_ECAT_ISR_XINT_INTERRUPT_ACK_GROUP);
 }
 
 /// @brief
@@ -38,7 +38,7 @@ __weak __interrupt void ECAT_Sync0Isr(void)
     Sync0_Isr();
 #endif
 #endif
-    Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP1);
+    Interrupt_clearACKGroup(INT_ECAT_SYNC0_ISR_XINT_INTERRUPT_ACK_GROUP);
 }
 
 /// @brief
@@ -51,7 +51,7 @@ __weak __interrupt void ECAT_Sync1Isr(void)
     Sync1_Isr();
 #endif
 #endif
-    Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP12);
+    Interrupt_clearACKGroup(INT_ECAT_SYNC1_ISR_XINT_INTERRUPT_ACK_GROUP);
 }
 
 /// @brief 1ms定时器中断服务函数

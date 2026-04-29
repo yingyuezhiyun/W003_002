@@ -47,6 +47,7 @@ typedef struct
             uint8_t pwr : 1;         ///< 供电错误
             uint8_t elmo : 1;        ///< Elmo 错误
             uint8_t motor_stall : 1; ///< 电机堵转
+            uint8_t ecat : 1;        ///< EtherCAT 错误
         } content;
         uint8_t val;
     } errors; // 错误状态

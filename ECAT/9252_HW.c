@@ -241,13 +241,18 @@ UINT8 HW_Init(void)
   Lan9252_ResetPulse();
   UINT16 intMask;
   UINT32 data;
-
+  UINT32 loopCnt = 200;
   do
   {
     data = SPIReadDWord(LAN9252_BYTE_TEST_REG);
     DEVICE_DELAY_US(10000UL);
-  } while (0x87654321 != data);
+  } while (0x87654321 != data && loopCnt--);
+  if (data != 0x87654321)
+  {
+    return 1; // LAN9252 not responding
+  }
   // Configure ESC AL event mask (requires working SPI/PDI)
+  loopCnt = 200;
   do
   {
     intMask = 0x93;
@@ -256,7 +261,11 @@ UINT8 HW_Init(void)
     intMask = 0;
     HW_EscReadWord(intMask, ESC_AL_EVENTMASK_OFFSET);
     DEVICE_DELAY_US(10000UL);
-  } while (intMask != 0x93);
+  } while (intMask != 0x93 && loopCnt--);
+  if (intMask != 0x93)
+  {
+    return 1; // LAN9252 not responding
+  }
 
   // Configure LAN9252 host interrupt output behavior (direct LAN9252 regs)
   // IRQ enable, IRQ polarity, IRQ buffer type in Interrupt Configuration register.

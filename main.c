@@ -45,27 +45,8 @@ void main(void)
 
     Board_init();
 
-  
-    // 初始化运行模式控制
-    ModeHSM_Init(&glob_value.modeCtx);
-    // 初始化RS232串口通信
-    HostRs232_Init();
-
-    ServicePortInit();
-    
-
-#if ECAT_ENABLE
-    // 初始化 EtherCAT
-    HW_Init();
-    MainInit();
-#endif
-
-    // Elmo 控制器初始化
-    ElmoCtrl_Init();
-
     // 启动定时器
     CPUTimer_startTimer(CPUTIMER0_BASE);
-    // CPUTimer_startTimer(CPUTIMER2_BASE);
 
     EINT; // 开启全局中断
     ERTM; // Enable Global realtime interrupt
@@ -74,12 +55,14 @@ void main(void)
 
     BIT_Init();
 
-
     while (1)
     {
         // 处理 EtherCAT 主循环
 #if ECAT_ENABLE
-        MainLoop();
+        if (glob_value.status.errors.content.ecat == 0)
+        {
+            MainLoop();
+        }
 #endif
 
         // 处理串口数据
