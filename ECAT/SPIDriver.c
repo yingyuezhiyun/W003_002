@@ -351,7 +351,7 @@ void SPIReadRegUsingCSR(UINT8 *ReadBuffer, UINT16 Address, UINT8 Count)
   UINT32 data;
   UINT16 i;
   UINT32 busyMask = ((UINT32)ESC_CSR_BUSY) << 24;
-  UINT32 timeout = 100000UL;
+  UINT32 timeout = 100UL;
 
   cmd = ((UINT32)(Address & 0xFFU)) |
       ((UINT32)((Address >> 8) & 0xFFU) << 8) |
@@ -384,7 +384,7 @@ void SPIWriteRegUsingCSR( UINT8 *WriteBuffer, UINT16 Address, UINT8 Count)
   UINT32 data = 0UL;
   UINT16 i;
   UINT32 busyMask = ((UINT32)ESC_CSR_BUSY) << 24;
-  UINT32 timeout = 100000UL;
+  UINT32 timeout = 100UL;
 
   for(i = 0U; i < (UINT16)Count; i++)
   {
@@ -433,7 +433,7 @@ void SPIReadPDRamRegister(UINT8 *ReadBuffer, UINT16 Address, UINT16 Count)
   /* Reset/abort any previous command and wait until not busy. */
   SPIWriteDWord(PRAM_READ_CMD_REG, (UINT32)PRAM_RW_ABORT_MASK);
   {
-    UINT32 timeout = 200000UL;
+    INT32 timeout = 200UL;
     do
     {
       st = SPIReadDWord(PRAM_READ_CMD_REG);
@@ -465,7 +465,7 @@ void SPIReadPDRamRegister(UINT8 *ReadBuffer, UINT16 Address, UINT16 Count)
   {
     UINT16 availDwords;
     UINT16 chunkBytes;
-    UINT32 timeout = 200000UL;
+    UINT32 timeout = 200UL;
 
     /* Wait until data is available. */
     do
@@ -546,7 +546,7 @@ void SPIWritePDRamRegister(UINT8 *WriteBuffer, UINT16 Address, UINT16 Count)
   /* Reset/abort any previous command and wait until not busy. */
   SPIWriteDWord(PRAM_WRITE_CMD_REG, (UINT32)PRAM_RW_ABORT_MASK);
   {
-    UINT32 timeout = 200000UL;
+    UINT32 timeout = 200UL;
     do
     {
       st = SPIReadDWord(PRAM_WRITE_CMD_REG);
@@ -573,7 +573,7 @@ void SPIWritePDRamRegister(UINT8 *WriteBuffer, UINT16 Address, UINT16 Count)
   {
     UINT16 availDwords;
     UINT16 chunkBytes;
-    UINT32 timeout = 200000UL;
+    UINT32 timeout = 200UL;
 
     /* Wait until space is available. */
     do

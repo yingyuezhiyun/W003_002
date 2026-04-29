@@ -126,7 +126,6 @@ __weak __interrupt void INT_EPWM0_ISR(void)
         // NOTE:PWR和BATT硬件接反了，软件上做了对应调整
         glob_value.measure.adc_batt = ADC_readResult(ADC_D_RESULT_BASE, ADC_D_BATT);
         glob_value.measure.adc_pwr = ADC_readResult(ADC_A_RESULT_BASE, ADC_A_PWR);
-
         glob_value.measure.adc_temp = ADC_readResult(ADC_D_RESULT_BASE, ADC_D_Temp);
     }
 
