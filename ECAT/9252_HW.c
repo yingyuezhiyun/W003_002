@@ -111,7 +111,7 @@ __interrupt void ECAT_Sync1Isr(void);
  * Only mask the LAN9252 IRQ (XINT1) to avoid re-entrancy, do NOT globally
  * disable interrupts (would break control loops / timing).
  */
-void ECAT_DisableEscInt(void);
+UINT8 ECAT_DisableEscInt(void);
 void ECAT_EnableEscInt(void);
 
 #define DISABLE_AL_EVENT_INT ECAT_DisableEscInt()
@@ -838,7 +838,7 @@ void HW_SetLed(UINT8 RunLed, UINT8 ErrLed)
 //   Interrupt_clearACKGroup(INTERRUPT_ACK_GROUP12);
 // }
 
-void ECAT_DisableEscInt(void)
+UINT8 ECAT_DisableEscInt(void)
 {
   /* Mask all IRQ sources that can touch the SPI PDI to avoid re-entrancy.
      ESC accesses are performed in the LAN9252 IRQ ISR and also in SYNC0/SYNC1 ISRs (DC).
@@ -848,6 +848,7 @@ void ECAT_DisableEscInt(void)
   Interrupt_disable(INT_ECAT_ISR_XINT);
   Interrupt_disable(INT_ECAT_SYNC0_ISR_XINT);
   Interrupt_disable(INT_ECAT_SYNC1_ISR_XINT);
+  return 1;
 }
 
 void ECAT_EnableEscInt(void)

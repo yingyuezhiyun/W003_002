@@ -114,7 +114,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 #define PROTO extern
 #endif
 
-PROTO void ECAT_DisableEscInt(void);
+PROTO UINT8 ECAT_DisableEscInt(void);
 PROTO void ECAT_EnableEscInt(void);
 
 #ifndef DISABLE_ESC_INT

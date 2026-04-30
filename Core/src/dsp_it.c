@@ -16,6 +16,12 @@
 #include "ECAT/src/applInterface.h"
 #endif
 
+#if ECAT_ENABLE
+VARVOLATILE UINT32 gEcatSync0IsrCount = 0U;
+VARVOLATILE UINT32 gEcatSync1IsrCount = 0U;
+VARVOLATILE UINT32 gEcatTimer0IsrCount = 0U;
+#endif
+
 /// @brief
 /// @param
 /// @return
@@ -35,6 +41,7 @@ __weak __interrupt void ECAT_Sync0Isr(void)
 {
 #if ECAT_ENABLE
 #if defined(INTERRUPTS_SUPPORTED) && defined(DC_SUPPORTED)
+    gEcatSync0IsrCount++;
     Interrupt_disable(INT_ECAT_SYNC0_ISR_XINT);
     Sync0_Isr();
     Interrupt_enable(INT_ECAT_SYNC0_ISR_XINT);
@@ -50,6 +57,7 @@ __weak __interrupt void ECAT_Sync1Isr(void)
 {
 #if ECAT_ENABLE
 #if defined(INTERRUPTS_SUPPORTED) && defined(DC_SUPPORTED)
+    gEcatSync1IsrCount++;
     Interrupt_disable(INT_ECAT_SYNC1_ISR_XINT);
     Sync1_Isr();
     Interrupt_enable(INT_ECAT_SYNC1_ISR_XINT);
@@ -75,6 +83,7 @@ __weak __interrupt void INT_CPU_TIMER2_ISR(void)
 /// @return
 __weak __interrupt void INT_CPU_TIMER0_ISR(void)
 {
+    gEcatTimer0IsrCount++;
     glob_value.tick0p1ms++;
     ModeHSM_Run_0p1msISR(&glob_value.modeCtx);
     CPUTimer_clearOverflowFlag(CPUTIMER0_BASE);

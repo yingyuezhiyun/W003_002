@@ -160,6 +160,10 @@ UINT16           aPdInputData[(MAX_PD_INPUT_SIZE>>1)];
 /*variables are declared in ecatslv.c*/
     extern VARVOLATILE UINT32    u32dummy;
 BOOL bInitFinished = FALSE; /** < \brief indicates if the initialization is finished*/
+VARVOLATILE UINT32 gEcatPdiIsrCount = 0U;
+VARVOLATILE UINT32 gEcatPdiOutputEventCount = 0U;
+VARVOLATILE UINT32 gEcatPdiInputEventCount = 0U;
+VARVOLATILE UINT32 gEcatPdiLastALEvent = 0U;
 /*-----------------------------------------------------------------------------------------
 ------
 ------    local functions
@@ -280,14 +284,17 @@ void HandleBusCycleCalculation(void)
 
 void PDI_Isr(void)
 {
+    gEcatPdiIsrCount++;
     if(bEscIntEnabled)
     {
         /* get the AL event register */
         UINT16  ALEvent = HW_GetALEventRegister_Isr();
         ALEvent = SWAPWORD(ALEvent);
+        gEcatPdiLastALEvent = ALEvent;
 
         if ( ALEvent & PROCESS_OUTPUT_EVENT )
         {
+            gEcatPdiOutputEventCount++;
             if(bDcRunning && bDcSyncActive)
             {
                 /* Reset SM/Sync0 counter. Will be incremented on every Sync0 event*/
@@ -325,6 +332,7 @@ void PDI_Isr(void)
 /*ECATCHANGE_START(V5.11) ECAT4*/
         if (( ALEvent & PROCESS_INPUT_EVENT ) && (nPdOutputSize == 0))
         {
+            gEcatPdiInputEventCount++;
             //calculate the bus cycle time if required
             HandleBusCycleCalculation();
         }

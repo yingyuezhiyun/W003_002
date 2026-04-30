@@ -368,13 +368,13 @@ sci3.rxQual.$name          = "myGPIOQUAL7";
 sci3.txQual.$name          = "myGPIOQUAL8";
 
 spi1.$name                   = "mySPI0";
-spi1.transferProtocol        = "SPI_PROT_POL1PHA0";
 spi1.dataWidth               = "8";
 spi1.useCase                 = "CUSTOM";
 spi1.useInterfacePins        = ["SPICLK@","SPISIMO@","SPISOMI@"];
 spi1.mode                    = "SPI_MODE_CONTROLLER";
 spi1.useInterrupts           = false;
 spi1.bitRate                 = 12000000;
+spi1.transferProtocol        = "SPI_PROT_POL1PHA0";
 spi1.spi.$assign             = "SPIA";
 spi1.spi.spi_picoPin.$assign = "GPIO58";
 spi1.spi.spi_pociPin.$assign = "GPIO59";
