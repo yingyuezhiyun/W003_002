@@ -510,7 +510,7 @@ void ServicePort_SCI_init();
 //
 //*****************************************************************************
 #define mySPI0_BASE SPIA_BASE
-#define mySPI0_BITRATE 1000000
+#define mySPI0_BITRATE 12000000
 #define mySPI0_DATAWIDTH 8
 void mySPI0_init();
 

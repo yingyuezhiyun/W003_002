@@ -25,6 +25,36 @@
 VARVOLATILE UINT32 gEcatSpiTxTimeoutCount = 0;
 VARVOLATILE UINT32 gEcatSpiRxTimeoutCount = 0;
 VARVOLATILE UINT32 gEcatSpiLastTimeoutStage = 0;
+static VARVOLATILE UINT16 gEcatSpiLockDepth = 0U;
+static VARVOLATILE bool gEcatSpiGlobalIntWasEnabled = false;
+
+static void ecat_spi_lock(void)
+{
+  bool wasDisabled = Interrupt_disableGlobal();
+
+  if(gEcatSpiLockDepth == 0U)
+  {
+    gEcatSpiGlobalIntWasEnabled = !wasDisabled;
+  }
+
+  gEcatSpiLockDepth++;
+}
+
+static void ecat_spi_unlock(void)
+{
+  if(gEcatSpiLockDepth > 0U)
+  {
+    gEcatSpiLockDepth--;
+    if((gEcatSpiLockDepth == 0U) && gEcatSpiGlobalIntWasEnabled)
+    {
+      (void)Interrupt_enableGlobal();
+    }
+  }
+  else if(gEcatSpiGlobalIntWasEnabled)
+  {
+    (void)Interrupt_enableGlobal();
+  }
+}
 
 static bool ecat_spi_write_fifo_with_timeout(uint16_t txWord)
 {
@@ -234,9 +264,11 @@ static void SPIWriteDWord_NoCS(UINT16 Address, UINT32 Val)
 UINT32 SPIReadDWord (UINT16 Address)
 {
   UINT32 result;
+  ecat_spi_lock();
   CSLOW();
   result = SPIReadDWord_NoCS(Address);
   CSHIGH();
+  ecat_spi_unlock();
   return result;
 }
 
@@ -251,9 +283,11 @@ void SPISendAddr (UINT16 Address)
 {
   UINT8 tx[2];
 
+  ecat_spi_lock();
   tx[0] = (UINT8)((Address >> 8) & 0xFFU);
   tx[1] = (UINT8)(Address & 0xFFU);
   (void)ecat_spi_transfer_fifo(tx, (UINT8 *)0, 2U);
+  ecat_spi_unlock();
 }
 
 /*******************************************************************************
@@ -269,8 +303,10 @@ UINT32 SPIReadBurstMode ()
   UINT8 rx[4];
   UINT32 result;
 
+  ecat_spi_lock();
   if(!ecat_spi_transfer_fifo(tx, rx, 4U))
   {
+    ecat_spi_unlock();
     return 0xFFFFFFFFUL;
   }
 
@@ -278,6 +314,7 @@ UINT32 SPIReadBurstMode ()
        ((UINT32)(rx[1] & 0xFFU) << 8) |
        ((UINT32)(rx[2] & 0xFFU) << 16) |
        ((UINT32)(rx[3] & 0xFFU) << 24);
+  ecat_spi_unlock();
   return result;
 }
 
@@ -292,12 +329,14 @@ void SPIWriteBurstMode (UINT32 Val)
 {
   UINT8 tx[4];
 
+  ecat_spi_lock();
   tx[0] = (UINT8)(Val & 0xFFU);
   tx[1] = (UINT8)((Val >> 8) & 0xFFU);
   tx[2] = (UINT8)((Val >> 16) & 0xFFU);
   tx[3] = (UINT8)((Val >> 24) & 0xFFU);
 
   (void)ecat_spi_transfer_fifo(tx, (UINT8 *)0, 4U);
+  ecat_spi_unlock();
 }
 
 #define ADDRESS_AUTO_INCREMENT 0x40
@@ -312,6 +351,7 @@ void SPIWriteBytes(UINT16 Address, UINT8 *Val, UINT8 nLenght)
 {
   UINT8 hdr[3];
 
+  ecat_spi_lock();
   hdr[0] = (UINT8)CMD_SERIAL_WRITE;
   hdr[1] = (UINT8)(((Address >> 8) & 0xFFU) | ADDRESS_AUTO_INCREMENT);
   hdr[2] = (UINT8)(Address & 0xFFU);
@@ -322,6 +362,7 @@ void SPIWriteBytes(UINT16 Address, UINT8 *Val, UINT8 nLenght)
     (void)ecat_spi_transfer_fifo(Val, (UINT8 *)0, (UINT16)nLenght);
   }
   CSHIGH();
+  ecat_spi_unlock();
 }
 
 /*******************************************************************************
@@ -333,9 +374,11 @@ void SPIWriteBytes(UINT16 Address, UINT8 *Val, UINT8 nLenght)
 *****************************************************************************/
 void SPIWriteDWord (UINT16 Address, UINT32 Val)
 {
+  ecat_spi_lock();
   CSLOW();
   SPIWriteDWord_NoCS(Address, Val);
   CSHIGH();
+  ecat_spi_unlock();
 }
 
 /*******************************************************************************
@@ -353,6 +396,7 @@ void SPIReadRegUsingCSR(UINT8 *ReadBuffer, UINT16 Address, UINT8 Count)
   UINT32 busyMask = ((UINT32)ESC_CSR_BUSY) << 24;
   UINT32 timeout = 100UL;
 
+  ecat_spi_lock();
   cmd = ((UINT32)(Address & 0xFFU)) |
       ((UINT32)((Address >> 8) & 0xFFU) << 8) |
       ((UINT32)((UINT16)Count & 0xFFU) << 16) |
@@ -369,6 +413,7 @@ void SPIReadRegUsingCSR(UINT8 *ReadBuffer, UINT16 Address, UINT8 Count)
   {
     ReadBuffer[i] = (UINT8)((data >> (8U * i)) & 0xFFU);
   }
+  ecat_spi_unlock();
 }
 
 /*******************************************************************************
@@ -386,6 +431,7 @@ void SPIWriteRegUsingCSR( UINT8 *WriteBuffer, UINT16 Address, UINT8 Count)
   UINT32 busyMask = ((UINT32)ESC_CSR_BUSY) << 24;
   UINT32 timeout = 100UL;
 
+  ecat_spi_lock();
   for(i = 0U; i < (UINT16)Count; i++)
   {
     data |= ((UINT32)(WriteBuffer[i] & 0xFFU)) << (8U * i);
@@ -401,6 +447,7 @@ void SPIWriteRegUsingCSR( UINT8 *WriteBuffer, UINT16 Address, UINT8 Count)
   {
     ;
   }
+  ecat_spi_unlock();
 }
 
 /*******************************************************************************
@@ -430,6 +477,7 @@ void SPIReadPDRamRegister(UINT8 *ReadBuffer, UINT16 Address, UINT16 Count)
     return;
   }
 
+  ecat_spi_lock();
   /* Reset/abort any previous command and wait until not busy. */
   SPIWriteDWord(PRAM_READ_CMD_REG, (UINT32)PRAM_RW_ABORT_MASK);
   {
@@ -446,6 +494,7 @@ void SPIReadPDRamRegister(UINT8 *ReadBuffer, UINT16 Address, UINT16 Count)
       {
         ReadBuffer[j] = (UINT8)0xFFU;
       }
+      ecat_spi_unlock();
       return;
     }
   }
@@ -501,6 +550,7 @@ void SPIReadPDRamRegister(UINT8 *ReadBuffer, UINT16 Address, UINT16 Count)
       if(!ecat_spi_transfer_fifo(hdr, (UINT8 *)0, 4U))
       {
         CSHIGH();
+        ecat_spi_unlock();
         return;
       }
     }
@@ -508,6 +558,7 @@ void SPIReadPDRamRegister(UINT8 *ReadBuffer, UINT16 Address, UINT16 Count)
     if(!ecat_spi_read_stream_fifo(&ReadBuffer[offset], chunkBytes))
     {
       CSHIGH();
+      ecat_spi_unlock();
       return;
     }
     CSHIGH();
@@ -515,6 +566,7 @@ void SPIReadPDRamRegister(UINT8 *ReadBuffer, UINT16 Address, UINT16 Count)
     remaining = (UINT16)(remaining - chunkBytes);
     offset = (UINT16)(offset + chunkBytes);
   }
+  ecat_spi_unlock();
 }
         
 /*******************************************************************************
@@ -543,6 +595,7 @@ void SPIWritePDRamRegister(UINT8 *WriteBuffer, UINT16 Address, UINT16 Count)
     return;
   }
 
+  ecat_spi_lock();
   /* Reset/abort any previous command and wait until not busy. */
   SPIWriteDWord(PRAM_WRITE_CMD_REG, (UINT32)PRAM_RW_ABORT_MASK);
   {
@@ -554,6 +607,7 @@ void SPIWritePDRamRegister(UINT8 *WriteBuffer, UINT16 Address, UINT16 Count)
 
     if((st & (UINT32)PRAM_RW_BUSY_32B) != 0U)
     {
+      ecat_spi_unlock();
       return;
     }
   }
@@ -603,6 +657,7 @@ void SPIWritePDRamRegister(UINT8 *WriteBuffer, UINT16 Address, UINT16 Count)
       if(!ecat_spi_transfer_fifo(hdr, (UINT8 *)0, 3U))
       {
         CSHIGH();
+        ecat_spi_unlock();
         return;
       }
     }
@@ -613,6 +668,7 @@ void SPIWritePDRamRegister(UINT8 *WriteBuffer, UINT16 Address, UINT16 Count)
     remaining = (UINT16)(remaining - chunkBytes);
     offset = (UINT16)(offset + chunkBytes);
   }
+  ecat_spi_unlock();
 }
 
 // -----------------------------------------------------------------------------
@@ -620,6 +676,7 @@ void SPIWritePDRamRegister(UINT8 *WriteBuffer, UINT16 Address, UINT16 Count)
 
 void SPIReadDRegister(UINT8 *ReadBuffer, UINT16 Address, UINT16 Count)
 {
+  ecat_spi_lock();
   if(Address >= 0x1000U)
   {
     SPIReadPDRamRegister(ReadBuffer, Address, Count);
@@ -628,10 +685,12 @@ void SPIReadDRegister(UINT8 *ReadBuffer, UINT16 Address, UINT16 Count)
   {
     SPIReadRegUsingCSR(ReadBuffer, Address, (UINT8)Count);
   }
+  ecat_spi_unlock();
 }
 
 void SPIWriteRegister(UINT8 *WriteBuffer, UINT16 Address, UINT16 Count)
 {
+  ecat_spi_lock();
   if(Address >= 0x1000U)
   {
     SPIWritePDRamRegister(WriteBuffer, Address, Count);
@@ -640,6 +699,7 @@ void SPIWriteRegister(UINT8 *WriteBuffer, UINT16 Address, UINT16 Count)
   {
     SPIWriteRegUsingCSR(WriteBuffer, Address, (UINT8)Count);
   }
+  ecat_spi_unlock();
 }
 
 void SPIOpen()
@@ -649,12 +709,18 @@ void SPIOpen()
 
 UINT8 SPIRead()
 {
-  return ecat_u8(ECAT_SPI_XFER8(0xFFU));
+  ecat_spi_lock();
+  
+  UINT8 result = ecat_u8(ECAT_SPI_XFER8(0xFFU));
+  ecat_spi_unlock();
+  return result;
 }
 
 void SPIWrite(UINT8 data)
 {
+  ecat_spi_lock();
   (void)ECAT_SPI_XFER8(lo8(data));
+  ecat_spi_unlock();
 }
 
 /*******************************************************************************
@@ -666,6 +732,7 @@ void SPIWrite(UINT8 data)
 *****************************************************************************/
 void PDIReadReg(UINT8 *ReadBuffer, UINT16 Address, UINT16 Count)
 {
+  ecat_spi_lock();
     if (Address >= 0x1000)
     {
          SPIReadPDRamRegister(ReadBuffer, Address,Count);
@@ -674,6 +741,7 @@ void PDIReadReg(UINT8 *ReadBuffer, UINT16 Address, UINT16 Count)
     {
          SPIReadRegUsingCSR(ReadBuffer, Address,Count);
     }
+    ecat_spi_unlock();
 }
 /*******************************************************************************
   Function:
@@ -684,7 +752,7 @@ void PDIReadReg(UINT8 *ReadBuffer, UINT16 Address, UINT16 Count)
 *****************************************************************************/
 void PDIWriteReg( UINT8 *WriteBuffer, UINT16 Address, UINT16 Count)
 {
-   
+  ecat_spi_lock();
    if (Address >= 0x1000)
    {
 		SPIWritePDRamRegister(WriteBuffer, Address,Count);
@@ -693,6 +761,7 @@ void PDIWriteReg( UINT8 *WriteBuffer, UINT16 Address, UINT16 Count)
    {
 		SPIWriteRegUsingCSR(WriteBuffer, Address,Count);
    }
+  ecat_spi_unlock();
     
 }
 
@@ -706,7 +775,9 @@ void PDIWriteReg( UINT8 *WriteBuffer, UINT16 Address, UINT16 Count)
 UINT32 PDIReadLAN9252DirectReg( UINT16 Address)
 {   
     UINT32 data;
+  ecat_spi_lock();
     data = SPIReadDWord (Address);
+  ecat_spi_unlock();
     return data;
 }
 
@@ -719,6 +790,8 @@ UINT32 PDIReadLAN9252DirectReg( UINT16 Address)
 *****************************************************************************/
 void PDIWriteLAN9252DirectReg( UINT32 Val, UINT16 Address)
 {
+  ecat_spi_lock();
     SPIWriteDWord (Address, Val);
+  ecat_spi_unlock();
 }
 

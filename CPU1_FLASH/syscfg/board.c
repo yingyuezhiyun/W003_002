@@ -616,19 +616,19 @@ void ECAT_SPI_CS_init(){
 }
 void ECAT_ISR_init(){
 	GPIO_setPadConfig(ECAT_ISR, GPIO_PIN_TYPE_STD);
-	GPIO_setQualificationMode(ECAT_ISR, GPIO_QUAL_SYNC);
+	GPIO_setQualificationMode(ECAT_ISR, GPIO_QUAL_ASYNC);
 	GPIO_setDirectionMode(ECAT_ISR, GPIO_DIR_MODE_IN);
 	GPIO_setControllerCore(ECAT_ISR, GPIO_CORE_CPU1);
 }
 void ECAT_SYNC0_ISR_init(){
 	GPIO_setPadConfig(ECAT_SYNC0_ISR, GPIO_PIN_TYPE_STD);
-	GPIO_setQualificationMode(ECAT_SYNC0_ISR, GPIO_QUAL_SYNC);
+	GPIO_setQualificationMode(ECAT_SYNC0_ISR, GPIO_QUAL_ASYNC);
 	GPIO_setDirectionMode(ECAT_SYNC0_ISR, GPIO_DIR_MODE_IN);
 	GPIO_setControllerCore(ECAT_SYNC0_ISR, GPIO_CORE_CPU1);
 }
 void ECAT_SYNC1_ISR_init(){
 	GPIO_setPadConfig(ECAT_SYNC1_ISR, GPIO_PIN_TYPE_STD);
-	GPIO_setQualificationMode(ECAT_SYNC1_ISR, GPIO_QUAL_SYNC);
+	GPIO_setQualificationMode(ECAT_SYNC1_ISR, GPIO_QUAL_ASYNC);
 	GPIO_setDirectionMode(ECAT_SYNC1_ISR, GPIO_DIR_MODE_IN);
 	GPIO_setControllerCore(ECAT_SYNC1_ISR, GPIO_CORE_CPU1);
 }

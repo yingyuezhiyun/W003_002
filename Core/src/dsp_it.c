@@ -35,7 +35,9 @@ __weak __interrupt void ECAT_Sync0Isr(void)
 {
 #if ECAT_ENABLE
 #if defined(INTERRUPTS_SUPPORTED) && defined(DC_SUPPORTED)
+    Interrupt_disable(INT_ECAT_SYNC0_ISR_XINT);
     Sync0_Isr();
+    Interrupt_enable(INT_ECAT_SYNC0_ISR_XINT);
 #endif
 #endif
     Interrupt_clearACKGroup(INT_ECAT_SYNC0_ISR_XINT_INTERRUPT_ACK_GROUP);
@@ -48,7 +50,9 @@ __weak __interrupt void ECAT_Sync1Isr(void)
 {
 #if ECAT_ENABLE
 #if defined(INTERRUPTS_SUPPORTED) && defined(DC_SUPPORTED)
+    Interrupt_disable(INT_ECAT_SYNC1_ISR_XINT);
     Sync1_Isr();
+    Interrupt_enable(INT_ECAT_SYNC1_ISR_XINT);
 #endif
 #endif
     Interrupt_clearACKGroup(INT_ECAT_SYNC1_ISR_XINT_INTERRUPT_ACK_GROUP);
