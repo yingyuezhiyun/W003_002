@@ -114,6 +114,9 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 #define PROTO extern
 #endif
 
+PROTO void PDI_Enable_Global_interrupt();
+PROTO void PDI_Disable_Global_Interrupt();
+
 PROTO void ECAT_DisableEscInt(void);
 PROTO void ECAT_EnableEscInt(void);
 

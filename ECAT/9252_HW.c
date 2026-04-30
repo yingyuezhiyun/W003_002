@@ -175,9 +175,11 @@ static inline void ECAT_StoreMemByte(MEM_ADDR *base, UINT16 byteOffset, UINT8 va
 
 static void GetInterruptRegister(void)
 {
-  DISABLE_AL_EVENT_INT;
+  // DISABLE_AL_EVENT_INT;
+  PDI_Disable_Global_Interrupt();
   HW_EscReadWordIsr(EscALEvent.Word, 0x220);
-  ENABLE_AL_EVENT_INT;
+  // ENABLE_AL_EVENT_INT;
+  PDI_Enable_Global_interrupt();
 }
 
 /*******************************************************************************
@@ -358,10 +360,12 @@ void HW_ResetALEventMask(UINT16 intMask)
   HW_EscReadWord(mask, ESC_AL_EVENTMASK_OFFSET);
 
   mask &= intMask;
-  DISABLE_AL_EVENT_INT;
+  // DISABLE_AL_EVENT_INT;
+   PDI_Disable_Global_Interrupt();
   HW_EscWriteWord(mask, ESC_AL_EVENTMASK_OFFSET);
   HW_EscReadWord(nAlEventMask, ESC_AL_EVENTMASK_OFFSET);
-  ENABLE_AL_EVENT_INT;
+  // ENABLE_AL_EVENT_INT;
+  PDI_Enable_Global_interrupt();
 }
 
 /*******************************************************************************
@@ -382,10 +386,12 @@ void HW_SetALEventMask(UINT16 intMask)
   HW_EscReadWord(mask, ESC_AL_EVENTMASK_OFFSET);
 
   mask |= intMask;
-  DISABLE_AL_EVENT_INT;
+  // DISABLE_AL_EVENT_INT;
+    PDI_Disable_Global_Interrupt();
   HW_EscWriteWord(mask, ESC_AL_EVENTMASK_OFFSET);
   HW_EscReadWord(nAlEventMask, ESC_AL_EVENTMASK_OFFSET);
-  ENABLE_AL_EVENT_INT;
+  // ENABLE_AL_EVENT_INT;
+  PDI_Enable_Global_interrupt();
 }
 
 /*******************************************************************************
@@ -432,7 +438,8 @@ void HW_EscRead(MEM_ADDR *pData, UINT16 Address, UINT16 Len)
       }
     }
 
-    DISABLE_AL_EVENT_INT;
+    // DISABLE_AL_EVENT_INT;
+    PDI_Disable_Global_Interrupt();
 
 #ifndef USE_SPI
     {
@@ -456,7 +463,8 @@ void HW_EscRead(MEM_ADDR *pData, UINT16 Address, UINT16 Len)
     }
 #endif
 
-    ENABLE_AL_EVENT_INT;
+    // ENABLE_AL_EVENT_INT;
+    PDI_Enable_Global_interrupt();
 
     Len -= i;
     byteOffset = (UINT16)(byteOffset + i);
@@ -598,7 +606,8 @@ void HW_EscWrite(MEM_ADDR *pData, UINT16 Address, UINT16 Len)
       }
     }
 
-    DISABLE_AL_EVENT_INT;
+    // DISABLE_AL_EVENT_INT;
+    PDI_Disable_Global_Interrupt();
 
     /* start transmission */
 #ifndef USE_SPI
@@ -623,7 +632,8 @@ void HW_EscWrite(MEM_ADDR *pData, UINT16 Address, UINT16 Len)
     }
 #endif
 
-    ENABLE_AL_EVENT_INT;
+    // ENABLE_AL_EVENT_INT;
+    PDI_Enable_Global_interrupt();
 
     /* next address */
     Len -= i;
@@ -855,4 +865,15 @@ void ECAT_EnableEscInt(void)
   Interrupt_enable(INT_ECAT_ISR_XINT);
   Interrupt_enable(INT_ECAT_SYNC0_ISR_XINT);
   Interrupt_enable(INT_ECAT_SYNC1_ISR_XINT);
+}
+
+
+void PDI_Disable_Global_Interrupt()
+{
+	DINT;
+}
+
+void PDI_Enable_Global_interrupt()
+{
+    EINT;
 }
