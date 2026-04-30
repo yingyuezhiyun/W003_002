@@ -36,33 +36,18 @@ static void ecat_spi_reset_fifos(void)
 
 static void ecat_spi_lock(void)
 {
-  bool globalWasDisabled = Interrupt_disableGlobal();
-
+ 
   if(gEcatSpiLockDepth == 0U)
   {
-    if(!globalWasDisabled)
-    {
-      ECAT_DisableEscInt();
-      gEcatSpiMaskedEscInts = true;
-    }
-    else
-    {
-      gEcatSpiMaskedEscInts = false;
-    }
+    ECAT_DisableEscInt();
+    gEcatSpiMaskedEscInts = true;
   }
 
   gEcatSpiLockDepth++;
-
-  if(!globalWasDisabled)
-  {
-    (void)Interrupt_enableGlobal();
-  }
 }
 
 static void ecat_spi_unlock(void)
 {
-  bool globalWasDisabled = Interrupt_disableGlobal();
-
   if(gEcatSpiLockDepth > 0U)
   {
     gEcatSpiLockDepth--;
@@ -71,11 +56,6 @@ static void ecat_spi_unlock(void)
       ECAT_EnableEscInt();
       gEcatSpiMaskedEscInts = false;
     }
-  }
-
-  if(!globalWasDisabled)
-  {
-    (void)Interrupt_enableGlobal();
   }
 }
 
