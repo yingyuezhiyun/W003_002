@@ -23,7 +23,9 @@ __weak __interrupt void ECAT_Lan9252IrqIsr(void)
 {
 #if ECAT_ENABLE
     // LAN9252 IRQ is level/edge depending on config;  falling edge.
+    ECAT_DisableEscInt();
     PDI_Isr();
+    ECAT_EnableEscInt();
 #endif
     Interrupt_clearACKGroup(INT_ECAT_ISR_XINT_INTERRUPT_ACK_GROUP);
 }
@@ -35,9 +37,11 @@ __weak __interrupt void ECAT_Sync0Isr(void)
 {
 #if ECAT_ENABLE
 #if defined(INTERRUPTS_SUPPORTED) && defined(DC_SUPPORTED)
-    Interrupt_disable(INT_ECAT_SYNC0_ISR_XINT);
+    // Interrupt_disable(INT_ECAT_SYNC0_ISR_XINT);
+    ECAT_DisableEscInt();
     Sync0_Isr();
-    Interrupt_enable(INT_ECAT_SYNC0_ISR_XINT);
+    // Interrupt_enable(INT_ECAT_SYNC0_ISR_XINT);
+    ECAT_EnableEscInt();
 #endif
 #endif
     Interrupt_clearACKGroup(INT_ECAT_SYNC0_ISR_XINT_INTERRUPT_ACK_GROUP);
@@ -50,9 +54,11 @@ __weak __interrupt void ECAT_Sync1Isr(void)
 {
 #if ECAT_ENABLE
 #if defined(INTERRUPTS_SUPPORTED) && defined(DC_SUPPORTED)
-    Interrupt_disable(INT_ECAT_SYNC1_ISR_XINT);
+    // Interrupt_disable(INT_ECAT_SYNC1_ISR_XINT);
+    ECAT_DisableEscInt();
     Sync1_Isr();
-    Interrupt_enable(INT_ECAT_SYNC1_ISR_XINT);
+    // Interrupt_enable(INT_ECAT_SYNC1_ISR_XINT);
+    ECAT_EnableEscInt();
 #endif
 #endif
     Interrupt_clearACKGroup(INT_ECAT_SYNC1_ISR_XINT_INTERRUPT_ACK_GROUP);

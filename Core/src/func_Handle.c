@@ -276,7 +276,7 @@ void BIT_handle()
         measure->powerType = PWR_TYPE_EXTERNAL;
     }
     else if (measure->power_voltage < 23.0f &&
-             measure->batt_voltage >= 16.8f && measure->batt_voltage <= 22.0f)
+             measure->batt_voltage >= 18.0f && measure->batt_voltage <= 22.0f)//电池 17.7V时就供电不足了
     {
         status->errors.content.pwr = 0; // 供电正常
         measure->powerType = PWR_TYPE_BATTERY;
