@@ -167,13 +167,66 @@ void Status_handle()
     if (status->errors.val != 0)
     {
         GPIO_writePin(FAULT_LED, 1);
+        GPIO_writePin(RS232_LED, 0);
+        GPIO_writePin(POS_LED, 0);
+        GPIO_writePin(PRE_LED, 0);
         // todo: 根据不同错误类型显示不同的状态（闪烁频率、灯的组合等）
+        if (status->errors.content.pwr == 1)
+        {
+            GPIO_writePin(RUN_LED, 1);
+            GPIO_writePin(BATT_LED, 1);
+            GPIO_writePin(POS_OPEN_LED, 1);
+            GPIO_writePin(POS_CLOSE_LED, 1);
+        }
+        else if (status->errors.content.epprom == 1)
+        {
+            GPIO_writePin(RUN_LED, 1);
+            GPIO_writePin(BATT_LED, 1);
+            GPIO_writePin(POS_OPEN_LED, 1);
+            GPIO_writePin(POS_CLOSE_LED, 0);
+        }
+        else if (status->errors.content.elmo == 1)
+        {
+            GPIO_writePin(RUN_LED, 1);
+            GPIO_writePin(BATT_LED, 1);
+            GPIO_writePin(POS_OPEN_LED, 0);
+            GPIO_writePin(POS_CLOSE_LED, 1);
+        }
+        else if (status->errors.content.high_temp == 1)
+        {
+            GPIO_writePin(RUN_LED, 1);
+            GPIO_writePin(BATT_LED, 1);
+            GPIO_writePin(POS_OPEN_LED, 0);
+            GPIO_writePin(POS_CLOSE_LED, 0);
+        }
+        else if (status->errors.content.low_temp == 1)
+        {
+            GPIO_writePin(RUN_LED, 1);
+            GPIO_writePin(BATT_LED, 0);
+            GPIO_writePin(POS_OPEN_LED, 1);
+            GPIO_writePin(POS_CLOSE_LED, 1);
+        }
+        else if (status->errors.content.calib == 1)
+        {
+            GPIO_writePin(RUN_LED, 1);
+            GPIO_writePin(BATT_LED, 0);
+            GPIO_writePin(POS_OPEN_LED, 1);
+            GPIO_writePin(POS_CLOSE_LED, 0);
+        }
+        else if (status->errors.content.motor_stall == 1)
+        {
+            GPIO_writePin(RUN_LED, 1);
+            GPIO_writePin(BATT_LED, 0);
+            GPIO_writePin(POS_OPEN_LED, 0);
+            GPIO_writePin(POS_CLOSE_LED, 1);
+        }
+
         GPIO_writePin(POS_OPEN_TTL_OUT, 1);
         GPIO_writePin(POS_CLOSE_TTL_OUT, 1);
         return;
     }
-    GPIO_writePin(FAULT_LED, 0);
 
+    GPIO_writePin(FAULT_LED, 0);
     if (status->state.content.rs232_connected)
     {
         GPIO_writePin(RS232_LED, 1);
@@ -209,9 +262,10 @@ void Status_handle()
         GPIO_writePin(POS_CLOSE_TTL_OUT, 1);
         GPIO_writePin(POS_LED, 0);
         GPIO_writePin(PRE_LED, 0);
+        GPIO_writePin(RUN_LED, 0);
         return;
     }
-
+    GPIO_writePin(RUN_LED, 1);
     // 模式指示
     if (ctx->hsm->type == MODE_POSITION)
     {
@@ -258,7 +312,7 @@ void Status_handle()
 void BIT_handle()
 {
     static uint32_t lastUpdateTick = 0U;
-    static uint8_t motor_stall_count = 0;
+    static uint8_t motor_stall_count = 0, batt_low_count = 0;
     Status_t *status = &glob_value.status;
     measure_t *measure = &glob_value.measure;
     Param_Config_t *paramCfg = &glob_value.paramCfg;
@@ -274,17 +328,29 @@ void BIT_handle()
     {
         status->errors.content.pwr = 0; // 供电正常
         measure->powerType = PWR_TYPE_EXTERNAL;
+        batt_low_count = 0;
     }
+    // else if (measure->power_voltage < 23.0f && locks->content.calib == 1 &&
+    //          measure->batt_voltage >= 17.0f && measure->batt_voltage <= 22.0f)// 标定过程中电池供电略微放宽一些
+    // {
+    //     status->errors.content.pwr = 0; // 供电正常
+    //     measure->powerType = PWR_TYPE_BATTERY;
+    // }
     else if (measure->power_voltage < 23.0f &&
-             measure->batt_voltage >= 18.0f && measure->batt_voltage <= 22.0f)//电池 17.7V时就供电不足了
+             measure->batt_voltage >= 18.0f && measure->batt_voltage <= 22.0f) // 电池 17.7V时就供电不足了
     {
-        status->errors.content.pwr = 0; // 供电正常
+        // status->errors.content.pwr = 0; // 出现电池供电异常时，不清空错误
+        batt_low_count = 0;
         measure->powerType = PWR_TYPE_BATTERY;
     }
     else
     {
-        status->errors.content.pwr = 1; // 供电错误
-        measure->powerType = PWR_TYPE_NONE;
+        batt_low_count++;
+        if (batt_low_count > 10) // 连续超过10次（100ms）认为是电池供电异常
+        {
+            status->errors.content.pwr = 1; // 供电错误
+            measure->powerType = PWR_TYPE_NONE;
+        }
     }
 
     // 温度过高或过低
@@ -315,10 +381,11 @@ void BIT_handle()
         motor_stall_count = 0;
     }
 
-    // if (status->errors.val != 0)
-    // {
-    //     Mode_HSM_Request_CMD(MODE_CMD_FAULT, 0);
-    // }
+    // 如果有任何错误且不是校准错误，则进入故障模式
+    if (status->errors.val != 0 && status->errors.content.calib == 0)
+    {
+        Mode_HSM_Request_CMD(MODE_CMD_FAULT, 0);
+    }
 }
 
 /// @brief BIT初始化，
@@ -367,7 +434,7 @@ void BIT_Init()
     if (status->errors.content.ecat == 0)
     {
         MainInit();
-        //启动定时器2，EtherCAT用    
+        // 启动定时器2，EtherCAT用
         CPUTimer_startTimer(CPUTIMER2_BASE);
     }
 #endif

@@ -138,7 +138,7 @@ uint8_t Mode_HSM_Request_CMD(Mode_Command_Type cmd, float param)
         result = 1;
         break;
     case MODE_CMD_CALIB_DONE:
-        ctx->hsm->next = &Mode_Root;
+        ctx->hsm->next = &Mode_Position; // 标定完成后切换至位置模式执行
         ctx->nextCmd.cmd = cmd;
         locks->content.calib = 0; // 解锁标定，允许切换模式
         result = 1;

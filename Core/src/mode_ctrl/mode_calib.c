@@ -41,7 +41,8 @@ static MODE_EXEC_t Mode_Calib_Enter(Mode_Ctx_t *ctx)
     CalibStartTick = glob_value.tick0p1ms;
     ctx->calibSubState = CALIB_SUB_SET_MIN_END;
     ctx->calibStepState.content.init = 1;
-
+    Status_t *status = &glob_value.status;
+    status->errors.content.calib = 0; // 清除标定错误
     return MODE_EXEC_DONE;
 }
 
@@ -65,6 +66,8 @@ static MODE_EXEC_t Mode_Calib_Execute(Mode_Ctx_t *ctx)
     {
         ctx->calibSubState = CALIB_SUB_TIMEOUT;
         ctx->calibStepState.content.timeout = 1;
+        Status_t *status = &glob_value.status;
+        status->errors.content.calib = 1;
         return MODE_EXEC_TIMEOUT; // 标定超时，交由状态机处理超时事件
     }
     if (nowTick - lastCalibLoopTick < MODE_CALIB_PERIOD_MS * TICK_PER_MS) //  执行周期
@@ -136,6 +139,8 @@ static MODE_EXEC_t Mode_Calib_Execute(Mode_Ctx_t *ctx)
             middleData->stroke = stroke * 0.96f;
             ctx->calibSubState = CALIB_SUB_DONE;
             ctx->calibStepState.content.calib_done = 1;
+            Status_t *status = &glob_value.status;
+            status->errors.content.calib = 0;
             Mode_HSM_Request_CMD(MODE_CMD_CALIB_DONE, 0.0f); // 标定完成后保持全开位置
         }
 
@@ -143,6 +148,8 @@ static MODE_EXEC_t Mode_Calib_Execute(Mode_Ctx_t *ctx)
         {
             ctx->calibSubState = CALIB_SUB_FAILED;
             ctx->calibStepState.content.verify_failed = 1;
+            Status_t *status = &glob_value.status;
+            status->errors.content.calib = 1;
             Mode_HSM_Request_CMD(MODE_CMD_FAULT, 0.0f); // 校验行程失败，进入故障模式
         }
     }
