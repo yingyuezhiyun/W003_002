@@ -67,9 +67,10 @@ typedef struct
 {
     struct
     {
-        uint16_t I;   // 行程校准时的 限位电流
-        uint16_t spd; // 行程校准时的 限位速度
-    } Pos_limit;      // 行程校准时的参数
+        uint16_t I;         // 行程校准时的 限位电流
+        uint16_t spd;       // 行程校准时的 限位速度
+        float Open_Backoff; // 行程校准时的 全开位置 回退量（百分比）
+    } Pos_limit;            // 行程校准时的参数
     struct
     {
         float CDG1_adc_k; // CDG1 ADC 转换系数（电压值 = ADC值 * adc_k + adc_b）

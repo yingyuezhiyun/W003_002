@@ -135,7 +135,7 @@ static MODE_EXEC_t Mode_Calib_Execute(Mode_Ctx_t *ctx)
             ElmoOps.setSpd(MODE_NORMAL_SPEED);
             DEVICE_DELAY_US(5000);
             middleData->fullClosePos += stroke * 0.02f;
-            middleData->fullOpenPos -= stroke * 0.02f;
+            middleData->fullOpenPos -= stroke * cfg->Pos_limit.Open_Backoff / 100.0f; // 全开位置回退量
             middleData->stroke = stroke * 0.96f;
             ctx->calibSubState = CALIB_SUB_DONE;
             ctx->calibStepState.content.calib_done = 1;
