@@ -43,6 +43,7 @@ void Data_handle()
     measure_t *measure = &glob_value.measure;
     middle_data_t *middleData = &glob_value.middleData;
     setparam_t *set = &glob_value.set;
+    Param_Config_t *paramCfg = &glob_value.paramCfg;
     Locks_t *locks = &glob_value.set.locks;
     if (glob_value.tick0p1ms - lastUpdateTick < DATA_UPDATE_PERIOD_MS * TICK_PER_MS)
     {
@@ -56,7 +57,7 @@ void Data_handle()
         measure->cdg_value = middleData->cdg_volt * 10.0f /* * set->CDG1_Range / set->CDG1_Range */;
         break;
     case CDG_RANGE_SMALL:
-        measure->cdg_value = middleData->cdg_volt * 10.0f * set->CDG2_Range / set->CDG1_Range;
+        measure->cdg_value = middleData->cdg_volt * 10.0f * paramCfg->CDG_cfg.CDG2_Range / paramCfg->CDG_cfg.CDG1_Range;
         break;
     }
 
@@ -94,6 +95,7 @@ void CDG_Volt_Update()
     Param_Config_t *paramCfg = &glob_value.paramCfg;
     middle_data_t *middleData = &glob_value.middleData;
     setparam_t *set = &glob_value.set;
+    Param_Config_t *paramCfg = &glob_value.paramCfg;
 
 #if (CDG_ADC_CALIB_EN)
     float vadc1 = (float)measure->adc_cdg1 * paramCfg->CDG_cfg.CDG1_adc_k + paramCfg->CDG_cfg.CDG1_adc_b;
@@ -111,7 +113,7 @@ void CDG_Volt_Update()
 
     const float UP_THRESHOLD = 0.99f;
     const float DOWN_THRESHOLD = 0.9f;
-    switch (set->CDG_Mode)
+    switch (paramCfg->CDG_cfg.CDG_Mode)
     {
     case GAUGE_CDG1:
         middleData->CDG_RangeSel = CDG_RANGE_BIG;

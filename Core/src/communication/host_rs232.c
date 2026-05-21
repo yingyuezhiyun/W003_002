@@ -19,8 +19,6 @@
 
 #include "param_store.h"
 
-
-
 static SCI_RX_t Host232SCI = {
 	.sci_base = RS232_SCI_BASE,
 	.lastRxTick = 0U,
@@ -150,19 +148,19 @@ static uint8_t set_pressure_param(const char *arg, printf_t pprintf)
 
 static uint8_t gauge_auto_func(const char *arg, printf_t pprintf)
 {
-	glob_value.set.CDG_Mode = GAUGE_AUTO;
+	glob_value.paramCfg.CDG_cfg.CDG_Mode = GAUGE_AUTO;
 	return RC_SUCCESS;
 }
 
 static uint8_t gauge_cdg1_func(const char *arg, printf_t pprintf)
 {
-	glob_value.set.CDG_Mode = GAUGE_CDG1;
+	glob_value.paramCfg.CDG_cfg.CDG_Mode = GAUGE_CDG1;
 	return RC_SUCCESS;
 }
 
 static uint8_t gauge_cdg2_func(const char *arg, printf_t pprintf)
 {
-	glob_value.set.CDG_Mode = GAUGE_CDG2;
+	glob_value.paramCfg.CDG_cfg.CDG_Mode = GAUGE_CDG2;
 	return RC_SUCCESS;
 }
 
@@ -187,7 +185,7 @@ static uint8_t set_scale1_param(const char *arg, printf_t pprintf)
 	float value;
 	if (ParseFloatValue(arg, &value) && (value > 0.0f))
 	{
-		glob_value.set.CDG1_Range = value;
+		glob_value.paramCfg.CDG_cfg.CDG1_Range = value;
 		return RC_SUCCESS;
 	}
 	return RC_PARAM_ERROR;
@@ -198,12 +196,11 @@ static uint8_t set_scale2_param(const char *arg, printf_t pprintf)
 	float value;
 	if (ParseFloatValue(arg, &value) && (value > 0.0f))
 	{
-		glob_value.set.CDG2_Range = value;
+		glob_value.paramCfg.CDG_cfg.CDG2_Range = value;
 		return RC_SUCCESS;
 	}
 	return RC_PARAM_ERROR;
 }
-
 
 static uint8_t calib_func(const char *arg, printf_t pprintf)
 {
@@ -221,7 +218,6 @@ static uint8_t reset_func(const char *arg, printf_t pprintf)
 SET_PRESSCTRL_PARAMS(set_pressctrl_kp_param, g_lKp)
 SET_PRESSCTRL_PARAMS(set_pressctrl_ki_param, g_lKi)
 
-
 static uint8_t save_params_func(const char *arg, printf_t pprintf)
 {
 	if (ParamStore_SaveConfig(&glob_value.paramCfg) == 1)
@@ -233,36 +229,35 @@ static uint8_t save_params_func(const char *arg, printf_t pprintf)
 
 /// @brief 命令列表，可执行相应功能，设置参数值，直接读取参数（不需要转换计算的参数）
 static Command_t commands[] = {
-	CMD_FUNC_ENTRY("C", close_func),									// 关闭阀门
-	CMD_FUNC_ENTRY("O", open_func),										// 打开阀门
-	CMD_FUNC_ENTRY("H", hold_func),										// 保持阀门位置
-	CMD_PARAM_ENTRY("T1", set_type_func),								// 设置定点类型（位置或压力）
-	CMD_PARAM_ENTRY("S1", set_setpoint_param),							// 设置设定点值（百分比）
-	CMD_FUNC_ENTRY("D1", activate_func),								// 激活应用设定点
-	CMD_PARAM_ENTRY("DPO", set_pressure_param),							// 设置压力设定点值（百分比），并激活应用
-	CMD_PARAM_ENTRY("DPR", set_position_param),							// 设置位置设定点值（百分比），并激活应用
-	CMD_PARAM_ENTRY("V", set_position_param),							// 设置位置设定点值（百分比），并激活应用
-	CMD_FUNC_ENTRY("L0", gauge_auto_func),								// 自动选择真空规
-	CMD_FUNC_ENTRY("L1", gauge_cdg1_func),								// 选择真空规1
-	CMD_FUNC_ENTRY("L2", gauge_cdg2_func),								// 选择真空规2
-	CMD_PARAM_ENTRY("M", set_mid_func),									// 设置MID位置(百分比),并激活应用
-	CMD_PARAM_ENTRY("N1", set_scale1_param),							// 设置真空规1量程
-	CMD_PARAM_ENTRY("N2", set_scale2_param),							// 设置真空规2量程
-	CMD_FUNC_ENTRY("J4", calib_func),									// 校准标定
-	CMD_READ_FLOAT("R1", "S1+%.4f", glob_value.set.setpointValue),		// 读取设定点值
-	CMD_READ_FLOAT("R5", "P+%.4f", glob_value.measure.pressurePercent), // 读取当前压力百分比（测量）
-	CMD_READ_FLOAT("R6", "V+%.4f", glob_value.measure.positionPercent), // 读取当前阀门位置百分比（测量）
-	CMD_READ_CSTR("R38", "Version+" HOST_VERSION),						// 获取设备软件版本号
-	CMD_READ_INT16("R26", "T1%u", glob_value.set.setpointType),			// 读取定点类型（位置或压力）
-	CMD_READ_CSTR("G", "SN: " HOST_SERIAL_NUMBER),						// 获取设备序列号
-	CMD_READ_FLOAT("RN1", "N1%.4f", glob_value.set.CDG1_Range),			// 读取真空规1量程
-	CMD_READ_FLOAT("RN2", "N2%.4f", glob_value.set.CDG2_Range),			// 读取真空规2量程
-	CMD_FUNC_ENTRY("RESET", reset_func),								// 复位
-	CMD_PARAM_ENTRY("PK", set_pressctrl_kp_param),						// 设置压力控制 KP 参数
-	CMD_PARAM_ENTRY("PI", set_pressctrl_ki_param),						// 设置压力控制 KI 参数
-	CMD_READ_INT32("QS", "SV%ld", g_dwPosSV),								// 查询压力控制中间量
-	CMD_READ_INT32("QP", "PV%ld", g_dwPosPV),								// 读取压力控制中间量
-
+	CMD_FUNC_ENTRY("C", close_func),										 // 关闭阀门
+	CMD_FUNC_ENTRY("O", open_func),											 // 打开阀门
+	CMD_FUNC_ENTRY("H", hold_func),											 // 保持阀门位置
+	CMD_PARAM_ENTRY("T1", set_type_func),									 // 设置定点类型（位置或压力）
+	CMD_PARAM_ENTRY("S1", set_setpoint_param),								 // 设置设定点值（百分比）
+	CMD_FUNC_ENTRY("D1", activate_func),									 // 激活应用设定点
+	CMD_PARAM_ENTRY("DPO", set_pressure_param),								 // 设置压力设定点值（百分比），并激活应用
+	CMD_PARAM_ENTRY("DPR", set_position_param),								 // 设置位置设定点值（百分比），并激活应用
+	CMD_PARAM_ENTRY("V", set_position_param),								 // 设置位置设定点值（百分比），并激活应用
+	CMD_FUNC_ENTRY("L0", gauge_auto_func),									 // 自动选择真空规
+	CMD_FUNC_ENTRY("L1", gauge_cdg1_func),									 // 选择真空规1
+	CMD_FUNC_ENTRY("L2", gauge_cdg2_func),									 // 选择真空规2
+	CMD_PARAM_ENTRY("M", set_mid_func),										 // 设置MID位置(百分比),并激活应用
+	CMD_PARAM_ENTRY("N1", set_scale1_param),								 // 设置真空规1量程
+	CMD_PARAM_ENTRY("N2", set_scale2_param),								 // 设置真空规2量程
+	CMD_FUNC_ENTRY("J4", calib_func),										 // 校准标定
+	CMD_READ_FLOAT("R1", "S1+%.4f", glob_value.set.setpointValue),			 // 读取设定点值
+	CMD_READ_FLOAT("R5", "P+%.4f", glob_value.measure.pressurePercent),		 // 读取当前压力百分比（测量）
+	CMD_READ_FLOAT("R6", "V+%.4f", glob_value.measure.positionPercent),		 // 读取当前阀门位置百分比（测量）
+	CMD_READ_CSTR("R38", "Version+" HOST_VERSION),							 // 获取设备软件版本号
+	CMD_READ_INT16("R26", "T1%u", glob_value.set.setpointType),				 // 读取定点类型（位置或压力）
+	CMD_READ_CSTR("G", "SN: " HOST_SERIAL_NUMBER),							 // 获取设备序列号
+	CMD_READ_FLOAT("RN1", "N1%.4f", glob_value.paramCfg.CDG_cfg.CDG1_Range), // 读取真空规1量程
+	CMD_READ_FLOAT("RN2", "N2%.4f", glob_value.paramCfg.CDG_cfg.CDG2_Range), // 读取真空规2量程
+	CMD_FUNC_ENTRY("RESET", reset_func),									 // 复位
+	CMD_PARAM_ENTRY("PK", set_pressctrl_kp_param),							 // 设置压力控制 KP 参数
+	CMD_PARAM_ENTRY("PI", set_pressctrl_ki_param),							 // 设置压力控制 KI 参数
+	CMD_READ_INT32("QS", "SV%ld", g_dwPosSV),								 // 查询压力控制中间量
+	CMD_READ_INT32("QP", "PV%ld", g_dwPosPV),								 // 读取压力控制中间量
 
 	CMD_FUNC_ENTRY("SA", save_params_func),
 	{NULL, CMD_NONE, NULL, NULL, DT_NONE},

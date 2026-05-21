@@ -103,8 +103,8 @@ static Command_t commands[] = {
     CMD_READ_INT32("R7", "SV+%ld", g_dwPosSV),                                              // 查询压力控制中间量
     CMD_READ_INT32("R8", "PV+%ld", g_dwPosPV),                                              // 读取压力控制中间量
     CMD_READ_INT32("R9", "PS+%ld", glob_value.set.PressCtrl.OutPos),                        // 读取压力控制中间量
-    CMD_READ_FLOAT("RA", "N1+%.4f", glob_value.set.CDG1_Range),                             // 读取真空规1量程
-    CMD_READ_FLOAT("RB", "N2+%.4f", glob_value.set.CDG2_Range),                             // 读取真空规2量程
+    CMD_READ_FLOAT("RA", "N1+%.4f", glob_value.paramCfg.CDG_cfg.CDG1_Range),                // 读取真空规1量程
+    CMD_READ_FLOAT("RB", "N2+%.4f", glob_value.paramCfg.CDG_cfg.CDG2_Range),                // 读取真空规2量程
     CMD_READ_INT32("RC", "K+%ld", g_lPeriod),                                               // 读取压力控制周期K值
     CMD_READ_FLOAT("RD", "CDG1V+%.5f", glob_value.measure.cdg1_volt),                       // 读取真空规1电压
     CMD_READ_FLOAT("RE", "CDG2V+%.5f", glob_value.measure.cdg2_volt),                       // 读取真空规2电压

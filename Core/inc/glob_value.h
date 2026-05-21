@@ -73,10 +73,13 @@ typedef struct
     } Pos_limit;            // 行程校准时的参数
     struct
     {
-        float CDG1_adc_k; // CDG1 ADC 转换系数（电压值 = ADC值 * adc_k + adc_b）
-        float CDG2_adc_k; // CDG2 ADC 转换系数（电压值 = ADC值 * adc_k + adc_b）
-        float CDG1_adc_b; // CDG1 ADC 转换偏移（电压值 = ADC值 * adc_k + adc_b）
-        float CDG2_adc_b; // CDG2 ADC 转换偏移（电压值 = ADC值 * adc_k + adc_b）
+        float CDG1_adc_k;     // CDG1 ADC 转换系数（电压值 = ADC值 * adc_k + adc_b）
+        float CDG2_adc_k;     // CDG2 ADC 转换系数（电压值 = ADC值 * adc_k + adc_b）
+        float CDG1_adc_b;     // CDG1 ADC 转换偏移（电压值 = ADC值 * adc_k + adc_b）
+        float CDG2_adc_b;     // CDG2 ADC 转换偏移（电压值 = ADC值 * adc_k + adc_b）
+        GaugeMode_t CDG_Mode; // CDG 模式选择 0:自动 1:CDG1 2:CDG2
+        float CDG1_Range;     // CDG1 量程（满刻度对应的压力值）
+        float CDG2_Range;     // CDG2 量程（满刻度对应的压力值）
     } CDG_cfg;
     struct
     {
@@ -148,9 +151,7 @@ typedef union
 typedef struct
 {
     Locks_t locks;         // 锁定状态
-    GaugeMode_t CDG_Mode;  // CDG 模式选择 0:自动 1:CDG1 2:CDG2
-    float CDG1_Range;      // CDG1 量程（满刻度对应的压力值）
-    float CDG2_Range;      // CDG2 量程（满刻度对应的压力值）
+
     float positionPercent; ///< 位置百分比（0~100%）
     float pressurePercent; ///< 压力百分比（0~100%）
     Setpoint_Type_t setpointType;   ///< 设置点类型（0：位置 1：压力）

@@ -50,13 +50,14 @@ static MODE_EXEC_t Mode_Press_ISR_Execute(Mode_Ctx_t *ctx)
     middle_data_t *middleData = &glob_value.middleData;
     setparam_t *set = &glob_value.set;
     Press_Ctrl *pressCtrl = &set->PressCtrl;
+    Param_Config_t *paramCfg = &glob_value.paramCfg;
     switch (middleData->CDG_RangeSel)
     {
     case CDG_RANGE_BIG:
-        pressCtrl->PressTarget = (uint32_t)(set->pressurePercent * 0.01f * 67108862.5f /* * set->CDG1_Range / set->CDG1_Range */);
+        pressCtrl->PressTarget = (uint32_t)(set->pressurePercent * 0.01f * 67108862.5f /* * paramCfg->CDG_cfg.CDG1_Range / paramCfg->CDG_cfg.CDG1_Range */);
         break;
     case CDG_RANGE_SMALL:
-        pressCtrl->PressTarget = (uint32_t)(set->pressurePercent * 0.01f * 67108862.5f * set->CDG1_Range / set->CDG2_Range);
+        pressCtrl->PressTarget = (uint32_t)(set->pressurePercent * 0.01f * 67108862.5f * paramCfg->CDG_cfg.CDG1_Range / paramCfg->CDG_cfg.CDG2_Range);
         break;
     }
     pressCtrl->PosAct = (float)(ElmoOps.fb.pos_fed - middleData->fullClosePos) / middleData->stroke * 0xe1d80a;
