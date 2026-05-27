@@ -437,7 +437,7 @@ void SPIReadPDRamRegister(UINT8 *ReadBuffer, UINT16 Address, UINT16 Count)
     {
       // SPIWriteDWord(PRAM_READ_CMD_REG, (UINT32)PRAM_RW_ABORT_MASK);
       st = SPIReadDWord(PRAM_READ_CMD_REG);
-    } while(((st & (UINT32)PRAM_RW_BUSY_32B) != 0U) && (timeout>= 0U));
+    } while(((st & (UINT32)PRAM_RW_BUSY_32B) != 0U) && (timeout-->= 0U));
 
     if((st & (UINT32)PRAM_RW_BUSY_32B) != 0U)
     {
@@ -474,7 +474,7 @@ void SPIReadPDRamRegister(UINT8 *ReadBuffer, UINT16 Address, UINT16 Count)
     {
       st = SPIReadDWord(PRAM_READ_CMD_REG);
       availDwords = (UINT16)((st >> 8) & (UINT32)PRAM_SPACE_AVBL_COUNT_MASK);
-    } while((((st & (UINT32)IS_PRAM_SPACE_AVBL_MASK) == 0U) || (availDwords == 0U)) && (timeout>= 0U));
+    } while((((st & (UINT32)IS_PRAM_SPACE_AVBL_MASK) == 0U) || (availDwords == 0U)) && (timeout-->= 0U));
 
     if(timeout <= 0U)
     {
@@ -555,7 +555,7 @@ void SPIWritePDRamRegister(UINT8 *WriteBuffer, UINT16 Address, UINT16 Count)
     {
       // SPIWriteDWord(PRAM_WRITE_CMD_REG, (UINT32)PRAM_RW_ABORT_MASK);
       st = SPIReadDWord(PRAM_WRITE_CMD_REG);
-    } while(((st & (UINT32)PRAM_RW_BUSY_32B) != 0U) && (timeout>= 0U));
+    } while(((st & (UINT32)PRAM_RW_BUSY_32B) != 0U) && (timeout-->= 0U));
 
     if((st & (UINT32)PRAM_RW_BUSY_32B) != 0U)
     {
@@ -586,7 +586,7 @@ void SPIWritePDRamRegister(UINT8 *WriteBuffer, UINT16 Address, UINT16 Count)
     {
       st = SPIReadDWord(PRAM_WRITE_CMD_REG);
       availDwords = (UINT16)((st >> 8) & (UINT32)PRAM_SPACE_AVBL_COUNT_MASK);
-    } while((((st & (UINT32)IS_PRAM_SPACE_AVBL_MASK) == 0U) || (availDwords == 0U)) && (timeout>= 0U));
+    } while((((st & (UINT32)IS_PRAM_SPACE_AVBL_MASK) == 0U) || (availDwords == 0U)) && (timeout-->= 0U));
 
     if(timeout <= 0U)
     {

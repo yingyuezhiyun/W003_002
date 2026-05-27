@@ -641,9 +641,9 @@ void HW_EscWrite(MEM_ADDR *pData, UINT16 Address, UINT16 Len)
     }
 
 #if USE_GLOBAL_INTERRUPT
-  PDI_Enable_Global_interrupt();
+  PDI_Disable_Global_Interrupt();
 #else
-  ENABLE_AL_EVENT_INT;
+  DISABLE_AL_EVENT_INT;
 #endif
     /* start transmission */
 #ifndef USE_SPI
