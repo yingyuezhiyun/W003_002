@@ -78,7 +78,7 @@ V4.08 MBX 1: If the switch MAILBOX_QUEUE was set, we have to put all SDO Info Re
 
 void COE_Init(void)
 {
-    pCoeSendStored = 0;
+    pCoeSendStored = NULL;
     nSdoInfoFragmentsLeft = 0;
 }
 
@@ -148,7 +148,7 @@ UINT8 COE_ContinueInd(TMBX MBXMEM * pMbx)
     {
         /* send the stored CoE service which could not be sent before */
         MBX_MailboxSendReq(pCoeSendStored, 0);
-        pCoeSendStored = 0;
+        pCoeSendStored = NULL;
     }
     else
     {

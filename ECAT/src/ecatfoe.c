@@ -352,7 +352,7 @@ void FOE_ContinueInd(TMBX MBXMEM * pMbx)
     {
         /* send the stored FoE service which could not be sent before */
         MBX_MailboxSendReq(pFoeSendStored, 0);
-        pFoeSendStored = 0;
+        pFoeSendStored = NULL;
     }
 }
 

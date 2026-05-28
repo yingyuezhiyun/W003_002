@@ -223,7 +223,7 @@ TMBX MBXMEM * GetOutOfMbxQueue(TMBXQUEUE MBXMEM * pQueue)
         }
     }
     else
-        pMbx = 0;
+        pMbx = NULL;
 
 
     LEAVE_MBX_CRITICAL;

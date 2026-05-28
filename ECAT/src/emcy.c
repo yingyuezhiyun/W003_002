@@ -106,7 +106,7 @@ TEMCYMESSAGE EMCYMEM * GetOutOfEmptyEmcyQueue(void)
         }
     }
     else
-        pEmcy = 0;
+        pEmcy = NULL;
     ENABLE_EMCY_INT;
 
     return pEmcy;
@@ -165,7 +165,7 @@ TEMCYMESSAGE EMCYMEM * GetOutOfSendEmcyQueue(void)
         }
     }
     else
-        pEmcy = 0;
+        pEmcy = NULL;
     ENABLE_EMCY_INT;
 
     return pEmcy;
@@ -190,7 +190,7 @@ void EMCY_Init(void)
     sSendEmcyQueue.MaxQueueSize                    = MAX_EMERGENCIES+1;
     for (i = 0; i < MAX_EMERGENCIES; i++)
     {
-        sSendEmcyQueue.pQueue[i] = 0;
+        sSendEmcyQueue.pQueue[i] = NULL;
     }
 
     /* initialize empty queue */
@@ -201,7 +201,7 @@ void EMCY_Init(void)
     sEmptyEmcyQueue.MaxQueueSize                    = MAX_EMERGENCIES+1;
     for (i = 0; i < MAX_EMERGENCIES; i++)
     {
-        sEmptyEmcyQueue.pQueue[i] = 0;
+        sEmptyEmcyQueue.pQueue[i] = NULL;
     }
 
     /* put all buffers in empty queue */

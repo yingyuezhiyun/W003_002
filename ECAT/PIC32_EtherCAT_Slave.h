@@ -50,7 +50,7 @@
 
 PROTO void APPL_Application(void);
 #if EXPLICIT_DEVICE_ID
-PROTO UINT16 APPL_GetDeviceID(void);
+PROTO UINT16 APPL_GetDeviceID();
 #endif
 
 PROTO void   APPL_AckErrorInd(UINT16 stateTrans);

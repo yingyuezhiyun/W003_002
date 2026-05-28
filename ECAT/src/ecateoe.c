@@ -116,7 +116,7 @@ TMBX MBXMEM *       pEoeSendStored;                     /**< \brief if the mailb
 
 void EOE_Init(void)
 {
-    pEoeSendStored = 0;
+    pEoeSendStored = NULL;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -524,7 +524,7 @@ void EOE_ContinueInd(TMBX MBXMEM * pMbx)
     {
         /* send the stored EoE service which could not be sent before */
         MBX_MailboxSendReq(pEoeSendStored, 0);
-        pEoeSendStored = 0;
+        pEoeSendStored = NULL;
     }
     else if ( bEoESendFramePending )
     {

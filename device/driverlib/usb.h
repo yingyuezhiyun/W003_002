@@ -464,10 +464,8 @@ extern uint32_t USBHostAddrGet(uint32_t ui32Base, uint32_t ui32Endpoint,
 extern void USBHostAddrSet(uint32_t ui32Base, uint32_t ui32Endpoint,
                            uint32_t ui32Addr, uint32_t ui32Flags);
 extern void USBHostEndpointConfig(uint32_t ui32Base, uint32_t ui32Endpoint,
-                                  uint32_t ui32MaxPacketSize,
-                                  uint32_t ui32NAKPollInterval,
-                                  uint32_t ui32TargetEndpoint,
-                                  uint32_t ui32Flags);
+                      uint32_t ui32MaxPayload, uint32_t ui32NAKPollInterval,
+                      uint32_t ui32TargetEndpoint, uint32_t ui32Flags);
 extern void USBHostEndpointDataAck(uint32_t ui32Base,
                                    uint32_t ui32Endpoint);
 extern void USBHostEndpointDataToggle(uint32_t ui32Base, uint32_t ui32Endpoint,
@@ -491,12 +489,12 @@ extern void USBHostReset(uint32_t ui32Base, bool bStart);
 extern void USBHostResume(uint32_t ui32Base, bool bStart);
 extern uint32_t USBHostSpeedGet(uint32_t ui32Base);
 extern void USBHostSuspend(uint32_t ui32Base);
-extern void USBIntDisableControl(uint32_t ui32Base, uint32_t ui32IntFlags);
+extern void USBIntDisableControl(uint32_t ui32Base, uint32_t ui32Flags);
 extern void USBIntEnableControl(uint32_t ui32Base, uint32_t ui32IntFlags);
-extern uint32_t USBIntStatus(uint32_t ui32Base, uint32_t *ui32IntStatusEP);
+extern uint32_t USBIntStatus(uint32_t ui32Base, uint32_t *pui32IntStatusEP);
 extern uint32_t USBIntStatusControl(uint32_t ui32Base);
-extern void USBIntDisableEndpoint(uint32_t ui32Base, uint32_t ui32IntFlags);
-extern void USBIntEnableEndpoint(uint32_t ui32Base, uint32_t ui32IntFlags);
+extern void USBIntDisableEndpoint(uint32_t ui32Base, uint32_t ui32Flags);
+extern void USBIntEnableEndpoint(uint32_t ui32Base, uint32_t ui32Flags);
 extern uint32_t USBIntStatusEndpoint(uint32_t ui32Base);
 extern void USBOTGSessionRequest(uint32_t ui32Base, bool bStart);
 extern uint32_t USBModeGet(uint32_t ui32Base);
