@@ -95,7 +95,7 @@ void CDG_Volt_Update()
     Param_Config_t *paramCfg = &glob_value.paramCfg;
     middle_data_t *middleData = &glob_value.middleData;
     setparam_t *set = &glob_value.set;
-    Param_Config_t *paramCfg = &glob_value.paramCfg;
+
 
 #if (CDG_ADC_CALIB_EN)
     float vadc1 = (float)measure->adc_cdg1 * paramCfg->CDG_cfg.CDG1_adc_k + paramCfg->CDG_cfg.CDG1_adc_b;
