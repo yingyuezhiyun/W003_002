@@ -67,8 +67,8 @@ typedef struct
 {
     struct
     {
-        uint16_t I;         // 行程校准时的 限位电流
-        uint16_t spd;       // 行程校准时的 限位速度
+        float I;            // 行程校准时的 限位电流
+        float spd;          // 行程校准时的 限位速度
         float Open_Backoff; // 行程校准时的 全开位置 回退量（百分比）
     } Pos_limit;            // 行程校准时的参数
     struct
@@ -150,13 +150,12 @@ typedef union
 
 typedef struct
 {
-    Locks_t locks;         // 锁定状态
-
-    float positionPercent; ///< 位置百分比（0~100%）
-    float pressurePercent; ///< 压力百分比（0~100%）
-    Setpoint_Type_t setpointType;   ///< 设置点类型（0：位置 1：压力）
-    float setpointValue;            ///< 设置点值
-    Press_Ctrl PressCtrl;  ///< 压力控制参数
+    Locks_t locks;                // 锁定状态
+    float positionPercent;        ///< 位置百分比（0~100%）
+    float pressurePercent;        ///< 压力百分比（0~100%）
+    Setpoint_Type_t setpointType; ///< 设置点类型（0：位置 1：压力）
+    float setpointValue;          ///< 设置点值
+    Press_Ctrl PressCtrl;         ///< 压力控制参数
 } setparam_t;
 
 typedef struct

@@ -71,7 +71,7 @@ static void elmoRs232ParseLine(char *line, ElmoFeedbackParam *fb)
 	else if (strncmp(line, "IQ", 2) == 0)
 	{
 		float iq = (float)atof(payload);
-		fb->iq_fed = fabsf(iq);
+		fb->iq_fed = iq;
 	}
 	else if (strncmp(line, "SO", 2) == 0)
 	{

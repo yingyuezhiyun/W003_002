@@ -207,7 +207,7 @@ static void elmoCanProcess(const uint8_t *msgData, uint8_t msgLen, ElmoFeedbackP
 							 ((uint32_t)msgData[6] << 16U) |
 							 ((uint32_t)msgData[5] << 8U) |
 							 msgData[4]);
-		fb->iq_fed = fabsf(conv.f32);
+		fb->iq_fed = conv.f32;
 		break;
 	}
 	case ELMO_IDX_ABS_POS_CMD:

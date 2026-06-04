@@ -127,8 +127,8 @@ static Command_t commands[] = {
     CMD_READ_INT32("PR2", "Ki+%ld", g_lKi),                                                 // 读取压力控制 KI 参数
     CMD_READ_INT32("PR4", "UpBaseStep+%ld", g_lUpBaseStep),                                 // 读取压力控制 设置上升稳定K值
     CMD_READ_INT32("PR5", "DownK+%ld", g_lDownK),                                           // 读取压力控制 设置下降初始K
-    CMD_READ_INT16("PR6", "pos_li+%u", glob_value.paramCfg.Pos_limit.I),                    // 读取堵转电流
-    CMD_READ_INT16("PR7", "pos_ls+%u", glob_value.paramCfg.Pos_limit.spd),                  // 读取堵转速度
+    CMD_READ_FLOAT("PR6", "pos_li+%.2f", glob_value.paramCfg.Pos_limit.I),                  // 读取堵转电流
+    CMD_READ_FLOAT("PR7", "pos_ls+%.0f", glob_value.paramCfg.Pos_limit.spd),                // 读取堵转速度
     CMD_READ_INT32("PR8", "MidS+%ld", g_lMidSpeed),                                         // 读取压力控制 上升小量程速度
     CMD_READ_INT32("PR9", "UpS+%ld", g_lMaxSpeed),                                          // 读取压力控制 上升大量程速度
     CMD_READ_INT32("PRA", "DownS+%ld", g_lMinSpeed),                                        // 读取压力控制 下降速度

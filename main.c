@@ -28,8 +28,17 @@ glob_value_t glob_value = {
     .paramCfg = {
         .Pos_limit.I = 8,
         .Pos_limit.spd = 1000,
+        .Pos_limit.Open_Backoff = 2.0f,
         .temp.high_threshold = 85.0f,
         .temp.low_threshold = -10.0f,
+        .CDG_cfg.CDG_Mode = GAUGE_AUTO,
+        .CDG_cfg.CDG1_adc_k = 1.0f,
+        .CDG_cfg.CDG1_adc_b = 0.0f,
+        .CDG_cfg.CDG2_adc_k = 1.0f,
+        .CDG_cfg.CDG2_adc_b = 0.0f,
+        .CDG_cfg.CDG1_Range = 20.0f,
+        .CDG_cfg.CDG2_Range = 0.1f,
+
     },
     .modeCtx = {0},
     .status = {.errors.val = 0, .state.val = 0},
