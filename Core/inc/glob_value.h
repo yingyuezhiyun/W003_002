@@ -115,8 +115,7 @@ typedef struct
     float temperature;              ///< 温度（根据 adc_temp 计算得出）
     float power_voltage;            ///< 供电电压（根据 adc_pwr 计算得出）
     volatile float cdg1_volt;       ///< CDG1 电压（根据 adc_cdg1 计算得出）
-    volatile float cdg2_volt;       ///< CDG2 电压（根据 adc_cdg2 计算得出）
-    volatile float cdg_value;       ///< CDG 计算得到的压力值（根据 cdg1_volt 或 cdg2_volt 计算得出，取决于 CDG 模式）
+    volatile float cdg2_volt;       ///< CDG2 电压（根据 adc_cdg2 计算得出）   
     volatile float positionPercent; ///< 位置百分比（0~100%），根据elmo反馈的当前位置与行程计算得出
     volatile float pressurePercent; ///< 压力百分比（0~100%），根据压力传感器反馈值计算得出
     PWR_TYPE_t powerType;           ///< 供电类型（根据 power_voltage 和 batt_voltage 判断得出）

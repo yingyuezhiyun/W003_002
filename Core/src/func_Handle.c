@@ -54,10 +54,10 @@ void Data_handle()
     switch (middleData->CDG_RangeSel)
     {
     case CDG_RANGE_BIG:
-        measure->cdg_value = middleData->cdg_volt * 10.0f /* * set->CDG1_Range / set->CDG1_Range */;
+        measure->pressurePercent = middleData->cdg_volt * 10.0f /* * set->CDG1_Range / set->CDG1_Range */;
         break;
     case CDG_RANGE_SMALL:
-        measure->cdg_value = middleData->cdg_volt * 10.0f * paramCfg->CDG_cfg.CDG2_Range / paramCfg->CDG_cfg.CDG1_Range;
+        measure->pressurePercent = middleData->cdg_volt * 10.0f * paramCfg->CDG_cfg.CDG2_Range / paramCfg->CDG_cfg.CDG1_Range;
         break;
     }
 
