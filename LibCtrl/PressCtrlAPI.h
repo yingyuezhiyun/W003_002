@@ -9,6 +9,7 @@ extern long g_lPosClosed;
 // extern long g_lGain;
 //  extern long g_lOffset;
 extern long g_lUpBaseStep;
+extern long g_lMinBaseStep;
 // extern long g_lMaxset;
 // extern long g_lMaxK;
 extern long g_lMinSpeed;

@@ -737,6 +737,7 @@ void UpdatePressCtrlParams(Param_Config_t *cfg)
     g_lKi = cfg->Press_Ctrl.ki;
     g_lPosClosed = cfg->Press_Ctrl.PosClosed;
     g_lUpBaseStep = cfg->Press_Ctrl.UpBaseStep;
+    g_lMinBaseStep = cfg->Press_Ctrl.MinBaseStep;
     g_lDownBaseStep = cfg->Press_Ctrl.DownBaseStep;
     g_lMinSpeed = cfg->Press_Ctrl.MinSpeed;
     g_lMaxSpeed = cfg->Press_Ctrl.MaxSpeed;
@@ -754,6 +755,7 @@ void LoadPressCtrlParams(Param_Config_t *cfg)
     cfg->Press_Ctrl.ki = g_lKi;
     cfg->Press_Ctrl.PosClosed = g_lPosClosed;
     cfg->Press_Ctrl.UpBaseStep = g_lUpBaseStep;
+    cfg->Press_Ctrl.MinBaseStep = g_lMinBaseStep;
     cfg->Press_Ctrl.DownBaseStep = g_lDownBaseStep;
     cfg->Press_Ctrl.MinSpeed = g_lMinSpeed;
     cfg->Press_Ctrl.MaxSpeed = g_lMaxSpeed;

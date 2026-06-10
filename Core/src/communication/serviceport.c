@@ -84,6 +84,7 @@ SET_PRESSCTRL_PARAMS(set_pressctrl_MinSpeed_param, g_lMinSpeed)
 SET_PRESSCTRL_PARAMS(set_pressctrl_DownBaseStep_param, g_lDownBaseStep)
 SET_PRESSCTRL_PARAMS(set_pressctrl_DownKmin_param, g_lDownKmin)
 SET_PRESSCTRL_PARAMS(set_pressctrl_DownKMax_param, g_lDownKMax)
+SET_PRESSCTRL_PARAMS(set_Pos_limit_MinBaseStep_param, g_lMinBaseStep)
 
 static uint8_t calib_func(const char *arg, printf_t pprintf)
 {
@@ -123,6 +124,7 @@ static Command_t commands[] = {
     CMD_PARAM_ENTRY("PSC", set_pressctrl_DownKmin_param),                                   // 设置压力控制 下降小量程K
     CMD_PARAM_ENTRY("PSD", set_pressctrl_DownKMax_param),                                   // 设置压力控制 下降大量程K
     CMD_PARAM_ENTRY("PSE", set_Pos_limit_Open_Backoff_param),                               // 设置压力控制 全开位置回退量
+    CMD_PARAM_ENTRY("PSF", set_Pos_limit_MinBaseStep_param),                                // 设置压力控制 上升小K过程值
     CMD_READ_INT32("PR1", "Kp+%ld", g_lKp),                                                 // 读取压力控制 KP 参数
     CMD_READ_INT32("PR2", "Ki+%ld", g_lKi),                                                 // 读取压力控制 KI 参数
     CMD_READ_INT32("PR4", "UpBaseStep+%ld", g_lUpBaseStep),                                 // 读取压力控制 设置上升稳定K值
@@ -136,6 +138,7 @@ static Command_t commands[] = {
     CMD_READ_INT32("PRC", "DownKmin+%ld", g_lDownKmin),                                     // 读取压力控制 下降小量程K
     CMD_READ_INT32("PRD", "DownKMax+%ld", g_lDownKMax),                                     // 读取压力控制 下降大量程K
     CMD_READ_FLOAT("PRE", "Open_Backoff+%.2f", glob_value.paramCfg.Pos_limit.Open_Backoff), // 读取压力控制 全开位置回退量
+    CMD_READ_INT32("PRF", "MinBaseStep+%.2f", g_lMinBaseStep),                              // 读取压力控制 上升小K过程值
     CMD_FUNC_ENTRY("J4", calib_func),                                                       // 校准标定
     {NULL, CMD_NONE, NULL, NULL, DT_NONE, 0},
 };

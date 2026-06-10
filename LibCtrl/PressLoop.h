@@ -73,6 +73,7 @@ extern long g_lDownK;
 extern long g_lDownKMax;
 extern long g_lDownKmin;
 extern long g_lDownBaseStep;
+extern long g_lMinBaseStep;
 // extern long g_lRead;
 extern long g_lCnt;
 
