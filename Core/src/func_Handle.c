@@ -96,7 +96,6 @@ void CDG_Volt_Update()
     middle_data_t *middleData = &glob_value.middleData;
     setparam_t *set = &glob_value.set;
 
-
 #if (CDG_ADC_CALIB_EN)
     float vadc1 = (float)measure->adc_cdg1 * paramCfg->CDG_cfg.CDG1_adc_k + paramCfg->CDG_cfg.CDG1_adc_b;
 #else
@@ -148,7 +147,9 @@ void CDG_Volt_Update()
 
 /*********************************************************************** 状态显示 ****************************************************************/
 
-#define LED_BLINK_PERIOD_MS (500U) // 500ms
+#define LED_BLINK_PERIOD_MS (500U)   // 500ms
+#define CALIB_BLINK_PERIOD_MS (500U) // 500ms
+#define BATT_BLINK_PERIOD_MS (500U)  // 500ms
 /// @brief 处理状态显示,LED 灯等。
 void Status_handle()
 {
@@ -158,11 +159,11 @@ void Status_handle()
     measure_t *measure = &glob_value.measure;
 
     uint32_t nowTick = glob_value.tick0p1ms;
-    static uint32_t lastToggleTick = 0U;
-    if ((uint32_t)(nowTick - lastToggleTick) >= LED_BLINK_PERIOD_MS * TICK_PER_MS)
+    static uint32_t boardLedToggleTick = 0U, calibLedToggleTick = 0U, battLedToggleTick = 0U;
+    if ((uint32_t)(nowTick - boardLedToggleTick) >= LED_BLINK_PERIOD_MS * TICK_PER_MS)
     {
         GPIO_togglePin(LED1);
-        lastToggleTick = nowTick;
+        boardLedToggleTick = nowTick;
     }
     //  GPIO_writePin(FAULT_LED, 1);
 
@@ -249,7 +250,18 @@ void Status_handle()
 
     if (status->errors.content.pwr == 0)
     {
-        GPIO_writePin(BATT_LED, 1);
+        if (measure->powerType == PWR_TYPE_BATTERY)
+        {
+            if ((uint32_t)(nowTick - battLedToggleTick) >= BATT_BLINK_PERIOD_MS * TICK_PER_MS)
+            {
+                GPIO_togglePin(BATT_LED);
+                battLedToggleTick = nowTick;
+            }
+        }
+        else
+        {
+            GPIO_writePin(BATT_LED, 1);
+        }
     }
     else
     {
@@ -258,9 +270,22 @@ void Status_handle()
 
     if (locks->content.calib)
     {
-        GPIO_writePin(POS_OPEN_LED, 0);
+        if ((uint32_t)(nowTick - calibLedToggleTick) >= CALIB_BLINK_PERIOD_MS * TICK_PER_MS)
+        {
+            GPIO_togglePin(POS_OPEN_LED);
+            if (GPIO_readPin(POS_OPEN_LED))
+            {
+                GPIO_writePin(POS_CLOSE_LED, 0);
+            }
+            else
+            {
+                GPIO_writePin(POS_CLOSE_LED, 1);
+            }
+            calibLedToggleTick = nowTick;
+        }
+        // GPIO_writePin(POS_OPEN_LED, 0);
         GPIO_writePin(POS_OPEN_TTL_OUT, 1);
-        GPIO_writePin(POS_CLOSE_LED, 0);
+        // GPIO_writePin(POS_CLOSE_LED, 0);
         GPIO_writePin(POS_CLOSE_TTL_OUT, 1);
         GPIO_writePin(POS_LED, 0);
         GPIO_writePin(PRE_LED, 0);
@@ -315,6 +340,7 @@ void BIT_handle()
 {
     static uint32_t lastUpdateTick = 0U;
     static uint8_t motor_stall_count = 0, batt_low_count = 0;
+    static uint16_t temp_err_count = 0;
     Status_t *status = &glob_value.status;
     measure_t *measure = &glob_value.measure;
     Param_Config_t *paramCfg = &glob_value.paramCfg;
@@ -358,14 +384,23 @@ void BIT_handle()
     // 温度过高或过低
     if (measure->temperature >= paramCfg->temp.high_threshold)
     {
-        status->errors.content.high_temp = 1; // 高温错误
+        temp_err_count++;
+        if (temp_err_count > 100) // 1秒
+        {
+            status->errors.content.high_temp = 1; // 高温错误
+        }
     }
     else if (measure->temperature <= paramCfg->temp.low_threshold)
     {
-        status->errors.content.low_temp = 1; // 低温错误
+        temp_err_count++;
+        if (temp_err_count > 100) // 1秒
+        {
+            status->errors.content.low_temp = 1; // 低温错误
+        }
     }
     else
     {
+        temp_err_count = 0;
         status->errors.content.high_temp = 0; // 温度正常
         status->errors.content.low_temp = 0;  // 温度正常
     }
