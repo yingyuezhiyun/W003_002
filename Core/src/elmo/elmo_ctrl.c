@@ -39,10 +39,10 @@ ElmoOpsTable ElmoOps = {
 
 static void elmoSetEnable(uint8_t enable)
 {
-	if (ElmoOps.set.en == enable && ElmoOps.fb.en == enable)
-	{
-		return;
-	}
+	// if (ElmoOps.set.en == enable && ElmoOps.fb.en == enable)
+	// {
+	// 	return;
+	// }
 	ElmoOps.set.en = enable;
 	if (ElmoOps.ctrl->setEnable != NULL)
 	{
@@ -170,6 +170,7 @@ void ElmoCtrl_Init(void)
 	if (ElmoOps.ctrl != NULL)
 	{
 		ElmoOps.reqPos = ElmoOps.ctrl->reqPos;
+		ElmoOps.reqPosIsr = ElmoOps.ctrl->reqPosIsr;
 		ElmoOps.reqSpd = ElmoOps.ctrl->reqSpd;
 		ElmoOps.reqIq = ElmoOps.ctrl->reqIq;
 		ElmoOps.reqEn = ElmoOps.ctrl->reqEn;

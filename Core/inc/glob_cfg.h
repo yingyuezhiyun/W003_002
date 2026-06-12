@@ -32,8 +32,8 @@
 
 // 校准模式，执行周期10ms
 #define MODE_CALIB_PERIOD_MS (10U) 
-// 校准模式，超时60s，认为校准失败
-#define MODE_CALIB_TIMEOUT_MS (60000UL)
+// 校准模式，超时30s，认为校准失败
+#define MODE_CALIB_TIMEOUT_MS (30000UL)
 // 校准模式，速度400000
 #define MODE_CALIB_SPEED (400000)
 // 正常模式，速度2000000
@@ -60,8 +60,8 @@
 #define KEY_TTL_POLL_PERIOD_MS (10U)
 
 
-// Elmo状态更新周期10ms
-#define ELMO_POLL_PERIOD_MS (10U) 
+// Elmo状态更新周期5ms
+#define ELMO_POLL_PERIOD_MS (5U) 
 
 // 测量数据更新周期2.5ms
 #define DATA_UPDATE_PERIOD_MS (2.5) 

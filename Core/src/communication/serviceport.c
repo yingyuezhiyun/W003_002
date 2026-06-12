@@ -64,8 +64,8 @@ static uint8_t set_pressctrl_percent_param(const char *arg, printf_t pprintf)
     if (ParseFloatValue(arg, &value))
     {
         glob_value.paramCfg.Press_Ctrl.percent = value;
-        // g_lPosClosed = (0xE1D80AUL * (glob_value.paramCfg.Press_Ctrl.percent / 100.0));
-        // LoadPressCtrlParams(&glob_value.paramCfg);
+        g_lPosClosed = (0xE1D80AUL * (glob_value.paramCfg.Press_Ctrl.percent / 100.0));
+        LoadPressCtrlParams(&glob_value.paramCfg);
         return RC_SUCCESS;
     }
     return RC_PARAM_ERROR;

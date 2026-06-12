@@ -104,6 +104,10 @@ static void elmoCanSendObj(const uint8_t *msgData, uint8_t wait)
 	else
 	{
 		objId = elmoCanGetFreeTxObj();
+		if (objId < ELMO_CAN_TX_OBJ_FIRST || objId > ELMO_CAN_TX_OBJ_LAST)
+		{
+			
+		}
 	}
 	if (objId >= ELMO_CAN_TX_OBJ_FIRST && objId <= ELMO_CAN_TX_OBJ_LAST)
 	{
@@ -323,6 +327,11 @@ static void elmoCanReqPos(void)
 	elmoCanSendSDORequest(ELMO_IDX_POS_FB, 1U, 0x40U, 1);
 }
 
+static void elmoCanReqPosIsr(void)
+{
+	elmoCanSendSDORequest(ELMO_IDX_POS_FB, 1U, 0x40U, 0);
+}
+
 // 请求速度反馈
 static void elmoCanReqSpd(void)
 {
@@ -419,6 +428,7 @@ ElmoCtrl ElmoCanCtrl = {
 	.reqSetAbsPos = elmoCanReqSetAbsPos,
 	.reqSetStopDc = elmoCanReqSetStopDc,
 	.reqPos = elmoCanReqPos,
+	.ParseIsr = elmoCanReqPosIsr,
 	.reqSpd = elmoCanReqSpd,
 	.reqIq = elmoCanReqIq,
 	.reqEn = elmoCanReqEn,

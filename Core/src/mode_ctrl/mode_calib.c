@@ -89,6 +89,7 @@ static MODE_EXEC_t Mode_Calib_Execute(Mode_Ctx_t *ctx)
             middleData->fullClosePos = ElmoOps.fb.pos_fed;
             // 先关闭电机，等待电流刷新后再反向运动
             ElmoOps.setEnable(0);
+            DEVICE_DELAY_US(100000);
             ctx->calibStepState.content.seek_min = 1;
             ctx->calibSubState = CALIB_SUB_WAIT_ELMO_READY;
         }
@@ -100,10 +101,10 @@ static MODE_EXEC_t Mode_Calib_Execute(Mode_Ctx_t *ctx)
             DEVICE_DELAY_US(100000);
             ElmoOps.setEnable(1);
         }
-        // else if (ElmoOps.fb.en == 1)
-        // {
+        else if (ElmoOps.fb.en == 1)
+        {
             ElmoOps.setEnable(0); // 如果电流或速度还没有足够小，继续保持电机关闭状态
-        // }
+        }
         break;
     case CALIB_SUB_SET_MAX_END:
         // if (ElmoOps.fb.en == 0)
@@ -116,6 +117,10 @@ static MODE_EXEC_t Mode_Calib_Execute(Mode_Ctx_t *ctx)
         ctx->calibSubState = CALIB_SUB_WAIT_MAX_END;
         break;
     case CALIB_SUB_WAIT_MAX_END:
+        if (ElmoOps.fb.en == 0 || (fabs(ElmoOps.fb.iq_fed) < 0.5f && fabs(ElmoOps.fb.spd_fed) < 100))
+        {
+            ctx->calibSubState = CALIB_SUB_SET_MAX_END;
+        }
         if ((fabs(ElmoOps.fb.spd_fed) < cfg->Pos_limit.spd) && (fabs(ElmoOps.fb.iq_fed) > cfg->Pos_limit.I)) // 速度足够慢且电流足够大，认为到达端点
         {
             middleData->fullOpenPos = ElmoOps.fb.pos_fed;
@@ -124,6 +129,7 @@ static MODE_EXEC_t Mode_Calib_Execute(Mode_Ctx_t *ctx)
             ctx->calibStepState.content.seek_max = 1;
             ctx->calibSubState = CALIB_SUB_VERIFY_RANGE;
         }
+        
         break;
     case CALIB_SUB_VERIFY_RANGE:
     {

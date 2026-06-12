@@ -285,6 +285,7 @@ ElmoCtrl ElmoRs232Ctrl = {
 	.reqSetAbsPos = elmoRs232ReqSetAbsPos,
 	.reqSetStopDc = elmoRs232ReqSetStopDc,
 	.reqPos = elmoRs232PosRequest,
+	.reqPosIsr = elmoRs232PosRequest,
 	.reqSpd = elmoRs232SpdRequest,
 	.reqIq = elmoRs232IqRequest,
 	.reqEn = elmoRs232ENRequest,
