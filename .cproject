@@ -244,7 +244,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="lib/eeprom.lib|device/driverlib/ccs|device/driverlib/ccs/Debug|driverlib.lib|LibCtrl/LibPress.lib|2837xD_FLASH_lnk_cpu1_bak.cmd|2837xD_RAM_lnk_cpu1.cmd" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="lib|lib/elmoCtrl.lib|lib/eeprom.lib|device/driverlib/ccs|device/driverlib/ccs/Debug|driverlib.lib|LibCtrl/LibPress.lib|2837xD_FLASH_lnk_cpu1_bak.cmd|2837xD_RAM_lnk_cpu1.cmd" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

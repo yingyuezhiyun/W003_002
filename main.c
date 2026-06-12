@@ -38,6 +38,7 @@ glob_value_t glob_value = {
         .CDG_cfg.CDG2_adc_b = 0.0f,
         .CDG_cfg.CDG1_Range = 20.0f,
         .CDG_cfg.CDG2_Range = 0.1f,
+        .Press_Ctrl.period = 9.0f,
 
     },
     .modeCtx = {0},

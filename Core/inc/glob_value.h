@@ -88,6 +88,7 @@ typedef struct
     } temp;
     struct
     {
+        float period;//调用周期
         int32_t kp;
         int32_t ki;
         float percent;        // 开度百分比

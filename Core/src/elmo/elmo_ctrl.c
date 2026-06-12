@@ -39,10 +39,18 @@ ElmoOpsTable ElmoOps = {
 
 static void elmoSetEnable(uint8_t enable)
 {
+	if (ElmoOps.set.en == enable && ElmoOps.fb.en == enable)
+	{
+		return;
+	}
 	ElmoOps.set.en = enable;
 	if (ElmoOps.ctrl->setEnable != NULL)
 	{
 		ElmoOps.ctrl->setEnable(enable);
+	}
+	if (ElmoOps.ctrl->reqEn)
+	{
+		ElmoOps.ctrl->reqEn();
 	}
 	if (enable == 0)
 	{
