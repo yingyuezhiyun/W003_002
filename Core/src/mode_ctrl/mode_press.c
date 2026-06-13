@@ -64,7 +64,8 @@ static MODE_EXEC_t Mode_Press_ISR_Execute(Mode_Ctx_t *ctx)
     // todo : 压力算法调用
     PressCtrl(pressCtrl->PressTarget, pressCtrl->PosAct, &pressCtrl->OutPos, middleData->CDG_RangeSel);
 
-    Set_Position_Percent_Isr(pressCtrl->OutPos * 100.0f / 0xe1d80a);
+    // Set_Position_Percent_Isr((float)pressCtrl->OutPos * 100.0f / 0xe1d80a);
+    Set_Position_Percent_Isr((float)pressCtrl->OutPos * 100.0f / 14800906.0f);
     if (ElmoOps.reqPosIsr != NULL)
     {
         ElmoOps.reqPosIsr();
