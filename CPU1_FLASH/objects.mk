@@ -4,5 +4,5 @@
 
 USER_OBJS :=
 
-LIBS := -llibc.a -lLibPress.lib -leeprom.lib
+LIBS := -llibc.a -lLibPress.lib
 

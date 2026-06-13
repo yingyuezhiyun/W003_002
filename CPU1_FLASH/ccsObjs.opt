@@ -66,4 +66,3 @@
 "../2837xD_FLASH_lnk_cpu1.cmd"
 -llibc.a
 -lLibPress.lib
--leeprom.lib
