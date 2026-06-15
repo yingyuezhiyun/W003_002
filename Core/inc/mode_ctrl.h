@@ -42,6 +42,7 @@ typedef enum
     CALIB_SUB_INIT,            ///< 标定初始化（进入标定模式时）
     CALIB_SUB_SET_MIN_END,     ///< 向最小端点运动
     CALIB_SUB_WAIT_MIN_END,    ///< 寻找最小端点
+    CALIB_SUB_TOGGLE,          ///< 反向
     CALIB_SUB_WAIT_ELMO_READY, ///< 等待 Elmo 准备就绪
     CALIB_SUB_SET_MAX_END,     ///< 向最大端点运动
     CALIB_SUB_WAIT_MAX_END,    ///< 寻找最大端点

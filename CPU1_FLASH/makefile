@@ -208,10 +208,10 @@ EXE_OUTPUTS__QUOTED += \
 "F28377D.out" 
 
 BIN_OUTPUTS += \
-F28377D.bin 
+F28377D.hex 
 
 BIN_OUTPUTS__QUOTED += \
-"F28377D.bin" 
+"F28377D.hex" 
 
 
 # All Target
@@ -226,10 +226,10 @@ F28377D.out: $(OBJS) $(CMD_SRCS) $(LIB_SRCS) $(GEN_CMDS)
 	@echo 'Finished building target: "$@"'
 	@echo ' '
 
-F28377D.bin: $(EXE_OUTPUTS)
+F28377D.hex: $(EXE_OUTPUTS)
 	@echo 'Building secondary target: "$@"'
 	@echo 'Invoking: C2000 Hex Utility'
-	"D:/Software/ti/ccs1281/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/bin/hex2000" --byte --memwidth=16 --order=MS --romwidth=16 --diag_wrap=off --binary -o "F28377D.bin" $(EXE_OUTPUTS__QUOTED)
+	"D:/Software/ti/ccs1281/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/bin/hex2000" --byte --memwidth=16 --order=MS --romwidth=16 --diag_wrap=off --intel -o "F28377D.hex" $(EXE_OUTPUTS__QUOTED)
 	@echo 'Finished building secondary target: "$@"'
 	@echo ' '
 

@@ -149,7 +149,7 @@ void CDG_Volt_Update()
 
 #define LED_BLINK_PERIOD_MS (500U)   // 500ms
 #define CALIB_BLINK_PERIOD_MS (500U) // 500ms
-#define BATT_BLINK_PERIOD_MS (500U)  // 500ms
+#define BATT_BLINK_PERIOD_MS (400U)  // 400ms
 /// @brief 处理状态显示,LED 灯等。
 void Status_handle()
 {
@@ -272,14 +272,24 @@ void Status_handle()
     {
         if ((uint32_t)(nowTick - calibLedToggleTick) >= CALIB_BLINK_PERIOD_MS * TICK_PER_MS)
         {
-            GPIO_togglePin(POS_OPEN_LED);
-            if (GPIO_readPin(POS_OPEN_LED))
+            if (ctx->calibSubState > CALIB_SUB_INIT && ctx->calibSubState < CALIB_SUB_DONE)
             {
-                GPIO_writePin(POS_CLOSE_LED, 0);
+                // 校准过程中常亮
+                GPIO_writePin(POS_OPEN_LED, 1);
+                GPIO_writePin(POS_CLOSE_LED, 1);
             }
             else
             {
-                GPIO_writePin(POS_CLOSE_LED, 1);
+                // 未开始校准时 交替闪烁
+                GPIO_togglePin(POS_OPEN_LED);
+                if (GPIO_readPin(POS_OPEN_LED))
+                {
+                    GPIO_writePin(POS_CLOSE_LED, 0);
+                }
+                else
+                {
+                    GPIO_writePin(POS_CLOSE_LED, 1);
+                }
             }
             calibLedToggleTick = nowTick;
         }

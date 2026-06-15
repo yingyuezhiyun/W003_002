@@ -44,6 +44,8 @@
 #define MODE_CALIB_MAX_POS (3000000)
 // 校准模式，行程阈值1700000
 #define MODE_CALIB_STROKE_THREAD (1700000)
+// 校准模式，反向时行程阈值400000
+#define MODE_CALIB_BACK_THREAD (400000)
 
 
 // 位置模式，执行周期20ms

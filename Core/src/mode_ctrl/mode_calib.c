@@ -7,7 +7,6 @@
 #include <stddef.h>
 #include <math.h>
 
-
 static uint32_t lastCalibLoopTick = 0U;
 static uint32_t CalibStartTick = 0U;
 
@@ -75,7 +74,7 @@ static MODE_EXEC_t Mode_Calib_Execute(Mode_Ctx_t *ctx)
         return MODE_EXEC_IGNORED; // 未到执行周期，继续等待
     }
     lastCalibLoopTick = nowTick; // 更新上次执行 tick
-
+#if 0
     switch (ctx->calibSubState)
     {
     case CALIB_SUB_SET_MIN_END:
@@ -169,6 +168,76 @@ static MODE_EXEC_t Mode_Calib_Execute(Mode_Ctx_t *ctx)
         ElmoOps.setEnable(0);
         break;
     }
+#else
+    switch (ctx->calibSubState)
+    {
+    case CALIB_SUB_SET_MIN_END:
+        ElmoOps.setRelPos(MODE_CALIB_MIN_POS); // 向最小端点方向运动
+        DEVICE_DELAY_US(5000);
+        ctx->calibSubState = CALIB_SUB_WAIT_MIN_END;
+        break;
+    case CALIB_SUB_WAIT_MIN_END:
+        if ((fabs(ElmoOps.fb.spd_fed) < cfg->Pos_limit.spd) && (fabs(ElmoOps.fb.iq_fed) > cfg->Pos_limit.I)) // 速度足够慢且电流足够大，认为到达端点
+        {
+            middleData->fullClosePos = ElmoOps.fb.pos_fed;
+            // 反向运动
+            // DEVICE_DELAY_US(100000);
+            ElmoOps.setRelPos(2.0 * MODE_CALIB_MAX_POS); // 向最大端点运动
+            ctx->calibStepState.content.seek_min = 1;
+            ctx->calibSubState = CALIB_SUB_TOGGLE;
+        }
+        break;
+    case CALIB_SUB_TOGGLE:
+        if (fabs(ElmoOps.fb.pos_fed - middleData->fullClosePos) > MODE_CALIB_BACK_THREAD)
+        {
+            ctx->calibSubState = CALIB_SUB_WAIT_MAX_END;
+        }
+        break;
+    case CALIB_SUB_WAIT_MAX_END:
+        if ((fabs(ElmoOps.fb.spd_fed) < cfg->Pos_limit.spd) && (fabs(ElmoOps.fb.iq_fed) > cfg->Pos_limit.I)) // 速度足够慢且电流足够大，认为到达端点
+        {
+            middleData->fullOpenPos = ElmoOps.fb.pos_fed;
+            ctx->calibStepState.content.seek_max = 1;
+            ctx->calibSubState = CALIB_SUB_VERIFY_RANGE;
+        }
+        break;
+    case CALIB_SUB_VERIFY_RANGE:
+    {
+        int32_t stroke = middleData->fullOpenPos - middleData->fullClosePos;
+        if (fabs(stroke) > MODE_CALIB_STROKE_THREAD)
+        {
+            //
+            ElmoOps.setSpd(MODE_NORMAL_SPEED);
+            DEVICE_DELAY_US(5000);
+            middleData->fullClosePos += stroke * 0.02f;
+            middleData->fullOpenPos -= stroke * cfg->Pos_limit.Open_Backoff / 100.0f; // 全开位置回退量
+            middleData->stroke = middleData->fullOpenPos - middleData->fullClosePos;
+            ctx->calibSubState = CALIB_SUB_DONE;
+            ctx->calibStepState.content.calib_done = 1;
+            Status_t *status = &glob_value.status;
+            status->errors.content.calib = 0;
+            Mode_HSM_Request_CMD(MODE_CMD_CALIB_DONE, 0.0f); // 标定完成后保持全开位置
+        }
+        else
+        {
+            ElmoOps.setEnable(0); // 关闭
+            ctx->calibSubState = CALIB_SUB_FAILED;
+            ctx->calibStepState.content.verify_failed = 1;
+            Status_t *status = &glob_value.status;
+            status->errors.content.calib = 1;
+            Mode_HSM_Request_CMD(MODE_CMD_FAULT, 0.0f); // 校验行程失败，进入故障模式
+        }
+    }
+    break;
+    case CALIB_SUB_DONE:
+
+        break;
+    default:
+
+        ElmoOps.setEnable(0);
+        break;
+    }
+#endif
     return MODE_EXEC_DONE;
 }
 
