@@ -114,6 +114,31 @@ static bool Sha_WaitStopDone(uint32_t timeout)
     return (timeout > 0U);
 }
 
+/// @brief 强制恢复 I2C 总线状态（用于 NAK 后总线卡死的情况）。
+///        流程：清状态 → 发 STOP → 关闭/重启 I2C 模块 → 复位 FIFO → 等待总线空闲。
+static void Sha_ForceRecoverI2C(void)
+{
+    Sha_ClearI2CStatus();
+
+    /* 尝试发送 STOP 释放总线 */
+    I2C_sendStopCondition(ATSHA204_I2C_BASE);
+    Sha_WaitStopDone(ATSHA204_I2C_TIMEOUT);
+
+    /* 关闭 I2C 模块，复位内部状态机 */
+    I2C_disableModule(ATSHA204_I2C_BASE);
+    Sha_ClearI2CStatus();
+
+    /* 重新启用 I2C 模块 */
+    I2C_enableModule(ATSHA204_I2C_BASE);
+
+    /* 复位 FIFO */
+    Sha_ResetFIFOs();
+    Sha_ClearI2CStatus();
+
+    /* 等待总线释放 */
+    Sha_WaitBusIdle(ATSHA204_I2C_TIMEOUT);
+}
+
 /// @brief I2CB 写 n 字节（纯数据，不带地址阶段）。
 static bool Sha_I2C_WriteBytes(uint16_t devAddr, const uint8_t *data, uint16_t len)
 {
@@ -326,18 +351,22 @@ bool ATSHA204_Wake(void)
 
     /*
      * ATSHA204 I2C 唤醒序列：
-     * 1. 向 general call 地址 0x00 写入 1 字节 0x00
+     * 1. 向 general call 地址 0x00 写入 1 字节 0x00（产生 SDA 低脉冲 ≥60µs）
      * 2. 等待 tWHI（≥1 ms）
      * 3. 从设备地址读 4 字节，应为 0x04 0x11 0x33 0x43
+     *
+     * 注意：ATSHA204 在休眠模式下不会 ACK 唤醒令牌，
+     *       因此 I2C 控制器会因 NAK 卡死，必须强制恢复总线后再读取。
      */
-    if (!Sha_I2C_WriteBytes(0x00U, wakeToken, 1U))
-    {
-        /* general call 写入可能返回 false（无 ACK），这是正常的 */
-        Sha_ClearI2CStatus();
-    }
+    (void)Sha_I2C_WriteBytes(0x00U, wakeToken, 1U);
 
+    /* 无论写入结果如何，强制恢复 I2C 总线状态 */
+    Sha_ForceRecoverI2C();
+
+    /* 等待 ATSHA204 完成唤醒（tWHI ≥ 1ms） */
     DEVICE_DELAY_US(ATSHA204_TWHI_US);
 
+    /* 读取唤醒响应 */
     if (!Sha_I2C_ReadBytes(ATSHA204_I2C_ADDR, resp, 4U))
         return false;
 
