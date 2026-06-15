@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "device.h"
+#include "driverlib.h"
 
 #include "board.h"
 

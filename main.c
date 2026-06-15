@@ -15,6 +15,8 @@
 #include "serviceport.h"
 #include "param_store.h"
 
+#include "atsha204.h"
+
 #if ECAT_ENABLE
 #include "ECAT/9252_HW.h"
 #include "ECAT/src/ecatappl.h"
@@ -45,6 +47,30 @@ glob_value_t glob_value = {
     .status = {.errors.val = 0, .state.val = 0},
 };
 
+
+void test()
+{
+    DSP_UniqueId_t dsp_uid;
+    ATSHA204_Serial_t at_uid;
+    DSP_ReadUniqueId(&dsp_uid);
+    // printf("DSP_ID: ");
+    // for (size_t i = 0; i < DSP_UNIQUE_ID_LEN; i++)
+    // {
+    //     printf("%02x",dsp_uid.id[i]);
+    // }
+    // printf("\n");
+    ATSHA204_Wake();
+    if (ATSHA204_ReadSerial(&at_uid))
+    {
+        // printf("AT_ID: ");
+        // for (size_t i = 0; i < ATSHA204_SERIAL_LEN; i++)
+        // {
+        //     printf("%02x", at_uid.sn[i]);
+        // }
+        // printf("\n");
+    }
+}
+
 void main(void)
 {
     Device_init();
@@ -62,7 +88,7 @@ void main(void)
     ERTM; // Enable Global realtime interrupt
 
     DEVICE_DELAY_US(1000);
-
+    test();
     BIT_Init();
 
     while (1)

@@ -2,6 +2,8 @@
 
 #include <math.h>
 #include <stdbool.h>
+#include "device.h"
+#include "driverlib.h"
 
 #include "board.h"
 
