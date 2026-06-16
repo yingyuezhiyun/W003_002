@@ -59,7 +59,7 @@ static void hostSendFmt(const char *fmt, ...)
 
 static void hostResetDevice(void)
 {
-	DEVICE_DELAY_US(20000U);
+	delay_ms(20);
 	SysCtl_resetDevice();
 }
 

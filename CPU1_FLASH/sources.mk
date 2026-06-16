@@ -127,7 +127,6 @@ SUBDIRS := \
 . \
 Core/src/communication \
 Core/src \
-Core/src/elmo \
 Core/src/mode_ctrl \
 ECAT \
 ECAT/src \

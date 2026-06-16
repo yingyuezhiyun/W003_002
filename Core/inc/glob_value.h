@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include "inc/hw_types.h"
 #include "mode_ctrl.h"
+#include "utility.h"
 
 typedef enum
 {

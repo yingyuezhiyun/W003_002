@@ -448,7 +448,7 @@ void BIT_Init()
 
     // Elmo 控制器初始化
     ElmoCtrl_Init();
-    DEVICE_DELAY_US(1000);
+    delay_ms(1);
     uint8_t loop = 100;
     while (loop-- > 0)
     {
@@ -464,7 +464,7 @@ void BIT_Init()
         {
             break;
         }
-        DEVICE_DELAY_US(10000); // 等待 10ms 后重试
+        delay_ms(10); // 等待 10ms 后重试
     }
     if (ElmoOps.fb.detect == 0U)
     {

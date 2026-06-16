@@ -61,7 +61,7 @@ void main(void)
     EINT; // 开启全局中断
     ERTM; // Enable Global realtime interrupt
 
-    DEVICE_DELAY_US(1000);
+    delay_ms(1);
 
     BIT_Init();
 

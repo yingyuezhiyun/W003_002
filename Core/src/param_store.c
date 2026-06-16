@@ -227,7 +227,7 @@ bool ParamStore_SelfTest(void)
         {
             return false;
         }
-        DEVICE_DELAY_US(AT24C512_WRITE_CYCLE_US);
+        delay_us(AT24C512_WRITE_CYCLE_US);
 
         if (ParamStore_LoadData(PARAM_STORE_SELFTEST_ADDR, rx, PARAM_STORE_SELFTEST_MAX_LEN) == false)
         {
@@ -250,7 +250,7 @@ bool ParamStore_SelfTest(void)
     {
         return false;
     }
-    DEVICE_DELAY_US(AT24C512_WRITE_CYCLE_US);
+    delay_us(AT24C512_WRITE_CYCLE_US);
 
     if (ParamStore_LoadWordImage((uint16_t)(PARAM_STORE_SELFTEST_ADDR + 0x0100U),
                                  wordPatternRx,

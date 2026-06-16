@@ -8,9 +8,6 @@
 "./Core/src/func_Handle.obj"
 "./Core/src/func_Poll.obj"
 "./Core/src/param_store.obj"
-"./Core/src/elmo/elmo_can.obj"
-"./Core/src/elmo/elmo_ctrl.obj"
-"./Core/src/elmo/elmo_rs232.obj"
 "./Core/src/mode_ctrl/mode_calib.obj"
 "./Core/src/mode_ctrl/mode_ctrl.obj"
 "./Core/src/mode_ctrl/mode_position.obj"
@@ -67,3 +64,5 @@
 -llibc.a
 -lLibPress.lib
 -leeprom.lib
+-lelmoCtrl.lib
+-lutility.lib

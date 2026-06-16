@@ -29,7 +29,7 @@ static MODE_EXEC_t Mode_Press_Enter(Mode_Ctx_t *ctx)
     if (ElmoOps.fb.en == 0)
     {
         ElmoOps.setEnable(1);
-        // DEVICE_DELAY_US(5000);
+        // delay_ms(5);
     }
     lastPressLoopTick = glob_value.tick0p1ms;
     return MODE_EXEC_DONE;

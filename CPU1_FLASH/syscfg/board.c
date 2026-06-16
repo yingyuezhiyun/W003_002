@@ -146,6 +146,17 @@ void PinMux_init()
 	GPIO_setQualificationMode(e2_i2c_I2CSCL_GPIO, GPIO_QUAL_ASYNC);
 
 	//
+	// I2CB -> a2_i2c Pinmux
+	//
+	GPIO_setPinConfig(a2_i2c_I2CSDA_PIN_CONFIG);
+	GPIO_setPadConfig(a2_i2c_I2CSDA_GPIO, GPIO_PIN_TYPE_STD | GPIO_PIN_TYPE_PULLUP);
+	GPIO_setQualificationMode(a2_i2c_I2CSDA_GPIO, GPIO_QUAL_ASYNC);
+
+	GPIO_setPinConfig(a2_i2c_I2CSCL_PIN_CONFIG);
+	GPIO_setPadConfig(a2_i2c_I2CSCL_GPIO, GPIO_PIN_TYPE_STD | GPIO_PIN_TYPE_PULLUP);
+	GPIO_setQualificationMode(a2_i2c_I2CSCL_GPIO, GPIO_QUAL_ASYNC);
+
+	//
 	// SCIB -> RS232_SCI Pinmux
 	//
 	GPIO_setPinConfig(RS232_SCI_SCIRX_PIN_CONFIG);
@@ -754,6 +765,7 @@ void POS_CLOSE_TTL_IN_init(){
 //*****************************************************************************
 void I2C_init(){
 	e2_i2c_init();
+	a2_i2c_init();
 }
 
 void e2_i2c_init(){
@@ -769,6 +781,20 @@ void e2_i2c_init(){
 	I2C_enableFIFO(e2_i2c_BASE);
 	I2C_setEmulationMode(e2_i2c_BASE, I2C_EMULATION_STOP_SCL_LOW);
 	I2C_enableModule(e2_i2c_BASE);
+}
+void a2_i2c_init(){
+	I2C_disableModule(a2_i2c_BASE);
+	I2C_initController(a2_i2c_BASE, DEVICE_SYSCLK_FREQ, a2_i2c_BITRATE, I2C_DUTYCYCLE_33);
+	I2C_setConfig(a2_i2c_BASE, I2C_CONTROLLER_SEND_MODE);
+	I2C_disableLoopback(a2_i2c_BASE);
+	I2C_setOwnAddress(a2_i2c_BASE, a2_i2c_OWN_ADDRESS);
+	I2C_setTargetAddress(a2_i2c_BASE, a2_i2c_TARGET_ADDRESS);
+	I2C_setBitCount(a2_i2c_BASE, I2C_BITCOUNT_8);
+	I2C_setDataCount(a2_i2c_BASE, 1);
+	I2C_setAddressMode(a2_i2c_BASE, I2C_ADDR_MODE_7BITS);
+	I2C_enableFIFO(a2_i2c_BASE);
+	I2C_setEmulationMode(a2_i2c_BASE, I2C_EMULATION_STOP_SCL_LOW);
+	I2C_enableModule(a2_i2c_BASE);
 }
 
 //*****************************************************************************
