@@ -139,6 +139,14 @@ static void Sha_ForceRecoverI2C(void)
     Sha_WaitBusIdle(ATSHA204_I2C_TIMEOUT);
 }
 
+/// @brief 主动结束一次 I2C 传输并尽量释放控制器状态。
+static void Sha_TerminateI2CTransaction(void)
+{
+    I2C_sendStopCondition(ATSHA204_I2C_BASE);
+    (void)Sha_WaitStopDone(ATSHA204_I2C_TIMEOUT);
+    Sha_ClearI2CStatus();
+}
+
 /// @brief I2CB 写 n 字节（纯数据，不带地址阶段）。
 static bool Sha_I2C_WriteBytes(uint16_t devAddr, const uint8_t *data, uint16_t len)
 {
@@ -180,14 +188,19 @@ static bool Sha_I2C_ReadBytes(uint16_t devAddr, uint8_t *buf, uint16_t len)
     I2C_setConfig(ATSHA204_I2C_BASE, I2C_CONTROLLER_RECEIVE_MODE);
     I2C_setDataCount(ATSHA204_I2C_BASE, len);
     I2C_sendStartCondition(ATSHA204_I2C_BASE);
-    I2C_sendStopCondition(ATSHA204_I2C_BASE);
 
     for (i = 0U; i < len; ++i)
     {
+        if (i == (uint16_t)(len - 1U))
+        {
+            /* 最后 1 字节前显式 NACK，避免提前挂 STOP 触发异常状态。 */
+            I2C_sendNACK(ATSHA204_I2C_BASE);
+            I2C_sendStopCondition(ATSHA204_I2C_BASE);
+        }
+
         if (!Sha_WaitRxReady(ATSHA204_I2C_TIMEOUT))
         {
-            I2C_sendStopCondition(ATSHA204_I2C_BASE);
-            (void)Sha_WaitStopDone(ATSHA204_I2C_TIMEOUT);
+            Sha_TerminateI2CTransaction();
             return false;
         }
         buf[i] = (uint8_t)I2C_getData(ATSHA204_I2C_BASE);
@@ -368,7 +381,10 @@ bool ATSHA204_Wake(void)
 
     /* 读取唤醒响应 */
     if (!Sha_I2C_ReadBytes(ATSHA204_I2C_ADDR, resp, 4U))
+    {
+        Sha_ForceRecoverI2C();
         return false;
+    }
 
     return (memcmp(resp, ATSHA204_WAKE_RESP, 4U) == 0);
 }

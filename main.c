@@ -69,7 +69,7 @@ void test()
         // }
         // printf("\n");
     }
-    Interrupt_illegalOperationHandler();
+    // Interrupt_illegalOperationHandler();
 }
 
 void main(void)
