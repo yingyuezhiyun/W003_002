@@ -51,15 +51,16 @@ typedef struct
 /// @brief 硬件绑定校验结果
 typedef enum
 {
-    HW_BIND_OK              = 0,   ///< 校验通过
-    HW_BIND_ERR_I2C         = 1,   ///< I2C 通信失败
-    HW_BIND_ERR_WAKE        = 2,   ///< ATSHA204 唤醒失败
-    HW_BIND_ERR_SERIAL      = 3,   ///< 读取 ATSHA204 序列号失败
-    HW_BIND_ERR_DSP_UID     = 4,   ///< 读取 DSP 唯一 ID 失败
-    HW_BIND_ERR_MAC         = 5,   ///< MAC 计算失败
-    HW_BIND_ERR_MISMATCH    = 6,   ///< 指纹/校验值不匹配
-    HW_BIND_ERR_WRITE       = 7,   ///< ATSHA204 写入失败
-    HW_BIND_ERR_LOCKED      = 8,   ///< Slot 0 已锁定，无法写入密钥
+    HW_BIND_NONE,         ///< 未执行校验
+    HW_BIND_OK,           ///< 校验通过
+    HW_BIND_ERR_I2C,      ///< I2C 通信失败
+    HW_BIND_ERR_WAKE,     ///< ATSHA204 唤醒失败
+    HW_BIND_ERR_SERIAL,   ///< 读取 ATSHA204 序列号失败
+    HW_BIND_ERR_DSP_UID,  ///< 读取 DSP 唯一 ID 失败
+    HW_BIND_ERR_MAC,      ///< MAC 计算失败
+    HW_BIND_ERR_MISMATCH, ///< 指纹/校验值不匹配
+    HW_BIND_ERR_WRITE,    ///< ATSHA204 写入失败
+    HW_BIND_ERR_LOCKED,   ///< Slot 0 已锁定，无法写入密钥
 } HW_BindResult_t;
 
 /* ========================= 接口函数 ========================= */

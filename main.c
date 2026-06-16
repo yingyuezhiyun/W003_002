@@ -69,6 +69,7 @@ void test()
         // }
         // printf("\n");
     }
+    Interrupt_illegalOperationHandler();
 }
 
 void main(void)
