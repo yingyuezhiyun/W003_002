@@ -349,7 +349,7 @@ void Status_handle()
 void BIT_handle()
 {
     static uint32_t lastUpdateTick = 0U;
-    static uint8_t motor_stall_count = 0, batt_low_count = 0;
+    static uint16_t motor_stall_count = 0, batt_low_count = 0;
     static uint16_t temp_err_count = 0;
     Status_t *status = &glob_value.status;
     measure_t *measure = &glob_value.measure;
@@ -418,7 +418,7 @@ void BIT_handle()
     if (locks->content.calib == 0 && fabsf(ElmoOps.fb.iq_fed) > 8.0f) // todo 电路阈值
     {
         motor_stall_count++;
-        if (motor_stall_count > 10) // 连续超过10次（100ms）认为是电机堵转
+        if (motor_stall_count > 100) // 连续超过100次（1000ms）认为是电机堵转
         {
             status->errors.content.motor_stall = 1; // 电机堵转错误
         }
