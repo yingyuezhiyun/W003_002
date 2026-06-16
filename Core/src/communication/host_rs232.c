@@ -149,18 +149,21 @@ static uint8_t set_pressure_param(const char *arg, printf_t pprintf)
 static uint8_t gauge_auto_func(const char *arg, printf_t pprintf)
 {
 	glob_value.paramCfg.CDG_cfg.CDG_Mode = GAUGE_AUTO;
+	ParamStore_SaveConfig(&glob_value.paramCfg);
 	return RC_SUCCESS;
 }
 
 static uint8_t gauge_cdg1_func(const char *arg, printf_t pprintf)
 {
 	glob_value.paramCfg.CDG_cfg.CDG_Mode = GAUGE_CDG1;
+	ParamStore_SaveConfig(&glob_value.paramCfg);
 	return RC_SUCCESS;
 }
 
 static uint8_t gauge_cdg2_func(const char *arg, printf_t pprintf)
 {
 	glob_value.paramCfg.CDG_cfg.CDG_Mode = GAUGE_CDG2;
+	ParamStore_SaveConfig(&glob_value.paramCfg);
 	return RC_SUCCESS;
 }
 
@@ -186,6 +189,7 @@ static uint8_t set_scale1_param(const char *arg, printf_t pprintf)
 	if (ParseFloatValue(arg, &value) && (value > 0.0f))
 	{
 		glob_value.paramCfg.CDG_cfg.CDG1_Range = value;
+		ParamStore_SaveConfig(&glob_value.paramCfg);
 		return RC_SUCCESS;
 	}
 	return RC_PARAM_ERROR;
@@ -197,6 +201,7 @@ static uint8_t set_scale2_param(const char *arg, printf_t pprintf)
 	if (ParseFloatValue(arg, &value) && (value > 0.0f))
 	{
 		glob_value.paramCfg.CDG_cfg.CDG2_Range = value;
+		ParamStore_SaveConfig(&glob_value.paramCfg);
 		return RC_SUCCESS;
 	}
 	return RC_PARAM_ERROR;

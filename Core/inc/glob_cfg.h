@@ -10,7 +10,7 @@
 #define ECAT_ENABLE (0)
 
 ///Enable/disable CDG ADC calibration
-#define CDG_ADC_CALIB_EN (0U)
+#define CDG_ADC_CALIB_EN (1U)
 
 #define ELMO_IF_CAN (1)
 #define ELMO_IF_RS232 (2)

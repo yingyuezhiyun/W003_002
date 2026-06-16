@@ -80,6 +80,10 @@ SET_OBJECT_PARAMS(set_Pos_limit_Open_Backoff_param, glob_value.paramCfg.Pos_limi
 SET_OBJECT_PARAMS(set_pressctrl_period_param, glob_value.paramCfg.Press_Ctrl.period)
 SET_OBJECT_PARAMS(set_temp_high_thr_param, glob_value.paramCfg.temp.high_threshold)
 SET_OBJECT_PARAMS(set_temp_low_thr_param, glob_value.paramCfg.temp.low_threshold)
+SET_OBJECT_PARAMS(set_cdg1_k_param, glob_value.paramCfg.CDG_cfg.CDG1_adc_k)
+SET_OBJECT_PARAMS(set_cdg1_b_param, glob_value.paramCfg.CDG_cfg.CDG1_adc_b)
+SET_OBJECT_PARAMS(set_cdg2_k_param, glob_value.paramCfg.CDG_cfg.CDG2_adc_k)
+SET_OBJECT_PARAMS(set_cdg2_b_param, glob_value.paramCfg.CDG_cfg.CDG2_adc_b)
 
 SET_PRESSCTRL_PARAMS(set_pressctrl_MidSpeed_param, g_lMidSpeed)
 SET_PRESSCTRL_PARAMS(set_pressctrl_MaxSpeed_param, g_lMaxSpeed)
@@ -110,8 +114,8 @@ static Command_t commands[] = {
     CMD_READ_FLOAT("RA", "N1+%.4f", glob_value.paramCfg.CDG_cfg.CDG1_Range),                 // 读取真空规1量程
     CMD_READ_FLOAT("RB", "N2+%.4f", glob_value.paramCfg.CDG_cfg.CDG2_Range),                 // 读取真空规2量程
     CMD_READ_INT32("RC", "K+%ld", g_lPeriod),                                                // 读取压力控制周期K值
-    CMD_READ_FLOAT("RD", "CDG1V+%.5f", glob_value.measure.cdg1_volt),                        // 读取真空规1电压
-    CMD_READ_FLOAT("RE", "CDG2V+%.5f", glob_value.measure.cdg2_volt),                        // 读取真空规2电压
+    CMD_READ_FLOAT("RD", "CDGIV+%.5f", glob_value.measure.cdg1_volt),                        // 读取真空规1电压
+    CMD_READ_FLOAT("RE", "CDGIIV+%.5f", glob_value.measure.cdg2_volt),                       // 读取真空规2电压
     CMD_READ_INT32("RF", "Cnt+%ld", g_lCnt),                                                 // 读取压力控制计数值
     CMD_READ_FLOAT("RG", "BattV+%.3f", glob_value.measure.batt_voltage),                     // 读取电池电压
     CMD_READ_FLOAT("RH", "MotorTemp+%.3f", glob_value.measure.temperature),                  // 读取电机温度
@@ -133,6 +137,10 @@ static Command_t commands[] = {
     CMD_PARAM_ENTRY("PSG", set_pressctrl_period_param),                                      // 设置压力控制 算法调用周期 ms
     CMD_PARAM_ENTRY("PSH", set_temp_high_thr_param),                                         // 设置电机温度阈值 高温
     CMD_PARAM_ENTRY("PSI", set_temp_low_thr_param),                                          // 设置电机温度阈值 低温
+    CMD_PARAM_ENTRY("PSJ", set_cdg1_k_param),                                                // 设置 CDG1 ADC 转换系数 k
+    CMD_PARAM_ENTRY("PSK", set_cdg1_b_param),                                                // 设置 CDG1 ADC 转换系数 b
+    CMD_PARAM_ENTRY("PSL", set_cdg2_k_param),                                                // 设置 CDG2 ADC 转换系数 k
+    CMD_PARAM_ENTRY("PSM", set_cdg2_b_param),                                                // 设置 CDG2 ADC 转换系数 b
     CMD_READ_INT32("PR1", "Kp+%ld", g_lKp),                                                  // 读取压力控制 KP 参数
     CMD_READ_INT32("PR2", "Ki+%ld", g_lKi),                                                  // 读取压力控制 KI 参数
     CMD_READ_INT32("PR4", "UpBaseStep+%ld", g_lUpBaseStep),                                  // 读取压力控制 设置上升稳定K值
@@ -150,6 +158,10 @@ static Command_t commands[] = {
     CMD_READ_FLOAT("PRG", "Period+%.1f", glob_value.paramCfg.Press_Ctrl.period),             // 读取压力控制 算法调用周期 ms
     CMD_READ_FLOAT("PRH", "MotorTempHighThr+%.1f", glob_value.paramCfg.temp.high_threshold), // 读取电机保护温度阈值 高温
     CMD_READ_FLOAT("PRI", "MotorTempLowThr+%.1f", glob_value.paramCfg.temp.low_threshold),   // 读取电机保护温度阈值 低温
+    CMD_READ_FLOAT("PRJ", "CDG1_K+%.2f", glob_value.paramCfg.CDG_cfg.CDG1_adc_k),            // 读取 CDG1 ADC 转换系数 k
+    CMD_READ_FLOAT("PRK", "CDG1_B+%.2f", glob_value.paramCfg.CDG_cfg.CDG1_adc_b),            // 读取 CDG1 ADC 转换系数 b
+    CMD_READ_FLOAT("PRL", "CDG2_K+%.2f", glob_value.paramCfg.CDG_cfg.CDG2_adc_k),            // 读取 CDG2 ADC 转换系数 k
+    CMD_READ_FLOAT("PRM", "CDG2_B+%.2f", glob_value.paramCfg.CDG_cfg.CDG2_adc_b),            // 读取 CDG2 ADC 转换系数 b
     CMD_FUNC_ENTRY("J4", calib_func),                                                        // 校准标定
     {NULL, CMD_NONE, NULL, NULL, DT_NONE, 0},
 };
