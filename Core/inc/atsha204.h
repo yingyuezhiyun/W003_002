@@ -113,6 +113,16 @@ bool HWBind_LockKeySlot(void);
 /// @note 此函数供烧写程序调用，用于生成针对特定 DSP 的 MAC。
 bool HWBind_ComputeMAC(const DSP_UniqueId_t *dspUID, uint8_t macOut[ATSHA204_MAC_LEN]);
 
+/// @brief HWBind_ComputeMAC 的纯软件版本（HMAC-SHA256），不依赖 ATSHA204 硬件。
+/// @param dspUID DSP 唯一 ID 指针。
+/// @param key    32 字节密钥（与 ATSHA204 Slot 0 中存储的密钥相同）。
+/// @param macOut 输出 32 字节 MAC 值。
+/// @return true 成功。
+/// @note 用于对比测试，验证软件计算结果与硬件计算结果是否一致。
+bool HWBind_ComputeMAC_SW(const DSP_UniqueId_t *dspUID,
+                          const uint8_t key[ATSHA204_SLOT_SIZE],
+                          uint8_t macOut[ATSHA204_MAC_LEN]);
+
 /* -------------------- 绑定校验 -------------------- */
 
 /// @brief 执行硬件绑定校验（每次上电调用）。
