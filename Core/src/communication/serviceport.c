@@ -158,10 +158,10 @@ static Command_t commands[] = {
     CMD_READ_FLOAT("PRG", "Period+%.1f", glob_value.paramCfg.Press_Ctrl.period),             // 读取压力控制 算法调用周期 ms
     CMD_READ_FLOAT("PRH", "MotorTempHighThr+%.1f", glob_value.paramCfg.temp.high_threshold), // 读取电机保护温度阈值 高温
     CMD_READ_FLOAT("PRI", "MotorTempLowThr+%.1f", glob_value.paramCfg.temp.low_threshold),   // 读取电机保护温度阈值 低温
-    CMD_READ_FLOAT("PRJ", "CDG1_K+%.2f", glob_value.paramCfg.CDG_cfg.CDG1_adc_k),            // 读取 CDG1 ADC 转换系数 k
-    CMD_READ_FLOAT("PRK", "CDG1_B+%.2f", glob_value.paramCfg.CDG_cfg.CDG1_adc_b),            // 读取 CDG1 ADC 转换系数 b
-    CMD_READ_FLOAT("PRL", "CDG2_K+%.2f", glob_value.paramCfg.CDG_cfg.CDG2_adc_k),            // 读取 CDG2 ADC 转换系数 k
-    CMD_READ_FLOAT("PRM", "CDG2_B+%.2f", glob_value.paramCfg.CDG_cfg.CDG2_adc_b),            // 读取 CDG2 ADC 转换系数 b
+    CMD_READ_FLOAT("PRJ", "CDG1_K+%E", glob_value.paramCfg.CDG_cfg.CDG1_adc_k),              // 读取 CDG1 ADC 转换系数 k
+    CMD_READ_FLOAT("PRK", "CDG1_B+%E", glob_value.paramCfg.CDG_cfg.CDG1_adc_b),              // 读取 CDG1 ADC 转换系数 b
+    CMD_READ_FLOAT("PRL", "CDG2_K+%E", glob_value.paramCfg.CDG_cfg.CDG2_adc_k),              // 读取 CDG2 ADC 转换系数 k
+    CMD_READ_FLOAT("PRM", "CDG2_B+%E", glob_value.paramCfg.CDG_cfg.CDG2_adc_b),              // 读取 CDG2 ADC 转换系数 b
     CMD_FUNC_ENTRY("J4", calib_func),                                                        // 校准标定
     {NULL, CMD_NONE, NULL, NULL, DT_NONE, 0},
 };

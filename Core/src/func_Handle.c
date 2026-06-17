@@ -99,14 +99,14 @@ void CDG_Volt_Update()
 #if (CDG_ADC_CALIB_EN)
     float vadc1 = (float)measure->adc_cdg1 * paramCfg->CDG_cfg.CDG1_adc_k + paramCfg->CDG_cfg.CDG1_adc_b;
 #else
-    float vadc1 = (float)(measure->adc_cdg1 - ADC_OFFSET) / ADC_SCALE * 15.0f;
+    float vadc1 = (float)(measure->adc_cdg1 - ADC_OFFSET) / ADC_SCALE * 10.2f;
 #endif
     measure->cdg1_volt = vadc1 * 0.0309275743F + measure->cdg1_volt * 0.9690724257F;
 
 #if (CDG_ADC_CALIB_EN)
     float vadc2 = (float)measure->adc_cdg2 * paramCfg->CDG_cfg.CDG2_adc_k + paramCfg->CDG_cfg.CDG2_adc_b;
 #else
-    float vadc2 = (float)(measure->adc_cdg2 - ADC_OFFSET) / ADC_SCALE * 15.0f;
+    float vadc2 = (float)(measure->adc_cdg2 - ADC_OFFSET) / ADC_SCALE * 10.2f;
 #endif
     measure->cdg2_volt = vadc2 * 0.0309275743F + measure->cdg2_volt * 0.9690724257F;
 
