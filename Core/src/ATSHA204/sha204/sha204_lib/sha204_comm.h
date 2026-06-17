@@ -44,7 +44,7 @@
 #include <stddef.h>                  // data type definitions
 
 #include "sha204_physical.h"         // declarations that are common to all interface implementations
-
+#include "inc/hw_types.h"
 /** \defgroup atsha204_communication Module 02: Communication
  *
  * This module implements communication with the device. It does not depend on the interface

@@ -40,7 +40,7 @@
 #   define SHA204_PHYSICAL_H
 
 #include <stdint.h>                                  // data type definitions
-
+#include "inc/hw_types.h"
 #include "sha204_config.h"                           // configuration values
 
 

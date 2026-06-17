@@ -39,9 +39,9 @@
  */
 
 #include "sha204_comm.h"                // definitions and declarations for the Communication module
-#include "usart1.h"
+//#include "usart1.h"
 //#include "timer_utilities.h"            // definitions for delay functions //2015-1-16 tony comment
-#include "software_timer_utilities.h"     //2015-1-16 tony comment
+#include "../STM32/software_timer_utilities.h"     //2015-1-16 tony comment
 
 #include "sha204_lib_return_codes.h"    // declarations of function return codes
 

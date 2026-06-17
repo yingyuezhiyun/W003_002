@@ -16,12 +16,12 @@
 
 #include "atsha204_mac.h"
 #include <string.h>
-#include "sha204_lib_return_codes.h"
-#include "sha204_comm_marshaling.h"
-#include "atsha204_defines.h"
+#include "../sha204/sha204_lib/sha204_lib_return_codes.h"
+#include "../sha204/sha204_lib/sha204_comm_marshaling.h"
+#include "../mcu_oper/atsha204_defines.h"
 
 // #include "sha204_timer.h"
-#include "sha204_helper.h"
+#include "../mcu_oper/sha204_helper.h"
 
 //************************************
 // Method:    atsha204_mac

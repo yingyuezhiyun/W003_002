@@ -1,9 +1,7 @@
 /** \file
- *  \brief Functions of Hardware Dependent Part of ATSHA204 Physical Layer
- *         Using I<SUP>2</SUP>C For Communication
- *  \author Atmel Crypto Products
- *  \date  January 11, 2013
- * \copyright Copyright (c) 2013 Atmel Corporation. All rights reserved.
+ *  \brief  I2C Physical Hardware Interface for F28377D (I2CB)
+ *  \author Adapted from Atmel STM32 version for F28377D
+ *  \date   2024
  *
  * \atsha204_library_license_start
  *
@@ -28,8 +26,8 @@
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
  * EXPRESSLY AND SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR
  * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
@@ -38,455 +36,351 @@
  * \atsha204_library_license_stop
  */
 
+#include <stdint.h>
+#include <stdbool.h>
+#include "driverlib.h"
+#include "device.h"
+#include "i2c_phys.h"
 
-//#include <avr\io.h>       // GPIO definitions //2014-11-16 tony comment
-//#include <util\twi.h>     // I2C definitions //2014-11-16 tony comment
-//#include <avr\power.h>    // definitions for power saving register //2014-11-16 tony comment
+// =========================================================================
+// 配置参数
+// =========================================================================
+#define I2C_BASE_ADDR       I2CB_BASE               //!< 使用I2CB模块
+#define I2C_SYSCLK_HZ       DEVICE_SYSCLK_FREQ      //!< 系统时钟频率
+#define I2C_BITRATE_HZ      100000U                 //!< I2C时钟频率 100kHz
 
-#include "i2c_phys.h"     // definitions and declarations for the hardware dependent I2C module
-//#include "common.h"
-#include "software_timer_utilities.h"     //2015-1-16 tony comment
+// I2CB引脚定义 (根据实际硬件修改)
+#define I2C_SDA_PIN         40U                     //!< GPIO40 - SDAB
+#define I2C_SCL_PIN         41U                     //!< GPIO41 - SCLB
+#define I2C_SDA_PIN_CFG     GPIO_40_SDAB            //!< SDAB引脚配置
+#define I2C_SCL_PIN_CFG     GPIO_41_SCLB            //!< SCLB引脚配置
 
-#define NACK   TRUE
-#define ACK    FALSE
+// GPIO40在GPB寄存器中的位偏移 (GPIO40 - GPIO32 = 8)
+#define GPIO40_BIT          (1U << (I2C_SDA_PIN - 32U))
 
-#define SDA_GPIO_OUT_LOW() GPIO_ResetBits(GPIOB, GPIO_Pin_11)  //PB11 output low		
-#define SDA_GPIO_OUT_HIGH() GPIO_SetBits(GPIOB, GPIO_Pin_11)  //PB11 output high
+// 超时计数
+#define I2C_TIMEOUT_COUNT   10000U
 
-#define SCL_GPIO_OUT_LOW() GPIO_ResetBits(GPIOB, GPIO_Pin_10)  //PB10 output low
-#define SCL_GPIO_OUT_HIGH() GPIO_SetBits(GPIOB, GPIO_Pin_10)  //PB10 output high
+// =========================================================================
+// 内部函数声明
+// =========================================================================
+static void i2c_hw_init(void);
+static void i2c_gpio_set_output(void);
+static void i2c_gpio_restore(void);
 
+// 模块初始化标志
+static bool i2c_initialized = false;
 
-void set_sda_pin_output(void);
-void set_sda_pin_input(void);
-bool read_sda_pin_level(void);
-void software_i2c_quarter_period(void);
-void scl_out_low(void);
-void scl_out_high(void);
-void software_i2c_init(void);
-bool software_i2c_read_ack(void);
-void software_i2c_send_ack_nack(bool ack_nack);
-void software_i2c_send_byte(uint8_t data);
-uint8_t software_i2c_read_byte(void);
+// =========================================================================
+// 内部函数实现
+// =========================================================================
 
-
-void set_sda_pin_output(void)
+/**
+ * \brief 初始化F28377D I2CB硬件模块
+ */
+static void i2c_hw_init(void)
 {
-	GPIO_InitTypeDef GPIO_InitStructure;
-	   
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP ; //�������
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	
-	GPIO_Init(GPIOB, &GPIO_InitStructure);
+    if (i2c_initialized)
+        return;
+
+    // 配置I2CB GPIO引脚
+    GPIO_setPinConfig(I2C_SDA_PIN_CFG);
+    GPIO_setPinConfig(I2C_SCL_PIN_CFG);
+    GPIO_setPadConfig(I2C_SDA_PIN, GPIO_PIN_TYPE_PULLUP);
+    GPIO_setPadConfig(I2C_SCL_PIN, GPIO_PIN_TYPE_PULLUP);
+    GPIO_setQualificationMode(I2C_SDA_PIN, GPIO_QUAL_ASYNC);
+    GPIO_setQualificationMode(I2C_SCL_PIN, GPIO_QUAL_ASYNC);
+
+    // 复位并配置I2C模块
+    I2C_disableModule(I2C_BASE_ADDR);
+
+    I2C_initController(I2C_BASE_ADDR, I2C_SYSCLK_HZ, I2C_BITRATE_HZ,
+                       I2C_DUTYCYCLE_50);
+
+    I2C_setBitCount(I2C_BASE_ADDR, I2C_BITCOUNT_8);
+    I2C_setAddressMode(I2C_BASE_ADDR, I2C_ADDR_MODE_7BITS);
+
+    // 启用FIFO
+    I2C_enableFIFO(I2C_BASE_ADDR);
+
+    // 清除所有状态标志
+    I2C_clearStatus(I2C_BASE_ADDR, 0xFFFFU);
+
+    // 使能I2C模块
+    I2C_enableModule(I2C_BASE_ADDR);
+
+    i2c_initialized = true;
 }
-void set_sda_pin_input(void)
+
+/**
+ * \brief 将I2C引脚临时配置为GPIO输出模式（用于Wakeup脉冲）
+ */
+static void i2c_gpio_set_output(void)
 {
-	GPIO_InitTypeDef GPIO_InitStructure;
-	   
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING ; //�������
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	
-	GPIO_Init(GPIOB, &GPIO_InitStructure);
+    EALLOW;
+    // GPIO40: 清除GPBMUX1对应位，切换到GPIO模式
+    HWREG(GPIOCTRL_BASE + GPIO_O_GPBMUX1) &= ~(0x3U << ((I2C_SDA_PIN - 32U) * 2U));
+    HWREG(GPIOCTRL_BASE + GPIO_O_GPBGMUX1) &= ~(0x3U << ((I2C_SDA_PIN - 32U) * 2U));
+    // 设置为输出
+    HWREG(GPIOCTRL_BASE + GPIO_O_GPBDIR) |= GPIO40_BIT;
+    EDIS;
 }
 
-bool read_sda_pin_level(void)
+/**
+ * \brief 恢复I2C引脚为I2C外设功能
+ */
+static void i2c_gpio_restore(void)
 {
-	return (bool)GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_11);
+    GPIO_setPinConfig(I2C_SDA_PIN_CFG);
+    GPIO_setPinConfig(I2C_SCL_PIN_CFG);
 }
 
-void software_i2c_quarter_period(void)
-{//����I2C period = 4us(250KHz),ʵ��7.5us��133KHz��
-	software_delay_us(1);
-}
+// =========================================================================
+// I2C物理层接口实现
+// =========================================================================
 
-void scl_out_low(void)
-{
-	software_i2c_quarter_period();
-	SCL_GPIO_OUT_LOW();
-	software_i2c_quarter_period();	
-}
-
-void scl_out_high(void)
-{
-	software_i2c_quarter_period();
-	SCL_GPIO_OUT_HIGH();
-	software_i2c_quarter_period();	
-}
-
-
-
-void software_i2c_init(void)
-{
-	GPIO_InitTypeDef GPIO_InitStructure;
-	RCC_APB2PeriphClockCmd(	RCC_APB2Periph_GPIOB, ENABLE );	
-	   
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10|GPIO_Pin_11;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP ; //�������
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	
-	GPIO_SetBits(GPIOB,GPIO_Pin_10|GPIO_Pin_11); //PB6,PB7 �����		
-	GPIO_Init(GPIOB, &GPIO_InitStructure);
-}
-
-bool software_i2c_read_ack(void)
-{
-	uint8_t error_times = 0;
-	
-	scl_out_low();
-
-	set_sda_pin_input();
-
-	scl_out_high();
-
-	while(read_sda_pin_level()==NACK)
-	{
-		if(error_times >= 4)
-		{//max wait time = 4*period/2
-			scl_out_low();
-
-			return (bool)NACK;
-		}
-		error_times++;
-		software_i2c_quarter_period();
-	}
-	scl_out_low();
-	
-	return (bool)ACK;	
-}
-
-void software_i2c_send_ack_nack(bool ack_nack)
-{
-	scl_out_low();
-
-	set_sda_pin_output();
-	
-	if(NACK==ack_nack)
-	{
-		SDA_GPIO_OUT_HIGH();//SDA out high
-	}
-	else
-	{
-		SDA_GPIO_OUT_LOW();//SDA out low
-	}
-	
-	scl_out_high();
-	scl_out_low();
-}
-
-void software_i2c_send_byte(uint8_t data)
-{
-	uint8_t byte_bit_count = 0;
-	set_sda_pin_output();
-	
-	for(byte_bit_count = 8; byte_bit_count > 0; byte_bit_count--)
-	{
-		scl_out_low();
-		
-		if((data >> (byte_bit_count - 1)) & 0x01)
-		{
-			SDA_GPIO_OUT_HIGH();//SDA����ߵ�ƽ/	
-		}
-		else
-		{
-			SDA_GPIO_OUT_LOW();//SDA����͵�ƽ
-		}
-		
-		scl_out_high();
-	}	
-}
-
-uint8_t software_i2c_read_byte(void)
-{
-	uint8_t byte_bit_count = 0;
-	uint8_t data = 0;
-
-	set_sda_pin_input();
-	
-	for(byte_bit_count = 0;byte_bit_count < 8;byte_bit_count++)
-	{
-		scl_out_low();
-		scl_out_high();
-			
-		data = data << 1;
-		
-		if(read_sda_pin_level())
-		{
-			data |= 0x01;
-		}
-	}
-	
-	scl_out_low();	
-	
-	return data;
-
-}
-
+/**
+ * \brief 初始化I2C物理接口
+ */
 void i2c_enable(void)
 {
-	software_i2c_init();
+    i2c_hw_init();
 }
 
-
-void i2c_disable(void)
+/**
+ * \brief 产生I2C Wakeup脉冲
+ *
+ * 通过临时切换I2C引脚为GPIO模式，产生满足ATSHA204要求的Wakeup脉冲：
+ * 1. SDA拉低至少60us（SCL由I2C外设保持低电平）
+ * 2. SDA释放（拉高），SCL仍保持低
+ * 3. 恢复I2C外设功能
+ *
+ * \return 操作状态
+ */
+uint8_t i2c_send_wakeup(void)
 {
-	software_i2c_init();
+    // 禁用I2C模块（SCL将被拉低）
+    I2C_disableModule(I2C_BASE_ADDR);
+
+    // 将SDA引脚配置为GPIO输出
+    i2c_gpio_set_output();
+
+    // SDA拉低 - 产生Wakeup脉冲的低电平部分
+    HWREG(GPIOCTRL_BASE + GPIO_O_GPBCLEAR) = GPIO40_BIT;
+
+    // 保持SDA低电平 >= 60us (ATSHA204 Wakeup脉冲宽度要求)
+    DEVICE_DELAY_US(60);
+
+    // SDA释放（拉高）
+    HWREG(GPIOCTRL_BASE + GPIO_O_GPBSET) = GPIO40_BIT;
+
+    // 等待T_WHI >= 60us (Wakeup脉冲后到通信开始前的延迟)
+    DEVICE_DELAY_US(60);
+
+    // 恢复I2C引脚功能
+    i2c_gpio_restore();
+
+    // 重新使能I2C模块
+    I2C_enableModule(I2C_BASE_ADDR);
+
+    // 重新使能FIFO
+    I2C_enableFIFO(I2C_BASE_ADDR);
+
+    // 等待I2C模块稳定
+    DEVICE_DELAY_US(10);
+
+    return I2C_FUNCTION_RETCODE_SUCCESS;
 }
 
-//SDA  --------_______
-//SCL  ---__------_____
+/**
+ * \brief 发送I2C START条件
+ *
+ * 等待总线空闲后，清除NACK标志，发送START条件
+ *
+ * \return 操作状态
+ */
 uint8_t i2c_send_start(void)
 {
-	scl_out_low();//SCL out low
+    uint32_t timeout = I2C_TIMEOUT_COUNT;
 
-	set_sda_pin_output();
-	SDA_GPIO_OUT_HIGH();//SDA out high
+    // 等待总线空闲
+    while (I2C_isBusBusy(I2C_BASE_ADDR)) {
+        if (--timeout == 0)
+            return I2C_FUNCTION_RETCODE_TIMEOUT;
+    }
 
-	scl_out_high();	//SCL out high
-	
-	SDA_GPIO_OUT_LOW();	//SDA out low
+    // 清除NACK状态标志
+    I2C_clearStatus(I2C_BASE_ADDR, I2C_STS_NO_ACK);
 
-	scl_out_low();//SCL out low
-	
-	return I2C_FUNCTION_RETCODE_SUCCESS;
+    // 发送START条件
+    I2C_sendStartCondition(I2C_BASE_ADDR);
+
+    return I2C_FUNCTION_RETCODE_SUCCESS;
 }
 
-//SDA_____------
-//SCL___--------
+/**
+ * \brief 发送I2C STOP条件
+ *
+ * \return 操作状态
+ */
 uint8_t i2c_send_stop(void)
 {
-	scl_out_low();//SCL out low
+    I2C_sendStopCondition(I2C_BASE_ADDR);
 
-	set_sda_pin_output();
-	SDA_GPIO_OUT_LOW();//SDA out low
+    // 等待STOP条件完成（总线不再繁忙）
+    uint32_t timeout = I2C_TIMEOUT_COUNT;
+    while (I2C_isBusBusy(I2C_BASE_ADDR)) {
+        if (--timeout == 0)
+            return I2C_FUNCTION_RETCODE_TIMEOUT;
+    }
 
-	scl_out_high();	//SCL out high
-
-	SDA_GPIO_OUT_HIGH();//SDA out high
-	
-	return I2C_FUNCTION_RETCODE_SUCCESS;
+    return I2C_FUNCTION_RETCODE_SUCCESS;
 }
 
-uint8_t i2c_send_bytes(uint8_t count, uint8_t *data)
-{
-	uint8_t ack_nack;
-	uint8_t temp;
-
-	for(temp = 0; temp < count; temp++)
-	{
-		software_i2c_send_byte(*data++);
-		ack_nack = software_i2c_read_ack();
-		if(NACK == ack_nack)
-		{
-			return I2C_FUNCTION_RETCODE_NACK;
-		}
-	}
-
-	return I2C_FUNCTION_RETCODE_SUCCESS;
-}
-
-uint8_t i2c_receive_byte(uint8_t *data)
-{
-	//uint8_t timeout_counter = I2C_BYTE_TIMEOUT;
-
-	*data = software_i2c_read_byte();
-	software_i2c_send_ack_nack((bool)ACK);
-
-	return I2C_FUNCTION_RETCODE_SUCCESS;
-}
-
-uint8_t i2c_receive_bytes(uint8_t count, uint8_t *data)
-{
-	uint8_t temp;
-	//uint8_t timeout_counter;
-
-	// Acknowledge all bytes except the last one.
-	for(temp = 0;temp < count -1;temp++)
-	{
-		*data++ = software_i2c_read_byte();
-		software_i2c_send_ack_nack((bool)ACK);
-	}
-
-	*data = software_i2c_read_byte();
-	software_i2c_send_ack_nack((bool)NACK);
-
-	return i2c_send_stop();
-}
-
-#if 0 //2014-11-16 tony comment
-/** \brief This function initializes and enables the I<SUP>2</SUP>C peripheral.
- * */
-void i2c_enable(void)
-{
-	PRR0 &= ~_BV(PRTWI);            // Disable power saving.
-
-#ifdef I2C_PULLUP
-	DDRD &= ~(_BV(PD0) | _BV(PD1)); // Configure I2C as input to allow setting the pull-up resistors.
-	PORTD |= (_BV(PD0) | _BV(PD1)); // Connect pull-up resistors on TWI clock and data pins.
-#endif
-
-	TWBR = ((uint8_t) (((double) F_CPU / I2C_CLOCK - 16.0) / 2.0 + 0.5)); // Set the baud rate
-}
-
-
-/** \brief This function disables the I<SUP>2</SUP>C peripheral. */
-void i2c_disable(void)
-{
-	TWCR = 0;                       // Disable TWI.
-	PRR0 |= _BV(PRTWI);             // Enable power saving.
-}
-
-
-/** \brief This function creates a Start condition (SDA low, then SCL low).
- * \return status of the operation
- * */
-uint8_t i2c_send_start(void)
-{
-	uint8_t timeout_counter = I2C_START_TIMEOUT;
-	uint8_t i2c_status;
-
-	TWCR = (_BV(TWEN) | _BV(TWSTA) | _BV(TWINT));
-	do {
-		if (timeout_counter-- == 0)
-			return I2C_FUNCTION_RETCODE_TIMEOUT;
-	} while ((TWCR & (_BV(TWINT))) == 0);
-
-	i2c_status = TW_STATUS;
-	if ((i2c_status != TW_START) && (i2c_status != TW_REP_START))
-		return I2C_FUNCTION_RETCODE_COMM_FAIL;
-
-	return I2C_FUNCTION_RETCODE_SUCCESS;
-}
-
-
-/** \brief This function creates a Stop condition (SCL high, then SDA high).
- * \return status of the operation
- * */
-uint8_t i2c_send_stop(void)
-{
-	uint8_t timeout_counter = I2C_STOP_TIMEOUT;
-
-	TWCR = (_BV(TWEN) | _BV(TWSTO) | _BV(TWINT));
-	do {
-		if (timeout_counter-- == 0)
-			return I2C_FUNCTION_RETCODE_TIMEOUT;
-	} while ((TWCR & _BV(TWSTO)) > 0);
-
-	if (TW_STATUS == TW_BUS_ERROR)
-		return I2C_FUNCTION_RETCODE_COMM_FAIL;
-
-	return I2C_FUNCTION_RETCODE_SUCCESS;
-}
-
-
-/** \brief This function sends bytes to an I<SUP>2</SUP>C device.
- * \param[in] count number of bytes to send
- * \param[in] data pointer to tx buffer
- * \return status of the operation
+/**
+ * \brief 通过I2C发送一个或多个字节
+ *
+ * 配置I2C为主发送模式，设置数据长度，逐个字节写入数据。
+ * 每个字节发送后检查ACK/NACK状态。
+ *
+ * \param[in] count 要发送的字节数
+ * \param[in] data  指向发送数据缓冲区的指针
+ * \return 操作状态
  */
 uint8_t i2c_send_bytes(uint8_t count, uint8_t *data)
 {
-	uint8_t timeout_counter;
-	uint8_t twi_status;
-	uint8_t i;
+    uint16_t i;
+    uint32_t timeout;
 
-	for (i = 0; i < count; i++) {
-		TWDR = *data++;
-		TWCR = _BV(TWEN) | _BV(TWINT);
+    // 配置为主发送模式，非重复模式
+    I2C_setConfig(I2C_BASE_ADDR, I2C_CONTROLLER_SEND_MODE);
+    I2C_setDataCount(I2C_BASE_ADDR, count);
 
-		timeout_counter = I2C_BYTE_TIMEOUT;
-		do {
-			if (timeout_counter-- == 0)
-				return I2C_FUNCTION_RETCODE_TIMEOUT;
-		} while ((TWCR & (_BV(TWINT))) == 0);
+    // 逐个发送数据字节
+    for (i = 0; i < count; i++) {
+        // 等待发送数据就绪 (TX_DATA_RDY)
+        timeout = I2C_TIMEOUT_COUNT;
+        while (!(I2C_getStatus(I2C_BASE_ADDR) & I2C_STS_TX_DATA_RDY)) {
+            // 检查NACK
+            if (I2C_getStatus(I2C_BASE_ADDR) & I2C_STS_NO_ACK) {
+                I2C_clearStatus(I2C_BASE_ADDR, I2C_STS_NO_ACK);
+                I2C_sendStopCondition(I2C_BASE_ADDR);
+                return I2C_FUNCTION_RETCODE_NACK;
+            }
+            if (--timeout == 0) {
+                I2C_sendStopCondition(I2C_BASE_ADDR);
+                return I2C_FUNCTION_RETCODE_TIMEOUT;
+            }
+        }
 
-		twi_status = TW_STATUS;
-		if ((twi_status != TW_MT_SLA_ACK)
-					&& (twi_status != TW_MT_DATA_ACK)
-					&& (twi_status != TW_MR_SLA_ACK))
-			// Return error if byte got nacked.
-			return I2C_FUNCTION_RETCODE_NACK;
-	}
+        // 写入数据字节
+        I2C_putData(I2C_BASE_ADDR, data[i]);
+    }
 
-	return I2C_FUNCTION_RETCODE_SUCCESS;
+    return I2C_FUNCTION_RETCODE_SUCCESS;
 }
 
-
-/** \brief This function receives one byte from an I<SUP>2</SUP>C device.
+/**
+ * \brief 通过I2C接收一个字节（发送ACK）
  *
- * \param[out] data pointer to received byte
- * \return status of the operation
+ * 配置I2C为主接收模式，接收1个字节后发送ACK。
+ *
+ * \param[out] data 指向接收数据缓冲区的指针
+ * \return 操作状态
  */
 uint8_t i2c_receive_byte(uint8_t *data)
 {
-	uint8_t timeout_counter = I2C_BYTE_TIMEOUT;
+    uint32_t timeout;
 
-	// Enable acknowledging data.
-	TWCR = (_BV(TWEN) | _BV(TWINT) | _BV(TWEA));
-	do {
-		if (timeout_counter-- == 0)
-			return I2C_FUNCTION_RETCODE_TIMEOUT;
-	} while ((TWCR & (_BV(TWINT))) == 0);
+    // 配置为主接收模式，接收1字节
+    I2C_setConfig(I2C_BASE_ADDR, I2C_CONTROLLER_RECEIVE_MODE);
+    I2C_setDataCount(I2C_BASE_ADDR, 1);
 
-	if (TW_STATUS != TW_MR_DATA_ACK) {
-		// Do not override original error.
-		(void) i2c_send_stop();
-		return I2C_FUNCTION_RETCODE_COMM_FAIL;
-	}
-	*data = TWDR;
+    // 发送NACK（最后字节不发送ACK）
+    I2C_sendNACK(I2C_BASE_ADDR);
 
-	return I2C_FUNCTION_RETCODE_SUCCESS;
+    // 发送START条件开始接收
+    I2C_sendStartCondition(I2C_BASE_ADDR);
+
+    // 等待接收数据就绪
+    timeout = I2C_TIMEOUT_COUNT;
+    while (!(I2C_getStatus(I2C_BASE_ADDR) & I2C_STS_RX_DATA_RDY)) {
+        if (--timeout == 0) {
+            I2C_sendStopCondition(I2C_BASE_ADDR);
+            return I2C_FUNCTION_RETCODE_TIMEOUT;
+        }
+    }
+
+    // 读取数据
+    *data = (uint8_t)I2C_getData(I2C_BASE_ADDR);
+
+    // 发送STOP条件
+    I2C_sendStopCondition(I2C_BASE_ADDR);
+
+    // 等待STOP完成
+    timeout = I2C_TIMEOUT_COUNT;
+    while (I2C_isBusBusy(I2C_BASE_ADDR)) {
+        if (--timeout == 0)
+            return I2C_FUNCTION_RETCODE_TIMEOUT;
+    }
+
+    return I2C_FUNCTION_RETCODE_SUCCESS;
 }
 
-
-/** \brief This function receives bytes from an I<SUP>2</SUP>C device
- *         and sends a Stop.
+/**
+ * \brief 通过I2C接收多个字节
  *
- * \param[in] count number of bytes to receive
- * \param[out] data pointer to rx buffer
- * \return status of the operation
+ * 配置I2C为主接收模式，使用FIFO接收多个字节。
+ * 最后一个字节发送NACK，然后发送STOP条件。
+ *
+ * \param[in]  count 要接收的字节数
+ * \param[out] data  指向接收数据缓冲区的指针
+ * \return 操作状态
  */
 uint8_t i2c_receive_bytes(uint8_t count, uint8_t *data)
 {
-	uint8_t i;
-	uint8_t timeout_counter;
+    uint16_t i;
+    uint32_t timeout;
 
-	// Acknowledge all bytes except the last one.
-	for (i = 0; i < count - 1; i++) {
-		// Enable acknowledging data.
-		TWCR = (_BV(TWEN) | _BV(TWINT) | _BV(TWEA));
-		timeout_counter = I2C_BYTE_TIMEOUT;
-		do {
-			if (timeout_counter-- == 0)
-				return I2C_FUNCTION_RETCODE_TIMEOUT;
-		} while ((TWCR & (_BV(TWINT))) == 0);
+    if (count == 0)
+        return I2C_FUNCTION_RETCODE_SUCCESS;
 
-		if (TW_STATUS != TW_MR_DATA_ACK) {
-			// Do not override original error.
-			(void) i2c_send_stop();
-			return I2C_FUNCTION_RETCODE_COMM_FAIL;
-		}
-		*data++ = TWDR;
-	}
+    // 配置为主接收模式
+    I2C_setConfig(I2C_BASE_ADDR, I2C_CONTROLLER_RECEIVE_MODE);
+    I2C_setDataCount(I2C_BASE_ADDR, count);
 
-	// Disable acknowledging data for the last byte.
-	TWCR = (_BV(TWEN) | _BV(TWINT));
-	timeout_counter = I2C_BYTE_TIMEOUT;
-	do {
-		if (timeout_counter-- == 0)
-			return I2C_FUNCTION_RETCODE_TIMEOUT;
-	} while ((TWCR & (_BV(TWINT))) == 0);
+    // 发送START条件开始接收
+    I2C_sendStartCondition(I2C_BASE_ADDR);
 
-	if (TW_STATUS != TW_MR_DATA_NACK) {
-		// Do not override original error.
-		(void) i2c_send_stop();
-		return I2C_FUNCTION_RETCODE_COMM_FAIL;
-	}
-	*data = TWDR;
+    // 逐个接收数据字节
+    for (i = 0; i < count; i++) {
+        // 等待接收数据就绪
+        timeout = I2C_TIMEOUT_COUNT;
+        while (!(I2C_getStatus(I2C_BASE_ADDR) & I2C_STS_RX_DATA_RDY)) {
+            if (--timeout == 0) {
+                I2C_sendStopCondition(I2C_BASE_ADDR);
+                return I2C_FUNCTION_RETCODE_TIMEOUT;
+            }
+        }
 
-	return i2c_send_stop();
+        // 最后一个字节发送NACK
+        if (i == count - 1) {
+            I2C_sendNACK(I2C_BASE_ADDR);
+        }
+
+        // 读取数据
+        data[i] = (uint8_t)I2C_getData(I2C_BASE_ADDR);
+    }
+
+    // 发送STOP条件
+    I2C_sendStopCondition(I2C_BASE_ADDR);
+
+    // 等待STOP完成
+    timeout = I2C_TIMEOUT_COUNT;
+    while (I2C_isBusBusy(I2C_BASE_ADDR)) {
+        if (--timeout == 0)
+            return I2C_FUNCTION_RETCODE_TIMEOUT;
+    }
+
+    return I2C_FUNCTION_RETCODE_SUCCESS;
 }
-
-#endif
-

@@ -18,7 +18,7 @@
 #ifndef ATSHA204A_READ_SN_H_
 #define ATSHA204A_READ_SN_H_
 #include "stdint.h"
-
+#include "inc/hw_types.h"
 uint8_t atsha204_read_sn(uint8_t *ptr_SN);
 
 

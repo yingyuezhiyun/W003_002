@@ -42,8 +42,8 @@
 #include <stdint.h>
 
 #include "sha204_helper.h"             // header module for this C module
-#include "sha204_lib_return_codes.h"   // declarations of function return codes
-#include "sha204_comm_marshaling.h"    // definitions and declarations for the Command Marshaling module
+#include "../sha204/sha204_lib/sha204_lib_return_codes.h"   // declarations of function return codes
+#include "../sha204/sha204_lib/sha204_comm_marshaling.h"    // definitions and declarations for the Command Marshaling module
 
 
 /** \brief This function returns the library version.

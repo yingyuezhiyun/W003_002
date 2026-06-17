@@ -13,6 +13,16 @@ ORDERED_OBJS += \
 "./syscfg/board.obj" \
 "./syscfg/c2000ware_libraries.obj" \
 "./main.obj" \
+"./Core/src/ATSHA204/atsha204/atsha204_enc_read.obj" \
+"./Core/src/ATSHA204/atsha204/atsha204_enc_write.obj" \
+"./Core/src/ATSHA204/atsha204/atsha204_mac.obj" \
+"./Core/src/ATSHA204/atsha204/atsha204_read_sn.obj" \
+"./Core/src/ATSHA204/mcu_oper/sha204_helper.obj" \
+"./Core/src/ATSHA204/sha204/STM32/i2c_phys.obj" \
+"./Core/src/ATSHA204/sha204/STM32/software_timer_utilities.obj" \
+"./Core/src/ATSHA204/sha204/sha204_lib/sha204_comm.obj" \
+"./Core/src/ATSHA204/sha204/sha204_lib/sha204_comm_marshaling.obj" \
+"./Core/src/ATSHA204/sha204/sha204_lib/sha204_i2c.obj" \
 "./Core/src/communication/commu_core.obj" \
 "./Core/src/communication/host_rs232.obj" \
 "./Core/src/communication/serviceport.obj" \
@@ -88,6 +98,10 @@ RMDIR := RMDIR /S/Q
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include subdir_vars.mk
+-include Core/src/ATSHA204/atsha204/subdir_vars.mk
+-include Core/src/ATSHA204/mcu_oper/subdir_vars.mk
+-include Core/src/ATSHA204/sha204/STM32/subdir_vars.mk
+-include Core/src/ATSHA204/sha204/sha204_lib/subdir_vars.mk
 -include Core/src/communication/subdir_vars.mk
 -include Core/src/subdir_vars.mk
 -include Core/src/elmo/subdir_vars.mk
@@ -97,6 +111,10 @@ RMDIR := RMDIR /S/Q
 -include device/subdir_vars.mk
 -include device/driverlib/subdir_vars.mk
 -include subdir_rules.mk
+-include Core/src/ATSHA204/atsha204/subdir_rules.mk
+-include Core/src/ATSHA204/mcu_oper/subdir_rules.mk
+-include Core/src/ATSHA204/sha204/STM32/subdir_rules.mk
+-include Core/src/ATSHA204/sha204/sha204_lib/subdir_rules.mk
 -include Core/src/communication/subdir_rules.mk
 -include Core/src/subdir_rules.mk
 -include Core/src/elmo/subdir_rules.mk
@@ -235,10 +253,12 @@ F28377D.hex: $(EXE_OUTPUTS)
 # Other Targets
 clean:
 	-$(RM) $(GEN_MISC_FILES__QUOTED)$(BIN_OUTPUTS__QUOTED)$(GEN_FILES__QUOTED)$(EXE_OUTPUTS__QUOTED)
-	-$(RM) "syscfg\board.obj" "syscfg\c2000ware_libraries.obj" "main.obj" "Core\src\communication\commu_core.obj" "Core\src\communication\host_rs232.obj" "Core\src\communication\serviceport.obj" "Core\src\dsp_it.obj" "Core\src\func_Handle.obj" "Core\src\func_Poll.obj" "Core\src\param_store.obj" "Core\src\elmo\elmo_can.obj" "Core\src\elmo\elmo_ctrl.obj" "Core\src\elmo\elmo_rs232.obj" "Core\src\mode_ctrl\mode_calib.obj" "Core\src\mode_ctrl\mode_ctrl.obj" "Core\src\mode_ctrl\mode_position.obj" "Core\src\mode_ctrl\mode_press.obj" "Core\src\mode_ctrl\mode_root.obj" "ECAT\9252_HW.obj" "ECAT\PIC32_EtherCAT_Slave.obj" "ECAT\SPIDriver.obj" "ECAT\src\coeappl.obj" "ECAT\src\ecatappl.obj" "ECAT\src\ecatcoe.obj" "ECAT\src\ecateoe.obj" "ECAT\src\ecatfoe.obj" "ECAT\src\ecatslv.obj" "ECAT\src\emcy.obj" "ECAT\src\eoeappl.obj" "ECAT\src\foeappl.obj" "ECAT\src\mailbox.obj" "ECAT\src\objdef.obj" "ECAT\src\sdoserv.obj" "device\F2837xD_CodeStartBranch.obj" "device\device.obj" "device\driverlib\adc.obj" "device\driverlib\asysctl.obj" 
-	-$(RM) "device\driverlib\can.obj" "device\driverlib\cla.obj" "device\driverlib\clb.obj" "device\driverlib\cmpss.obj" "device\driverlib\cputimer.obj" "device\driverlib\dac.obj" "device\driverlib\dcsm.obj" "device\driverlib\dma.obj" "device\driverlib\ecap.obj" "device\driverlib\emif.obj" "device\driverlib\epwm.obj" "device\driverlib\eqep.obj" "device\driverlib\flash.obj" "device\driverlib\gpio.obj" "device\driverlib\hrpwm.obj" "device\driverlib\i2c.obj" "device\driverlib\interrupt.obj" "device\driverlib\ipc.obj" "device\driverlib\mcbsp.obj" "device\driverlib\memcfg.obj" "device\driverlib\sci.obj" "device\driverlib\sdfm.obj" "device\driverlib\spi.obj" "device\driverlib\sysctl.obj" "device\driverlib\upp.obj" "device\driverlib\usb.obj" "device\driverlib\version.obj" "device\driverlib\xbar.obj" 
-	-$(RM) "syscfg\board.d" "syscfg\c2000ware_libraries.d" "main.d" "Core\src\communication\commu_core.d" "Core\src\communication\host_rs232.d" "Core\src\communication\serviceport.d" "Core\src\dsp_it.d" "Core\src\func_Handle.d" "Core\src\func_Poll.d" "Core\src\param_store.d" "Core\src\elmo\elmo_can.d" "Core\src\elmo\elmo_ctrl.d" "Core\src\elmo\elmo_rs232.d" "Core\src\mode_ctrl\mode_calib.d" "Core\src\mode_ctrl\mode_ctrl.d" "Core\src\mode_ctrl\mode_position.d" "Core\src\mode_ctrl\mode_press.d" "Core\src\mode_ctrl\mode_root.d" "ECAT\9252_HW.d" "ECAT\PIC32_EtherCAT_Slave.d" "ECAT\SPIDriver.d" "ECAT\src\coeappl.d" "ECAT\src\ecatappl.d" "ECAT\src\ecatcoe.d" "ECAT\src\ecateoe.d" "ECAT\src\ecatfoe.d" "ECAT\src\ecatslv.d" "ECAT\src\emcy.d" "ECAT\src\eoeappl.d" "ECAT\src\foeappl.d" "ECAT\src\mailbox.d" "ECAT\src\objdef.d" "ECAT\src\sdoserv.d" "device\device.d" "device\driverlib\adc.d" "device\driverlib\asysctl.d" "device\driverlib\can.d" "device\driverlib\cla.d" "device\driverlib\clb.d" "device\driverlib\cmpss.d" 
-	-$(RM) "device\driverlib\cputimer.d" "device\driverlib\dac.d" "device\driverlib\dcsm.d" "device\driverlib\dma.d" "device\driverlib\ecap.d" "device\driverlib\emif.d" "device\driverlib\epwm.d" "device\driverlib\eqep.d" "device\driverlib\flash.d" "device\driverlib\gpio.d" "device\driverlib\hrpwm.d" "device\driverlib\i2c.d" "device\driverlib\interrupt.d" "device\driverlib\ipc.d" "device\driverlib\mcbsp.d" "device\driverlib\memcfg.d" "device\driverlib\sci.d" "device\driverlib\sdfm.d" "device\driverlib\spi.d" "device\driverlib\sysctl.d" "device\driverlib\upp.d" "device\driverlib\usb.d" "device\driverlib\version.d" "device\driverlib\xbar.d" 
+	-$(RM) "syscfg\board.obj" "syscfg\c2000ware_libraries.obj" "main.obj" "Core\src\ATSHA204\atsha204\atsha204_enc_read.obj" "Core\src\ATSHA204\atsha204\atsha204_enc_write.obj" "Core\src\ATSHA204\atsha204\atsha204_mac.obj" "Core\src\ATSHA204\atsha204\atsha204_read_sn.obj" "Core\src\ATSHA204\mcu_oper\sha204_helper.obj" "Core\src\ATSHA204\sha204\STM32\i2c_phys.obj" "Core\src\ATSHA204\sha204\STM32\software_timer_utilities.obj" "Core\src\ATSHA204\sha204\sha204_lib\sha204_comm.obj" "Core\src\ATSHA204\sha204\sha204_lib\sha204_comm_marshaling.obj" "Core\src\ATSHA204\sha204\sha204_lib\sha204_i2c.obj" "Core\src\communication\commu_core.obj" "Core\src\communication\host_rs232.obj" "Core\src\communication\serviceport.obj" "Core\src\dsp_it.obj" "Core\src\func_Handle.obj" "Core\src\func_Poll.obj" "Core\src\param_store.obj" "Core\src\elmo\elmo_can.obj" "Core\src\elmo\elmo_ctrl.obj" "Core\src\elmo\elmo_rs232.obj" "Core\src\mode_ctrl\mode_calib.obj" "Core\src\mode_ctrl\mode_ctrl.obj" "Core\src\mode_ctrl\mode_position.obj" 
+	-$(RM) "Core\src\mode_ctrl\mode_press.obj" "Core\src\mode_ctrl\mode_root.obj" "ECAT\9252_HW.obj" "ECAT\PIC32_EtherCAT_Slave.obj" "ECAT\SPIDriver.obj" "ECAT\src\coeappl.obj" "ECAT\src\ecatappl.obj" "ECAT\src\ecatcoe.obj" "ECAT\src\ecateoe.obj" "ECAT\src\ecatfoe.obj" "ECAT\src\ecatslv.obj" "ECAT\src\emcy.obj" "ECAT\src\eoeappl.obj" "ECAT\src\foeappl.obj" "ECAT\src\mailbox.obj" "ECAT\src\objdef.obj" "ECAT\src\sdoserv.obj" "device\F2837xD_CodeStartBranch.obj" "device\device.obj" "device\driverlib\adc.obj" "device\driverlib\asysctl.obj" "device\driverlib\can.obj" "device\driverlib\cla.obj" "device\driverlib\clb.obj" "device\driverlib\cmpss.obj" "device\driverlib\cputimer.obj" "device\driverlib\dac.obj" "device\driverlib\dcsm.obj" "device\driverlib\dma.obj" "device\driverlib\ecap.obj" "device\driverlib\emif.obj" "device\driverlib\epwm.obj" "device\driverlib\eqep.obj" "device\driverlib\flash.obj" "device\driverlib\gpio.obj" "device\driverlib\hrpwm.obj" "device\driverlib\i2c.obj" "device\driverlib\interrupt.obj" 
+	-$(RM) "device\driverlib\ipc.obj" "device\driverlib\mcbsp.obj" "device\driverlib\memcfg.obj" "device\driverlib\sci.obj" "device\driverlib\sdfm.obj" "device\driverlib\spi.obj" "device\driverlib\sysctl.obj" "device\driverlib\upp.obj" "device\driverlib\usb.obj" "device\driverlib\version.obj" "device\driverlib\xbar.obj" 
+	-$(RM) "syscfg\board.d" "syscfg\c2000ware_libraries.d" "main.d" "Core\src\ATSHA204\atsha204\atsha204_enc_read.d" "Core\src\ATSHA204\atsha204\atsha204_enc_write.d" "Core\src\ATSHA204\atsha204\atsha204_mac.d" "Core\src\ATSHA204\atsha204\atsha204_read_sn.d" "Core\src\ATSHA204\mcu_oper\sha204_helper.d" "Core\src\ATSHA204\sha204\STM32\i2c_phys.d" "Core\src\ATSHA204\sha204\STM32\software_timer_utilities.d" "Core\src\ATSHA204\sha204\sha204_lib\sha204_comm.d" "Core\src\ATSHA204\sha204\sha204_lib\sha204_comm_marshaling.d" "Core\src\ATSHA204\sha204\sha204_lib\sha204_i2c.d" "Core\src\communication\commu_core.d" "Core\src\communication\host_rs232.d" "Core\src\communication\serviceport.d" "Core\src\dsp_it.d" "Core\src\func_Handle.d" "Core\src\func_Poll.d" "Core\src\param_store.d" "Core\src\elmo\elmo_can.d" "Core\src\elmo\elmo_ctrl.d" "Core\src\elmo\elmo_rs232.d" "Core\src\mode_ctrl\mode_calib.d" "Core\src\mode_ctrl\mode_ctrl.d" "Core\src\mode_ctrl\mode_position.d" "Core\src\mode_ctrl\mode_press.d" "Core\src\mode_ctrl\mode_root.d" 
+	-$(RM) "ECAT\9252_HW.d" "ECAT\PIC32_EtherCAT_Slave.d" "ECAT\SPIDriver.d" "ECAT\src\coeappl.d" "ECAT\src\ecatappl.d" "ECAT\src\ecatcoe.d" "ECAT\src\ecateoe.d" "ECAT\src\ecatfoe.d" "ECAT\src\ecatslv.d" "ECAT\src\emcy.d" "ECAT\src\eoeappl.d" "ECAT\src\foeappl.d" "ECAT\src\mailbox.d" "ECAT\src\objdef.d" "ECAT\src\sdoserv.d" "device\device.d" "device\driverlib\adc.d" "device\driverlib\asysctl.d" "device\driverlib\can.d" "device\driverlib\cla.d" "device\driverlib\clb.d" "device\driverlib\cmpss.d" "device\driverlib\cputimer.d" "device\driverlib\dac.d" "device\driverlib\dcsm.d" "device\driverlib\dma.d" "device\driverlib\ecap.d" "device\driverlib\emif.d" "device\driverlib\epwm.d" "device\driverlib\eqep.d" "device\driverlib\flash.d" "device\driverlib\gpio.d" "device\driverlib\hrpwm.d" "device\driverlib\i2c.d" "device\driverlib\interrupt.d" "device\driverlib\ipc.d" "device\driverlib\mcbsp.d" "device\driverlib\memcfg.d" "device\driverlib\sci.d" "device\driverlib\sdfm.d" "device\driverlib\spi.d" "device\driverlib\sysctl.d" 
+	-$(RM) "device\driverlib\upp.d" "device\driverlib\usb.d" "device\driverlib\version.d" "device\driverlib\xbar.d" 
 	-$(RM) "device\F2837xD_CodeStartBranch.d" 
 	-$(RMDIR) $(GEN_MISC_DIRS__QUOTED)
 	-@echo 'Finished clean'

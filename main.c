@@ -45,6 +45,15 @@ glob_value_t glob_value = {
     .status = {.errors.val = 0, .state.val = 0},
 };
 
+
+void test()
+{
+    sha204p_init();
+    uint8_t wakeup_response_buffer[4] = {0};
+    int ret = sha204p_wakeup(wakeup_response_buffer);
+ 
+}
+
 void main(void)
 {
     Device_init();
@@ -62,7 +71,7 @@ void main(void)
     ERTM; // Enable Global realtime interrupt
 
     DEVICE_DELAY_US(1000);
-
+    test();
     BIT_Init();
 
     while (1)

@@ -1,7 +1,7 @@
 /** \file
  *  \brief Timer Utility Functions
  *  \author Atmel Crypto Products
- *  \date January 11, 2013
+ *  \date January 11,2013
  * \copyright Copyright (c) 2013 Atmel Corporation. All rights reserved.
  *
  * \atsha204_library_license_start
@@ -39,138 +39,11 @@
 
 
 #include <stdint.h>                           // data type definitions
-//#include "timer_utilities.h"     //2015-1-16 tony comment
-#include "software_timer_utilities.h"     //2015-1-16 tony comment
+#include "software_timer_utilities.h"
 
-
-//software_delay_us(1) ʵ��(1.58-0.25)us //(IO�ڷ�תʱ��250ns)
-void software_delay_us(uint8_t delay_usec)//2015-1-16 tony comment
+// 延时已通过宏定义在头文件中使用DEVICE_DELAY_US实现，无需额外代码
+// delay_init保留为空函数，保持接口兼容
+void delay_init(void)
 {
-	uint8_t temp = 0;
-	
-	for(;delay_usec > 0;delay_usec--)
-	{
-		for(temp=0;temp < 9;temp++)
-		{
-			;
-		}
-	}
+    // F28377D使用硬件延时，无需初始化定时器
 }
-
-//software_delay_10us(1) ʵ��11.7us
-void software_delay_10us(uint8_t delay_10usec) //2015-1-16 tony comment
-{
-		
-	for(;delay_10usec > 0;delay_10usec--)
-	{
-		software_delay_us(10);//ʵ��11us
-	}
-}
-//software_delay_ms(1) //ʵ��1.2ms
-void software_delay_ms(uint16_t delay_msec) //2015-1-16 tony comment
-{
-	for(;delay_msec > 0;delay_msec--)
-	{
-		software_delay_10us(100);
-	}
-}
-
-
-#if 0   //2014-11-16 tony comment
-/** \defgroup timer_utilities Module 09: Timers
- *
- * This module implements timers used during communication.
- * They are implemented using loop counters. But if you have hardware
- * timers available, you can implement the functions using them.
-@{ */
-
-// The values below are valid for an AVR 8-bit processor running at 16 MHz.
-// Code is compiled with optimization set to -O1.
-
-#if F_CPU == 16000000UL
-//! Fill the inner loop of delay_10us() with these CPU instructions to achieve 10 us per iteration.
-#   define   TIME_UTILS_US_CALIBRATION           //__asm__ volatile ("\n\tnop\n\tnop\n\tnop\n")
-
-/** Decrement the inner loop of delay_10us() this many times to achieve 10 us per
- *  iteration of the outer loop.
- */
-#   define   TIME_UTILS_LOOP_COUNT            ((uint8_t)  14)
-
-//! The delay_ms function calls delay_10us with this parameter.
-#   define   TIME_UTILS_MS_CALIBRATION        ((uint8_t) 104)
-
-#elif F_CPU == 8000000UL
-//! Fill the inner loop of delay_10us() with these CPU instructions to achieve 10 us per iteration.
-#   define   TIME_UTILS_US_CALIBRATION           __asm__ volatile ("\n\tnop\n\tnop\n\tnop\n\tnop\n")
-
-/** \brief Decrement the inner loop of delay_10us() this many times to achieve 10 us per
- *         iteration of the outer loop.
- */
-#   define   TIME_UTILS_LOOP_COUNT            ((uint8_t)  0)
-
-//! The delay_ms function calls delay_10us with this parameter.
-#   define   TIME_UTILS_MS_CALIBRATION        ((uint8_t) 100)
-
-#elif F_CPU == 2000000UL
-//! Fill the inner loop of delay_10us() with these CPU instructions to achieve 10 us per iteration.
-#   define   TIME_UTILS_US_CALIBRATION           __asm__ volatile ("\n\tnop\n")
-
-/** \brief Decrement the inner loop of delay_10us() this many times to achieve 10 us per
- *         iteration of the outer loop.
- */
-#   define   TIME_UTILS_LOOP_COUNT            ((uint8_t)  1)
-
-//! The delay_ms function calls delay_10us with this parameter.
-#   define   TIME_UTILS_MS_CALIBRATION        ((uint8_t) 91)
-
-#elif CONFIG_SYSCLK_SOURCE == SYSCLK_SRC_RC32MHZ
-// Xmega
-//! Fill the inner loop of delay_10us() with these CPU instructions to achieve 10 us per iteration.
-#   define   TIME_UTILS_US_CALIBRATION           //__asm__ volatile ("\n\tnop\n\tnop\n\tnop\n")
-
-/** \brief Decrement the inner loop of delay_10us() this many times to achieve 10 us per
- *         iteration of the outer loop.
- */
-#   define   TIME_UTILS_LOOP_COUNT            ((uint8_t)  28)
-
-//! The delay_ms function calls delay_10us with this parameter.
-#   define   TIME_UTILS_MS_CALIBRATION        ((uint8_t) 104)
-
-#else
-#   error   Time macros are not defined.
-#endif
-
-
-/** \brief This function delays for a number of tens of microseconds.
- *
- * This function will not time correctly, if one loop iteration
- * plus the time it takes to enter this function takes more than 10 us.
- * \param[in] delay number of 0.01 milliseconds to delay
- */
-void delay_10us(uint8_t delay)
-{
-	volatile uint8_t delay_10us;
-
-	for (; delay > 0; delay--) {
-		for (delay_10us = TIME_UTILS_LOOP_COUNT; delay_10us > 0; delay_10us--);
-		TIME_UTILS_US_CALIBRATION;
-	}
-}
-
-
-/** \brief This function delays for a number of milliseconds.
- *
- *         You can override this function if you like to do
- *         something else in your system while delaying.
- * \param[in] delay number of milliseconds to delay
- */
-void delay_ms(uint8_t delay)
-{
-	uint8_t i;
-	for (i = delay; i > 0; i--)
-		delay_10us(TIME_UTILS_MS_CALIBRATION);
-}
-
-/** @} */
-
-#endif

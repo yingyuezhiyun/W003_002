@@ -2,7 +2,7 @@
  *  \brief Definitions for Hardware Dependent Part of ATSHA204 Physical Layer
  *         Using I<SUP>2</SUP>C for Communication
  *  \author Atmel Crypto Products
- *  \date January 14, 2013
+ *  \date January 14,2013
  * \copyright Copyright (c) 2013 Atmel Corporation. All rights reserved.
  *
  * \atsha204_library_license_start
@@ -90,9 +90,11 @@
 #define I2C_FUNCTION_RETCODE_TIMEOUT     ((uint8_t) 0xF1) //!< Communication timed out.
 #define I2C_FUNCTION_RETCODE_NACK        ((uint8_t) 0xF8) //!< TWI nack
 
+#include "inc/hw_types.h"
 
 void    i2c_enable(void);
 void    i2c_disable(void);
+uint8_t i2c_send_wakeup(void);
 uint8_t i2c_send_start(void);
 uint8_t i2c_send_stop(void);
 uint8_t i2c_send_bytes(uint8_t count, uint8_t *data);

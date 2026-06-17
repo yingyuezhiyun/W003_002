@@ -1,4 +1,12 @@
 eclipse.preferences.version=1
+encoding//CPU1_FLASH/Core/src/ATSHA204/atsha204/subdir_rules.mk=UTF-8
+encoding//CPU1_FLASH/Core/src/ATSHA204/atsha204/subdir_vars.mk=UTF-8
+encoding//CPU1_FLASH/Core/src/ATSHA204/mcu_oper/subdir_rules.mk=UTF-8
+encoding//CPU1_FLASH/Core/src/ATSHA204/mcu_oper/subdir_vars.mk=UTF-8
+encoding//CPU1_FLASH/Core/src/ATSHA204/sha204/STM32/subdir_rules.mk=UTF-8
+encoding//CPU1_FLASH/Core/src/ATSHA204/sha204/STM32/subdir_vars.mk=UTF-8
+encoding//CPU1_FLASH/Core/src/ATSHA204/sha204/sha204_lib/subdir_rules.mk=UTF-8
+encoding//CPU1_FLASH/Core/src/ATSHA204/sha204/sha204_lib/subdir_vars.mk=UTF-8
 encoding//CPU1_FLASH/Core/src/communication/subdir_rules.mk=UTF-8
 encoding//CPU1_FLASH/Core/src/communication/subdir_vars.mk=UTF-8
 encoding//CPU1_FLASH/Core/src/elmo/subdir_rules.mk=UTF-8

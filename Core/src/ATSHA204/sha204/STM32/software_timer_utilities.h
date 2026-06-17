@@ -1,7 +1,7 @@
 /** \file
  *  \brief 	Timer Utility Declarations
  *  \author Atmel Crypto Products
- *  \date 	January 11, 2013
+ *  \date 	January 11,2013
  * \copyright Copyright (c) 2013 Atmel Corporation. All rights reserved.
  *
  * \atsha204_library_license_start
@@ -37,20 +37,15 @@
  * \atsha204_library_license_stop
  */
 
-#ifndef SOFTWARE_TIMER_UTILITIES_H
-#define    SOFTWARE_TIMER_UTILITIES_H
+#ifndef SOFTWARE_TIMER_UTILITIES_H_
+#define SOFTWARE_TIMER_UTILITIES_H_
 
-#include "common.h"
+#include "device.h"
 
-#include <stdint.h>                    // data type definitions
+// 使用F28377D硬件延时替代STM32软件延时
+#define software_delay_ms(ms)       DEVICE_DELAY_US((uint32_t)(ms) * 1000U)
+#define software_delay_10us(n)      DEVICE_DELAY_US((uint32_t)(n) * 10U)
 
-void software_delay_us(uint8_t delay_usec);//2015-1-16 tony comment
+void delay_init(void);
 
-void software_delay_10us(uint8_t delay_10usec); //2015-1-16 tony comment
-
-void software_delay_ms(uint16_t delay_msec); //2015-1-16 tony comment //
-
-//#define FREERTOS_DELAY_FOR_SHA204_COMMAND_EXEC(ms)  software_delay_ms(ms) //2015-1-16 tony comment//when use none FreeRTOS
-#define FREERTOS_DELAY_FOR_SHA204_COMMAND_EXEC(ms)  vTaskDelay(80 / portTICK_RATE_MS)//2015-1-16 tony comment//when use FreeRTOS
-
-#endif //SOFTWARE_TIMER_UTILITIES_H
+#endif /* SOFTWARE_TIMER_UTILITIES_H_ */

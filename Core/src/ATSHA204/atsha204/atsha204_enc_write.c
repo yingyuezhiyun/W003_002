@@ -15,12 +15,12 @@
 //******************************************************************************************
 
 #include <string.h>
-#include "sha204_lib_return_codes.h"
-#include "sha204_comm_marshaling.h"
-#include "atsha204_defines.h"
+#include "../sha204/sha204_lib/sha204_lib_return_codes.h"
+#include "../sha204/sha204_lib/sha204_comm_marshaling.h"
+#include "../mcu_oper/atsha204_defines.h"
 //#include "atsha204_device_configuration.h"
 
-#include "sha204_helper.h"
+#include "../mcu_oper/sha204_helper.h"
 #include "atsha204_enc_write.h"
 
 uint8_t atsha204_enc_write(uint16_t write_slot_address, uint8_t* clear_write_data, uint16_t write_key_slot_id, uint8_t* secret_write_key, uint8_t* NumIn) 

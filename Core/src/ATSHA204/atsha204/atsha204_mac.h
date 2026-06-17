@@ -18,6 +18,7 @@
 #define ATSHA204_MAC_
 
 #include "stdint.h"
+#include "inc/hw_types.h"
 
 uint8_t atsha204_mac(uint16_t key_id,uint8_t* secret_key, uint8_t* NumIn, uint8_t* challenge);
 
