@@ -11,7 +11,7 @@
 #define ATSHA204_I2C_BASE I2CB_BASE
 
 /// ATSHA204 唤醒后等待时间（µs），≥1 ms
-#define ATSHA204_TWHI_US (1500U)
+#define ATSHA204_TWHI_US (3000U)
 
 /// 通用 I2C 超时
 #define ATSHA204_I2C_TIMEOUT (200000UL)
@@ -371,10 +371,26 @@ bool ATSHA204_Wake(void)
      * 注意：ATSHA204 在休眠模式下不会 ACK 唤醒令牌，
      *       因此 I2C 控制器会因 NAK 卡死，必须强制恢复总线后再读取。
      */
-    (void)Sha_I2C_WriteBytes(0x00U, wakeToken, 1U);
+    // (void)Sha_I2C_WriteBytes(0x00U, wakeToken, 1U);
 
-    /* 无论写入结果如何，强制恢复 I2C 总线状态 */
-    Sha_ForceRecoverI2C();
+    // /* 无论写入结果如何，强制恢复 I2C 总线状态 */
+    // Sha_ForceRecoverI2C();
+
+     if (!Sha_WaitBusIdle(ATSHA204_I2C_TIMEOUT))
+        return false;
+
+    Sha_ClearI2CStatus();
+    Sha_ResetFIFOs();
+    I2C_setTargetAddress(ATSHA204_I2C_BASE, 0x00U);
+    I2C_setConfig(ATSHA204_I2C_BASE, I2C_CONTROLLER_SEND_MODE);
+    I2C_setDataCount(ATSHA204_I2C_BASE, 1);
+    I2C_sendStartCondition(ATSHA204_I2C_BASE);
+    DEVICE_DELAY_US(100); /* 产生 ≥60µs 的 SDA 低脉冲 */
+    I2C_putData(ATSHA204_I2C_BASE, 0x00U);
+    // Sha_WaitStopDone(ATSHA204_I2C_TIMEOUT);
+    I2C_sendStopCondition(ATSHA204_I2C_BASE);
+
+
 
     /* 等待 ATSHA204 完成唤醒（tWHI ≥ 1ms） */
     DEVICE_DELAY_US(ATSHA204_TWHI_US);
