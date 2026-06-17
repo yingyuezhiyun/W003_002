@@ -50,7 +50,7 @@ void test()
 {
     sha204p_init();
     uint8_t wakeup_response_buffer[4] = {0};
-    int ret = sha204p_wakeup(wakeup_response_buffer);
+    int ret = sha204c_wakeup(wakeup_response_buffer);
  
 }
 
