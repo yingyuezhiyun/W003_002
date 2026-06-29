@@ -42,12 +42,12 @@
 //#   include <avr/io.h>					    // GPIO definitions  //2014-11-16 tony comment
 #endif
 
-
-#include "../STM32/i2c_phys.h"                   // hardware dependent declarations for I2C
+#include "usart1.h"
+#include "i2c_phys.h"                   // hardware dependent declarations for I2C
 #include "sha204_physical.h"            // declarations that are common to all interface implementations
 #include "sha204_lib_return_codes.h"    // declarations of function return codes
 //#include "timer_utilities.h"            // definitions for delay functions //2015-1-16 tony comment
-#include "../STM32/software_timer_utilities.h"     //2015-1-16 tony comment
+#include "software_timer_utilities.h"     //2015-1-16 tony comment
 
 /** \defgroup sha204_i2c Module 05: I2C Abstraction Module
  *
@@ -93,21 +93,19 @@ static uint8_t device_address;
 void sha204p_set_device_id(uint8_t id)
 {
 	device_address = id;
-	i2c_set_target_address((uint16_t) (id >> 1));
 }
 
-//	i2c_set_target_address((uint16_t) (id >> 1));
+
 /** \brief This function initializes the hardware.
  */
 void sha204p_init(void)
 {
 	i2c_enable();
 	device_address = SHA204_I2C_DEFAULT_ADDRESS;
-	i2c_set_target_address((uint16_t) (SHA204_I2C_DEFAULT_ADDRESS >> 1));
 }
 
 // todo Let the updateDistro script delete lines that refer to
-//	i2c_set_target_address((uint16_t) (SHA204_I2C_DEFAULT_ADDRESS >> 1));
+// DEBUG_DIAMOND.
 #ifndef DEBUG_DIAMOND
 #   define DEBUG_DIAMOND
 #endif
@@ -116,12 +114,54 @@ void sha204p_init(void)
  */
 uint8_t sha204p_wakeup(void)
 {
-	// 使用硬件I2C的GPIO Wakeup方式
-	i2c_send_wakeup();
+	//2014-11-16 tony comment
+	uint8_t dummy_byte = 0;
+	uint8_t i2c_status = i2c_send_start();
+	
+	software_delay_10us(SHA204_WAKEUP_PULSE_WIDTH);//60us
+
+	(void)i2c_send_bytes(1,&dummy_byte);
+
+	i2c_status |= i2c_send_stop();
 
 	software_delay_ms(SHA204_WAKEUP_DELAY);
 
 	return SHA204_SUCCESS;
+	
+#if 0	 //2014-11-16 tony comment
+#ifndef SHA204_GPIO_WAKEUP
+	// Generate wakeup pulse by writing a 0 on the I2C bus.
+	uint8_t dummy_byte = 0;
+	uint8_t i2c_status = i2c_send_start();
+	if (i2c_status != I2C_FUNCTION_RETCODE_SUCCESS)
+		return SHA204_COMM_FAIL;
+
+	// To send eight zero bits it takes 10E6 / I2C clock * 8 us.
+	delay_10us(SHA204_WAKEUP_PULSE_WIDTH - (uint8_t) (1000000.0 / 10.0 / I2C_CLOCK * 8.0));
+
+	// We have to send at least one byte between an I2C Start and an I2C Stop.
+	(void) i2c_send_bytes(1, &dummy_byte);
+	i2c_status = i2c_send_stop();
+	if (i2c_status != I2C_FUNCTION_RETCODE_SUCCESS)
+		return SHA204_COMM_FAIL;
+#else
+	// Generate wakeup pulse by disabling the I2C peripheral and
+	// pulling SDA low. The I2C peripheral gets automatically
+	// re-enabled when calling i2c_send_start().
+	TWCR = 0;           // Disable I2C.
+	DDRD |= _BV(PD1);   // Set SDA as output.
+	PORTD &= ~_BV(PD1); // Set SDA low.
+#ifndef DEBUG_DIAMOND
+	delay_10us(SHA204_WAKEUP_PULSE_WIDTH);
+#else	
+	delay_10us(10);
+#endif	
+	PORTD |= _BV(PD1);  // Set SDA high.
+#endif
+	delay_ms(SHA204_WAKEUP_DELAY);
+
+	return SHA204_SUCCESS;
+#endif
 }
 
 
@@ -132,11 +172,17 @@ uint8_t sha204p_wakeup(void)
  */
 static uint8_t sha204p_send_slave_address(uint8_t read)
 {
-	if (read == I2C_READ)
-		I2C_setConfig(I2CB_BASE, I2C_CONTROLLER_RECEIVE_MODE);
-	else
-		I2C_setConfig(I2CB_BASE, I2C_CONTROLLER_SEND_MODE);
-	return i2c_send_start();
+	uint8_t sla = device_address | read;
+	uint8_t ret_code = i2c_send_start();
+	if (ret_code != I2C_FUNCTION_RETCODE_SUCCESS)
+		return ret_code;
+
+	ret_code = i2c_send_bytes(1, &sla);
+
+	if (ret_code != I2C_FUNCTION_RETCODE_SUCCESS)
+		(void) i2c_send_stop();
+
+	return ret_code;
 }
 
 
@@ -333,3 +379,5 @@ uint8_t sha204p_resync(uint8_t size, uint8_t *response)
 	// Try to send a Reset IO command if re-sync succeeded.
 	return sha204p_reset_io();
 }
+
+/** @} */

@@ -183,22 +183,6 @@ extern "C"
 #define e2_i2c_I2CSCL_PIN_CONFIG GPIO_43_SCLA
 
 //
-// I2CB -> a2_i2c Pinmux
-//
-//
-// SDAB - GPIO Settings
-//
-#define GPIO_PIN_SDAB 40
-#define a2_i2c_I2CSDA_GPIO 40
-#define a2_i2c_I2CSDA_PIN_CONFIG GPIO_40_SDAB
-//
-// SCLB - GPIO Settings
-//
-#define GPIO_PIN_SCLB 41
-#define a2_i2c_I2CSCL_GPIO 41
-#define a2_i2c_I2CSCL_PIN_CONFIG GPIO_41_SCLB
-
-//
 // SCIB -> RS232_SCI Pinmux
 //
 //
@@ -427,12 +411,6 @@ void POS_CLOSE_TTL_IN_init();
 #define e2_i2c_OWN_ADDRESS 0
 #define e2_i2c_MODULE_CLOCK_FREQUENCY 10000000
 void e2_i2c_init();
-#define a2_i2c_BASE I2CB_BASE
-#define a2_i2c_BITRATE 50000
-#define a2_i2c_TARGET_ADDRESS 0
-#define a2_i2c_OWN_ADDRESS 0
-#define a2_i2c_MODULE_CLOCK_FREQUENCY 10000000
-void a2_i2c_init();
 
 //*****************************************************************************
 //

@@ -57,6 +57,8 @@
 
 // GPIO40在GPB寄存器中的位偏移 (GPIO40 - GPIO32 = 8)
 #define GPIO40_BIT          (1U << (I2C_SDA_PIN - 32U))
+// GPIO41在GPB寄存器中的位偏移 (GPIO41 - GPIO32 = 9)
+#define GPIO41_BIT          (1U << (I2C_SCL_PIN - 32U))
 
 // 超时计数
 #define I2C_TIMEOUT_COUNT   10000U
@@ -147,23 +149,29 @@ void i2c_enable(void)
     i2c_hw_init();
 }
 
+void i2c_set_target_address(uint16_t targetAddr)
+{
+    I2C_setTargetAddress(I2C_BASE_ADDR, targetAddr);
+}
+
 /**
  * \brief 产生I2C Wakeup脉冲
  *
- * 通过临时切换I2C引脚为GPIO模式，产生满足ATSHA204要求的Wakeup脉冲：
- * 1. SDA拉低至少60us（SCL由I2C外设保持低电平）
- * 2. SDA释放（拉高），SCL仍保持低
+ * 通过临时切换SDA为GPIO模式，产生满足ATSHA204要求的Wakeup脉冲：
+ * 1. SDA拉低至少60us，SCL保持释放态
+ * 2. SDA释放（拉高）
  * 3. 恢复I2C外设功能
  *
  * \return 操作状态
  */
 uint8_t i2c_send_wakeup(void)
 {
-    // 禁用I2C模块（SCL将被拉低）
+    // 禁用I2C模块，随后用GPIO在SDA上生成Wake token
     I2C_disableModule(I2C_BASE_ADDR);
 
     // 将SDA引脚配置为GPIO输出
     i2c_gpio_set_output();
+    
 
     // SDA拉低 - 产生Wakeup脉冲的低电平部分
     HWREG(GPIOCTRL_BASE + GPIO_O_GPBCLEAR) = GPIO40_BIT;
@@ -296,12 +304,6 @@ uint8_t i2c_receive_byte(uint8_t *data)
     I2C_setConfig(I2C_BASE_ADDR, I2C_CONTROLLER_RECEIVE_MODE);
     I2C_setDataCount(I2C_BASE_ADDR, 1);
 
-    // 发送NACK（最后字节不发送ACK）
-    I2C_sendNACK(I2C_BASE_ADDR);
-
-    // 发送START条件开始接收
-    I2C_sendStartCondition(I2C_BASE_ADDR);
-
     // 等待接收数据就绪
     timeout = I2C_TIMEOUT_COUNT;
     while (!(I2C_getStatus(I2C_BASE_ADDR) & I2C_STS_RX_DATA_RDY)) {
@@ -313,16 +315,6 @@ uint8_t i2c_receive_byte(uint8_t *data)
 
     // 读取数据
     *data = (uint8_t)I2C_getData(I2C_BASE_ADDR);
-
-    // 发送STOP条件
-    I2C_sendStopCondition(I2C_BASE_ADDR);
-
-    // 等待STOP完成
-    timeout = I2C_TIMEOUT_COUNT;
-    while (I2C_isBusBusy(I2C_BASE_ADDR)) {
-        if (--timeout == 0)
-            return I2C_FUNCTION_RETCODE_TIMEOUT;
-    }
 
     return I2C_FUNCTION_RETCODE_SUCCESS;
 }
@@ -348,9 +340,6 @@ uint8_t i2c_receive_bytes(uint8_t count, uint8_t *data)
     // 配置为主接收模式
     I2C_setConfig(I2C_BASE_ADDR, I2C_CONTROLLER_RECEIVE_MODE);
     I2C_setDataCount(I2C_BASE_ADDR, count);
-
-    // 发送START条件开始接收
-    I2C_sendStartCondition(I2C_BASE_ADDR);
 
     // 逐个接收数据字节
     for (i = 0; i < count; i++) {

@@ -45,7 +45,6 @@ const gpio20           = gpio.addInstance();
 const gpio21           = gpio.addInstance();
 const i2c              = scripting.addModule("/driverlib/i2c.js", {}, false);
 const i2c1             = i2c.addInstance();
-const i2c2             = i2c.addInstance();
 const inputxbar        = scripting.addModule("/driverlib/inputxbar.js", {}, false);
 const inputxbar1       = inputxbar.addInstance();
 const inputxbar_input  = scripting.addModule("/driverlib/inputxbar_input.js", {}, false);
@@ -332,13 +331,6 @@ i2c1.bitRate            = 50000;
 i2c1.i2c.sdaPin.$assign = "GPIO42";
 i2c1.i2c.sclPin.$assign = "GPIO43";
 
-i2c2.$name              = "a2_i2c";
-i2c2.bitRate            = 50000;
-i2c2.bitCount           = "I2C_BITCOUNT_8";
-i2c2.useInterrupts      = false;
-i2c2.i2c.sdaPin.$assign = "GPIO40";
-i2c2.i2c.sclPin.$assign = "GPIO41";
-
 inputxbar1.$name = "myINPUTXBAR";
 
 inputxbar_input1.$name         = "myINPUTXBARINPUT0";
@@ -398,7 +390,6 @@ spi1.pociQual.$name          = "myGPIOQUAL1";
  */
 can1.can.$suggestSolution = "CANA";
 i2c1.i2c.$suggestSolution = "I2CA";
-i2c2.i2c.$suggestSolution = "I2CB";
 sci1.sci.$suggestSolution = "SCIB";
 sci2.sci.$suggestSolution = "SCID";
 sci3.sci.$suggestSolution = "SCIC";
