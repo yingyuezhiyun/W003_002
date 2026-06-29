@@ -94,8 +94,8 @@
 
 void    i2c_enable(void);
 void    i2c_disable(void);
-void    i2c_set_target_address(uint16_t targetAddr);
-uint8_t i2c_send_wakeup(void);
+
+
 uint8_t i2c_send_start(void);
 uint8_t i2c_send_stop(void);
 uint8_t i2c_send_bytes(uint8_t count, uint8_t *data);
