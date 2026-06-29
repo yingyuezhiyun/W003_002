@@ -38,15 +38,15 @@
  * \atsha204_library_license_stop
  */
 
-#include "sha204_comm.h"                // definitions and declarations for the Communication module
-//#include "usart1.h"
-//#include "timer_utilities.h"            // definitions for delay functions //2015-1-16 tony comment
-#include "../STM32/software_timer_utilities.h"     //2015-1-16 tony comment
+#include "sha204_comm.h" // definitions and declarations for the Communication module
+// #include "usart1.h"
+// #include "timer_utilities.h"            // definitions for delay functions //2015-1-16 tony comment
+#include "../atsha204_hw/timer_utilities.h" //2015-1-16 tony comment
 
-#include "sha204_lib_return_codes.h"    // declarations of function return codes
+#include "sha204_lib_return_codes.h" // declarations of function return codes
 
-uint8_t sha204c_check_crc(uint8_t *response);//2014-11-16 tony comment
-uint8_t sha204c_resync(uint8_t size, uint8_t *response);//2014-11-16 tony comment
+uint8_t sha204c_check_crc(uint8_t *response);			 // 2014-11-16 tony comment
+uint8_t sha204c_resync(uint8_t size, uint8_t *response); // 2014-11-16 tony comment
 
 /** \brief This function calculates CRC.
  *
@@ -54,26 +54,28 @@ uint8_t sha204c_resync(uint8_t size, uint8_t *response);//2014-11-16 tony commen
  * \param[in] data pointer to data for which CRC should be calculated
  * \param[out] crc pointer to 16-bit CRC
  */
-void sha204c_calculate_crc(uint8_t length, uint8_t *data, uint8_t *crc) {
+void sha204c_calculate_crc(uint8_t length, uint8_t *data, uint8_t *crc)
+{
 	uint8_t counter;
 	uint16_t crc_register = 0;
 	uint16_t polynom = 0x8005;
 	uint8_t shift_register;
 	uint8_t data_bit, crc_bit;
 
-	for (counter = 0; counter < length; counter++) {
-	  for (shift_register = 0x01; shift_register > 0x00; shift_register <<= 1) {
-		 data_bit = (data[counter] & shift_register) ? 1 : 0;
-		 crc_bit = crc_register >> 15;
-		 crc_register <<= 1;
-		 if (data_bit != crc_bit)
-			crc_register ^= polynom;
-	  }
+	for (counter = 0; counter < length; counter++)
+	{
+		for (shift_register = 0x01; shift_register > 0x00; shift_register <<= 1)
+		{
+			data_bit = (data[counter] & shift_register) ? 1 : 0;
+			crc_bit = crc_register >> 15;
+			crc_register <<= 1;
+			if (data_bit != crc_bit)
+				crc_register ^= polynom;
+		}
 	}
-	crc[0] = (uint8_t) (crc_register & 0x00FF);
-	crc[1] = (uint8_t) (crc_register >> 8);
+	crc[0] = (uint8_t)(crc_register & 0x00FF);
+	crc[1] = (uint8_t)(crc_register >> 8);
 }
-
 
 /** \brief This function checks the consistency of a response.
  *  \ingroup atsha204_communication
@@ -89,9 +91,9 @@ uint8_t sha204c_check_crc(uint8_t *response)
 	sha204c_calculate_crc(count, response, crc);
 
 	return (crc[0] == response[count] && crc[1] == response[count + 1])
-		? SHA204_SUCCESS : SHA204_BAD_CRC;
+			   ? SHA204_SUCCESS
+			   : SHA204_BAD_CRC;
 }
-
 
 /** \brief This function wakes up a SHA204 device
  *         and receives a response.
@@ -114,17 +116,16 @@ uint8_t sha204c_wakeup(uint8_t *response)
 		ret_code = SHA204_INVALID_SIZE;
 	else if (response[SHA204_BUFFER_POS_STATUS] != SHA204_STATUS_BYTE_WAKEUP)
 		ret_code = SHA204_COMM_FAIL;
-	else {
-		if ((response[SHA204_RSP_SIZE_MIN - SHA204_CRC_SIZE] != 0x33)
-					|| (response[SHA204_RSP_SIZE_MIN + 1 - SHA204_CRC_SIZE] != 0x43))
+	else
+	{
+		if ((response[SHA204_RSP_SIZE_MIN - SHA204_CRC_SIZE] != 0x33) || (response[SHA204_RSP_SIZE_MIN + 1 - SHA204_CRC_SIZE] != 0x43))
 			ret_code = SHA204_BAD_CRC;
 	}
 	if (ret_code != SHA204_SUCCESS)
-		software_delay_ms(SHA204_COMMAND_EXEC_MAX);//2014-11-16 tony comment
+		sha_delay_ms(SHA204_COMMAND_EXEC_MAX); // 2014-11-16 tony comment
 
 	return ret_code;
 }
-
 
 /** \brief This function re-synchronizes communication.
  * \ingroup atsha204_communication
@@ -135,16 +136,16 @@ uint8_t sha204c_wakeup(uint8_t *response)
   Re-synchronizing communication is done in a maximum of
   three steps:
   <ol>
-    <li>
-      Try to re-synchronize without sending a Wake token.
-      This step is implemented in the Physical layer.
-    </li>
-    <li>
-      If the first step did not succeed send a Wake token.
-    </li>
-    <li>
-      Try to read the Wake response.
-    </li>
+	<li>
+	  Try to re-synchronize without sending a Wake token.
+	  This step is implemented in the Physical layer.
+	</li>
+	<li>
+	  If the first step did not succeed send a Wake token.
+	</li>
+	<li>
+	  Try to read the Wake response.
+	</li>
   </ol>
  *
  * \param[in] size size of response buffer
@@ -162,7 +163,7 @@ uint8_t sha204c_resync(uint8_t size, uint8_t *response)
 	// We lost communication. Send a Wake pulse and try
 	// to receive a response (steps 2 and 3 of the
 	// re-synchronization process).
-	(void) sha204p_sleep();
+	(void)sha204p_sleep();
 	ret_code = sha204c_wakeup(response);
 
 	// Translate a return value of success into one
@@ -170,7 +171,6 @@ uint8_t sha204c_resync(uint8_t size, uint8_t *response)
 	// and might have lost its TempKey.
 	return (ret_code == SHA204_SUCCESS ? SHA204_RESYNC_WITH_WAKEUP : ret_code);
 }
-
 
 /** \brief This function runs a communication sequence.
  *
@@ -189,7 +189,7 @@ uint8_t sha204c_resync(uint8_t size, uint8_t *response)
  * \return status of the operation
  */
 uint8_t sha204c_send_and_receive(uint8_t *tx_buffer, uint8_t rx_size, uint8_t *rx_buffer,
-			uint8_t execution_delay, uint8_t execution_timeout)
+								 uint8_t execution_delay, uint8_t execution_timeout)
 {
 	uint8_t ret_code = SHA204_FUNC_FAIL;
 	uint8_t ret_code_resync;
@@ -199,7 +199,7 @@ uint8_t sha204c_send_and_receive(uint8_t *tx_buffer, uint8_t rx_size, uint8_t *r
 	uint8_t status_byte;
 	uint8_t count = tx_buffer[SHA204_BUFFER_POS_COUNT];
 	uint8_t count_minus_crc = count - SHA204_CRC_SIZE;
-	uint16_t execution_timeout_us = (uint16_t) (execution_timeout * 1000) + SHA204_RESPONSE_TIMEOUT;
+	uint16_t execution_timeout_us = (uint16_t)(execution_timeout * 1000) + SHA204_RESPONSE_TIMEOUT;
 	volatile uint16_t timeout_countdown;
 
 	// Append CRC.
@@ -208,10 +208,12 @@ uint8_t sha204c_send_and_receive(uint8_t *tx_buffer, uint8_t rx_size, uint8_t *r
 	// Retry loop for sending a command and receiving a response.
 	n_retries_send = SHA204_RETRY_COUNT + 1;
 
-	while ((n_retries_send-- > 0) && (ret_code != SHA204_SUCCESS)) {
+	while ((n_retries_send-- > 0) && (ret_code != SHA204_SUCCESS))
+	{
 		// Send command.
 		ret_code = sha204p_send_command(count, tx_buffer);
-		if (ret_code != SHA204_SUCCESS) {
+		if (ret_code != SHA204_SUCCESS)
+		{
 			if (sha204c_resync(rx_size, rx_buffer) == SHA204_RX_NO_RESPONSE)
 				// The device seems to be dead in the water.
 				return ret_code;
@@ -220,11 +222,12 @@ uint8_t sha204c_send_and_receive(uint8_t *tx_buffer, uint8_t rx_size, uint8_t *r
 		}
 
 		// Wait minimum command execution time and then start polling for a response.
-		software_delay_ms(execution_delay + 10);//2014-11-16 tony comment
+		sha_delay_ms(execution_delay + 10); // 2014-11-16 tony comment
 
 		// Retry loop for receiving a response.
 		n_retries_receive = SHA204_RETRY_COUNT + 1;
-		while (n_retries_receive-- > 0) {
+		while (n_retries_receive-- > 0)
+		{
 
 			// Reset response buffer.
 			for (i = 0; i < rx_size; i++)
@@ -232,12 +235,14 @@ uint8_t sha204c_send_and_receive(uint8_t *tx_buffer, uint8_t rx_size, uint8_t *r
 
 			// Poll for response.
 			timeout_countdown = execution_timeout_us;
-			do {
+			do
+			{
 				ret_code = sha204p_receive_response(rx_size, rx_buffer);
 				timeout_countdown -= SHA204_RESPONSE_TIMEOUT;
 			} while ((timeout_countdown > SHA204_RESPONSE_TIMEOUT) && (ret_code == SHA204_RX_NO_RESPONSE));
 
-			if (ret_code == SHA204_RX_NO_RESPONSE) {
+			if (ret_code == SHA204_RX_NO_RESPONSE)
+			{
 				// We did not receive a response. Re-synchronize and send command again.
 				if (sha204c_resync(rx_size, rx_buffer) == SHA204_RX_NO_RESPONSE)
 					// The device seems to be dead in the water.
@@ -247,7 +252,8 @@ uint8_t sha204c_send_and_receive(uint8_t *tx_buffer, uint8_t rx_size, uint8_t *r
 			}
 
 			// Check whether we received a valid response.
-			if (ret_code == SHA204_INVALID_SIZE) {
+			if (ret_code == SHA204_INVALID_SIZE)
+			{
 				// We see 0xFF for the count when communication got out of sync.
 				ret_code_resync = sha204c_resync(rx_size, rx_buffer);
 				if (ret_code_resync == SHA204_SUCCESS)
@@ -265,7 +271,8 @@ uint8_t sha204c_send_and_receive(uint8_t *tx_buffer, uint8_t rx_size, uint8_t *r
 			// We received a response of valid size.
 			// Check the consistency of the response.
 			ret_code = sha204c_check_crc(rx_buffer);
-			if (ret_code == SHA204_SUCCESS) {
+			if (ret_code == SHA204_SUCCESS)
+			{
 				// Received valid response.
 				if (rx_buffer[SHA204_BUFFER_POS_COUNT] > SHA204_RSP_SIZE_MIN)
 					// Received non-status response. We are done.
@@ -280,7 +287,8 @@ uint8_t sha204c_send_and_receive(uint8_t *tx_buffer, uint8_t rx_size, uint8_t *r
 					return SHA204_PARSE_ERROR;
 				if (status_byte == SHA204_STATUS_BYTE_EXEC)
 					return SHA204_CMD_FAIL;
-				if (status_byte == SHA204_STATUS_BYTE_COMM) {
+				if (status_byte == SHA204_STATUS_BYTE_COMM)
+				{
 					// In case of the device status byte indicating a communication
 					// error this function exits the retry loop for receiving a response
 					// and enters the overall retry loop
@@ -294,7 +302,8 @@ uint8_t sha204c_send_and_receive(uint8_t *tx_buffer, uint8_t rx_size, uint8_t *r
 				return ret_code;
 			}
 
-			else {
+			else
+			{
 				// Received response with incorrect CRC.
 				ret_code_resync = sha204c_resync(rx_size, rx_buffer);
 				if (ret_code_resync == SHA204_SUCCESS)

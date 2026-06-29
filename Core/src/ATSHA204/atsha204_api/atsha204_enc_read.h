@@ -14,13 +14,11 @@
 // Optimization:			-O1
 //******************************************************************************************
 
-
 #ifndef ATSHA204_ENC_READ_
 #define ATSHA204_ENC_READ_
 
 #include "stdint.h"
 
-uint8_t atsha204_enc_read(uint16_t read_slot_address, uint8_t* clear_read_data, uint16_t read_key_slot_id, uint8_t* secret_read_key, uint8_t* NumIn);
+uint8_t atsha204_enc_read(uint16_t read_slot_address, uint8_t *clear_read_data, uint16_t read_key_slot_id, uint8_t *secret_read_key, uint8_t *NumIn);
 
 #endif /* ATSHA204_ENC_READ_ */
-

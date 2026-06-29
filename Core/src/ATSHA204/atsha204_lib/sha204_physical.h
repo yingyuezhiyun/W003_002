@@ -37,12 +37,11 @@
  * \atsha204_library_license_stop
  */
 #ifndef SHA204_PHYSICAL_H
-#   define SHA204_PHYSICAL_H
+#define SHA204_PHYSICAL_H
 
-#include <stdint.h>                                  // data type definitions
+#include <stdint.h> // data type definitions
 #include "inc/hw_types.h"
-#include "sha204_config.h"                           // configuration values
-
+#include "sha204_config.h" // configuration values
 
 /** \defgroup sha204_physical Module 03: Header File for Interface Abstraction Modules
  *
@@ -51,23 +50,22 @@
  * Always include this file no matter whether you use SWI or I<SUP>2</SUP>C.
 @{ */
 
-#define SHA204_RSP_SIZE_MIN          ((uint8_t)  4)  //!< minimum number of bytes in response
-#define SHA204_RSP_SIZE_MAX          ((uint8_t) 35)  //!< maximum size of response packet
+#define SHA204_RSP_SIZE_MIN ((uint8_t)4)  //!< minimum number of bytes in response
+#define SHA204_RSP_SIZE_MAX ((uint8_t)35) //!< maximum size of response packet
 
-#define SHA204_BUFFER_POS_COUNT      (0)             //!< buffer index of count byte in command or response
-#define SHA204_BUFFER_POS_DATA       (1)             //!< buffer index of data in response
+#define SHA204_BUFFER_POS_COUNT (0) //!< buffer index of count byte in command or response
+#define SHA204_BUFFER_POS_DATA (1)  //!< buffer index of data in response
 
 //! width of Wakeup pulse in 10 us units
-#define SHA204_WAKEUP_PULSE_WIDTH    (uint8_t) (6.0 * CPU_CLOCK_DEVIATION_POSITIVE + 0.5)
+#define SHA204_WAKEUP_PULSE_WIDTH (uint8_t)(6.0 * CPU_CLOCK_DEVIATION_POSITIVE + 0.5)
 
 //! delay between Wakeup pulse and communication in ms
-#define SHA204_WAKEUP_DELAY          (uint8_t) (3.0 * CPU_CLOCK_DEVIATION_POSITIVE + 0.5)
-
+#define SHA204_WAKEUP_DELAY (uint8_t)(3.0 * CPU_CLOCK_DEVIATION_POSITIVE + 0.5)
 
 uint8_t sha204p_send_command(uint8_t count, uint8_t *command);
 uint8_t sha204p_receive_response(uint8_t size, uint8_t *response);
-void    sha204p_init(void);
-void    sha204p_set_device_id(uint8_t id);
+void sha204p_init(void);
+void sha204p_set_device_id(uint8_t id);
 uint8_t sha204p_wakeup(void);
 uint8_t sha204p_idle(void);
 uint8_t sha204p_sleep(void);

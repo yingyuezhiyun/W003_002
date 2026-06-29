@@ -41,7 +41,7 @@
 #ifndef SHA204_HELPER_H
 #   define SHA204_HELPER_H
 
-#include "../sha204/sha204_lib/sha204_comm_marshaling.h" // definitions and declarations for the Command Marshaling module
+#include "../atsha204_lib/sha204_comm_marshaling.h" // definitions and declarations for the Command Marshaling module
 
 
 /** \defgroup atsha204_helper Module 06: Helper Functions

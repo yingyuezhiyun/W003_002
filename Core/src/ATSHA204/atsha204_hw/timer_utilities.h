@@ -37,15 +37,15 @@
  * \atsha204_library_license_stop
  */
 
-#ifndef SOFTWARE_TIMER_UTILITIES_H_
-#define SOFTWARE_TIMER_UTILITIES_H_
+#ifndef TIMER_UTILITIES_H_
+#define TIMER_UTILITIES_H_
 
 #include "device.h"
 
-// 使用F28377D硬件延时替代STM32软件延时
-#define software_delay_ms(ms)       DEVICE_DELAY_US((uint32_t)(ms) * 1000U)
-#define software_delay_10us(n)      DEVICE_DELAY_US((uint32_t)(n) * 10U)
 
-void delay_init(void);
+#define sha_delay_ms(ms)       DEVICE_DELAY_US((uint32_t)(ms) * 1000U)
+#define sha_delay_10us(n)      DEVICE_DELAY_US((uint32_t)(n) * 10U)
 
-#endif /* SOFTWARE_TIMER_UTILITIES_H_ */
+
+
+#endif /* TIMER_UTILITIES_H_ */

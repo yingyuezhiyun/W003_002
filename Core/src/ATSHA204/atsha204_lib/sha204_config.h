@@ -44,9 +44,9 @@
  */
 
 #ifndef SHA204_CONFIG_H
-#   define SHA204_CONFIG_H
+#define SHA204_CONFIG_H
 
-#include <stddef.h>                    // data type definitions
+#include <stddef.h> // data type definitions
 
 /** \defgroup atsha204_config Module 07: Configuration Definitions
  *
@@ -63,13 +63,13 @@
  * This value is used to establish time related worst case numbers, for
  * example to calculate execution delays and timeouts.
  */
-#define CPU_CLOCK_DEVIATION_POSITIVE   (1.01)
+#define CPU_CLOCK_DEVIATION_POSITIVE (1.01)
 
 /** \brief maximum CPU clock deviation to lower frequency (crystal etc.)
  * This value is used to establish time related worst case numbers, for
  * example to calculate execution delays and timeouts.
  */
-#define CPU_CLOCK_DEVIATION_NEGATIVE   (0.99)
+#define CPU_CLOCK_DEVIATION_NEGATIVE (0.99)
 
 /** \brief number of command / response retries
  *
@@ -79,10 +79,9 @@
  * Every increment of the number of retries increases the time
  * the library is spending in the retry loop by \ref SHA204_COMMAND_EXEC_MAX.
  */
-#define SHA204_RETRY_COUNT           (2)
+#define SHA204_RETRY_COUNT (2)
 
 /** @} */
-
 
 /** \name Available Definitions for Interfaces
  *
@@ -94,13 +93,12 @@
  *
 @{ */
 //! Dummy macro that allow Doxygen to parse this group.
-//#define DOXYGEN_DUMMY 0
-// #define SHA204_SWI_BITBANG
-// #define SHA204_SWI_UART
- #define SHA204_I2C
+// #define DOXYGEN_DUMMY 0
+//  #define SHA204_SWI_BITBANG
+//  #define SHA204_SWI_UART
+#define SHA204_I2C
 
 /** @} */
-
 
 #ifdef SHA204_SWI_BITBANG
 /** \name Configuration Definitions for SWI (GPIO) Interface
@@ -109,54 +107,48 @@
 /** \brief This value is the same as START_PULSE_TIME_OUT in
  *  bitbang_config.h, but in us instead of loop counts.
  */
-#   define SWI_RECEIVE_TIME_OUT      ((uint16_t) 163)
+#define SWI_RECEIVE_TIME_OUT ((uint16_t)163)
 
 //! It takes 312.5 us to send a byte (9 single-wire bits / 230400 Baud * 8 flag bits).
-#   define SWI_US_PER_BYTE           ((uint16_t) 313)
+#define SWI_US_PER_BYTE ((uint16_t)313)
 
 /** @} */
 #endif
-
-
 
 #ifdef SHA204_SWI_UART
 /** \name Configuration Definitions for SWI (UART) Interface
 @{ */
 
 //! receive timeout in us instead of loop counts
-#   define SWI_RECEIVE_TIME_OUT      ((uint16_t) 153)
+#define SWI_RECEIVE_TIME_OUT ((uint16_t)153)
 
 //! It takes 312.5 us to send a byte (9 single-wire bits / 230400 Baud * 8 flag bits).
-#   define SWI_US_PER_BYTE           ((uint16_t) 313)
+#define SWI_US_PER_BYTE ((uint16_t)313)
 
 //! SWI response timeout is the sum of receive timeout and the time it takes to send the TX flag.
-#   ifndef SHA204_RESPONSE_TIMEOUT
-#      define SHA204_RESPONSE_TIMEOUT   ((uint16_t) SWI_RECEIVE_TIME_OUT + SWI_US_PER_BYTE)
-#   endif
+#ifndef SHA204_RESPONSE_TIMEOUT
+#define SHA204_RESPONSE_TIMEOUT ((uint16_t)SWI_RECEIVE_TIME_OUT + SWI_US_PER_BYTE)
+#endif
 
 /** @} */
 
 #endif
-
-
 
 #if defined(SHA204_SWI_BITBANG) || defined(SHA204_SWI_UART)
 /** \name Configuration Definitions for SWI Interface, Common to GPIO and UART
 @{ */
 
 //! delay before sending a transmit flag in the synchronization routine
-#   define SHA204_SYNC_TIMEOUT       ((uint8_t) 85)
+#define SHA204_SYNC_TIMEOUT ((uint8_t)85)
 
 //! SWI response timeout is the sum of receive timeout and the time it takes to send the TX flag.
-#   ifndef SHA204_RESPONSE_TIMEOUT
-#      define SHA204_RESPONSE_TIMEOUT   ((uint16_t) SWI_RECEIVE_TIME_OUT + SWI_US_PER_BYTE)
-#   endif
+#ifndef SHA204_RESPONSE_TIMEOUT
+#define SHA204_RESPONSE_TIMEOUT ((uint16_t)SWI_RECEIVE_TIME_OUT + SWI_US_PER_BYTE)
+#endif
 
 /** @} */
 
 #endif
-
-
 
 #ifdef SHA204_I2C
 /** \name Configuration Definitions for I2C Interface
@@ -167,14 +159,13 @@
  *
  *         This value is used to timeout when waiting for a response.
  */
-#   ifndef SHA204_RESPONSE_TIMEOUT
-#      define SHA204_RESPONSE_TIMEOUT     ((uint16_t) 37)
-#   endif
+#ifndef SHA204_RESPONSE_TIMEOUT
+#define SHA204_RESPONSE_TIMEOUT ((uint16_t)37)
+#endif
 
 /** @} */
 
 #endif
-
 
 /** @} */
 

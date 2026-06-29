@@ -10,10 +10,7 @@
 #define ATSHA204_DEFINES_H_
 
 #include <stdint.h>
-//#include <string.h>
-//#include "sha204_comm_marshaling.h"
-//#include "sha204_helper.h"
-//#include "sha204_lib_return_codes.h"
+
 
 
 #define NONCE_PARAM2					((uint16_t) 0x0000)		//nonce param2. always zero

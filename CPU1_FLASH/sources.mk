@@ -125,10 +125,10 @@ GEN_OPTS__QUOTED :=
 # Every subdirectory with source files must be described here
 SUBDIRS := \
 . \
-Core/src/ATSHA204/atsha204 \
-Core/src/ATSHA204/mcu_oper \
-Core/src/ATSHA204/sha204/STM32 \
-Core/src/ATSHA204/sha204/sha204_lib \
+Core/src/ATSHA204/atsha204_api \
+Core/src/ATSHA204/atsha204_helper \
+Core/src/ATSHA204/atsha204_hw \
+Core/src/ATSHA204/atsha204_lib \
 Core/src/communication \
 Core/src \
 Core/src/elmo \

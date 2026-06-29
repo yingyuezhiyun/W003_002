@@ -58,18 +58,12 @@
 // I2CB引脚定义 (根据实际硬件修改)
 #define I2C_SDA_PIN         40U                     //!< GPIO40 - SDAB
 #define I2C_SCL_PIN         41U                     //!< GPIO41 - SCLB
-#define I2C_SDA_PIN_CFG     GPIO_40_SDAB            //!< SDAB引脚配置
-#define I2C_SCL_PIN_CFG     GPIO_41_SCLB            //!< SCLB引脚配置
 
-// GPIO40在GPB寄存器中的位偏移 (GPIO40 - GPIO32 = 8)
-#define GPIO40_BIT          (1U << (I2C_SDA_PIN - 32U))
-// GPIO41在GPB寄存器中的位偏移 (GPIO41 - GPIO32 = 9)
-#define GPIO41_BIT          (1U << (I2C_SCL_PIN - 32U))
 
-#define SDA_GPIO_OUT_HIGH() GPIO_writePin(I2C_SDA_PIN, 1)
-#define SDA_GPIO_OUT_LOW() GPIO_writePin(I2C_SDA_PIN, 0)
-#define SCL_GPIO_OUT_HIGH() GPIO_writePin(I2C_SCL_PIN, 1)
-#define SCL_GPIO_OUT_LOW() GPIO_writePin(I2C_SCL_PIN, 0)
+#define SDA_GPIO_OUT_HIGH() 	GPIO_writePin(I2C_SDA_PIN, 1)
+#define SDA_GPIO_OUT_LOW()  	GPIO_writePin(I2C_SDA_PIN, 0)
+#define SCL_GPIO_OUT_HIGH() 	GPIO_writePin(I2C_SCL_PIN, 1)
+#define SCL_GPIO_OUT_LOW()  	GPIO_writePin(I2C_SCL_PIN, 0)
 
 
 // 超时计数
@@ -79,11 +73,8 @@
 // 内部函数声明
 // =========================================================================
 
-static void i2c_gpio_set_output(void);
-static void i2c_gpio_restore(void);
 
-// 模块初始化标志
-static bool i2c_initialized = false;
+
 
 // =========================================================================
 // 内部函数实现
@@ -326,7 +317,3 @@ void i2c_enable(void)
     software_i2c_init();
 }
 
-void i2c_set_target_address(uint16_t targetAddr)
-{
-    I2C_setTargetAddress(I2C_BASE_ADDR, targetAddr);
-}

@@ -38,17 +38,16 @@
  * \atsha204_library_license_stop
  */
 
-#include <string.h>                    // needed for memcpy()
-#include "sha204_lib_return_codes.h"   // declarations of function return codes
-#include "sha204_comm_marshaling.h"    // definitions and declarations for the Command Marshaling module
-
+#include <string.h>					 // needed for memcpy()
+#include "sha204_lib_return_codes.h" // declarations of function return codes
+#include "sha204_comm_marshaling.h"	 // definitions and declarations for the Command Marshaling module
 
 uint8_t sha204m_check_parameters(uint8_t op_code, uint8_t param1, uint16_t param2,
-																uint8_t datalen1, uint8_t *data1, uint8_t datalen2, uint8_t *data2, uint8_t datalen3, uint8_t *data3,
-																uint8_t tx_size, uint8_t *tx_buffer, uint8_t rx_size, uint8_t *rx_buffer);//2014-11-16 tony comment
+								 uint8_t datalen1, uint8_t *data1, uint8_t datalen2, uint8_t *data2, uint8_t datalen3, uint8_t *data3,
+								 uint8_t tx_size, uint8_t *tx_buffer, uint8_t rx_size, uint8_t *rx_buffer); // 2014-11-16 tony comment
 
 // Define this to compile and link this function.
-//#define SHA204_CHECK_PARAMETERS
+// #define SHA204_CHECK_PARAMETERS
 
 /** \ingroup atsha204_command_marshaling
  * \brief This function checks the parameters for sha204m_execute().
@@ -70,8 +69,8 @@ uint8_t sha204m_check_parameters(uint8_t op_code, uint8_t param1, uint16_t param
  * \return status of the operation
  */
 uint8_t sha204m_check_parameters(uint8_t op_code, uint8_t param1, uint16_t param2,
-		uint8_t datalen1, uint8_t *data1, uint8_t datalen2, uint8_t *data2, uint8_t datalen3, uint8_t *data3,
-		uint8_t tx_size, uint8_t *tx_buffer, uint8_t rx_size, uint8_t *rx_buffer)
+								 uint8_t datalen1, uint8_t *data1, uint8_t datalen2, uint8_t *data2, uint8_t datalen3, uint8_t *data3,
+								 uint8_t tx_size, uint8_t *tx_buffer, uint8_t rx_size, uint8_t *rx_buffer)
 {
 #ifdef SHA204_CHECK_PARAMETERS
 
@@ -83,7 +82,8 @@ uint8_t sha204m_check_parameters(uint8_t op_code, uint8_t param1, uint16_t param
 		return SHA204_BAD_PARAM;
 
 	// Check parameters depending on op-code.
-	switch (op_code) {
+	switch (op_code)
+	{
 	case SHA204_CHECKMAC:
 		if (!data1 || !data2 || (param1 & ~CHECKMAC_MODE_MASK) || (param2 > SHA204_KEY_ID_MAX))
 			// Neither data1 nor data2 can be null.
@@ -115,23 +115,21 @@ uint8_t sha204m_check_parameters(uint8_t op_code, uint8_t param1, uint16_t param
 		break;
 
 	case SHA204_LOCK:
-		if ((param1 & ~LOCK_ZONE_MASK)
-					|| ((param1 & LOCK_ZONE_NO_CRC) && param2))
+		if ((param1 & ~LOCK_ZONE_MASK) || ((param1 & LOCK_ZONE_NO_CRC) && param2))
 			// param1 has to match an allowed Lock mode.
 			// If no CRC is required the CRC should be 0.
 			return SHA204_BAD_PARAM;
 		break;
 
 	case SHA204_MAC:
-		if ((param1 & ~MAC_MODE_MASK)
-					|| (!(param1 & MAC_MODE_BLOCK2_TEMPKEY) && !data1))
+		if ((param1 & ~MAC_MODE_MASK) || (!(param1 & MAC_MODE_BLOCK2_TEMPKEY) && !data1))
 			// param1 has to match an allowed MAC mode.
 			// If the MAC mode requires challenge data, data1 should not be null.
 			return SHA204_BAD_PARAM;
 		break;
 
 	case SHA204_NONCE:
-		if (!data1 || (param1 > NONCE_MODE_PASSTHROUGH)	|| (param1 == NONCE_MODE_INVALID))
+		if (!data1 || (param1 > NONCE_MODE_PASSTHROUGH) || (param1 == NONCE_MODE_INVALID))
 			// data1 cannot be null.
 			// param1 has to match an allowed Nonce mode.
 			return SHA204_BAD_PARAM;
@@ -148,8 +146,7 @@ uint8_t sha204m_check_parameters(uint8_t op_code, uint8_t param1, uint16_t param
 		break;
 
 	case SHA204_READ:
-		if ((param1 & ~READ_ZONE_MASK)
-					|| ((param1 & READ_ZONE_MODE_32_BYTES) && (param1 == SHA204_ZONE_OTP)))
+		if ((param1 & ~READ_ZONE_MASK) || ((param1 & READ_ZONE_MODE_32_BYTES) && (param1 == SHA204_ZONE_OTP)))
 			// param1 has to match an allowed Read mode.
 			// A 32-byte block cannot be read from the OTP zone.
 			return SHA204_BAD_PARAM;
@@ -177,7 +174,6 @@ uint8_t sha204m_check_parameters(uint8_t op_code, uint8_t param1, uint16_t param
 	return SHA204_SUCCESS;
 }
 
-
 /** \brief This function creates a command packet, sends it, and receives its response.
  *
  * \param[in] op_code command op-code
@@ -196,8 +192,8 @@ uint8_t sha204m_check_parameters(uint8_t op_code, uint8_t param1, uint16_t param
  * \return status of the operation
  */
 uint8_t sha204m_execute(uint8_t op_code, uint8_t param1, uint16_t param2,
-			uint8_t datalen1, uint8_t *data1, uint8_t datalen2, uint8_t *data2, uint8_t datalen3, uint8_t *data3,
-			uint8_t tx_size, uint8_t *tx_buffer, uint8_t rx_size, uint8_t *rx_buffer)
+						uint8_t datalen1, uint8_t *data1, uint8_t datalen2, uint8_t *data2, uint8_t datalen3, uint8_t *data3,
+						uint8_t tx_size, uint8_t *tx_buffer, uint8_t rx_size, uint8_t *rx_buffer)
 {
 	uint8_t poll_delay, poll_timeout, response_size;
 	uint8_t *p_buffer;
@@ -205,13 +201,14 @@ uint8_t sha204m_execute(uint8_t op_code, uint8_t param1, uint16_t param2,
 
 	// Define SHA204_CHECK_PARAMETERS to compile and link this feature.
 	uint8_t ret_code = sha204m_check_parameters(op_code, param1, param2,
-				datalen1, data1, datalen2, data2, datalen3, data3, 
-				tx_size, tx_buffer, rx_size, rx_buffer);
+												datalen1, data1, datalen2, data2, datalen3, data3,
+												tx_size, tx_buffer, rx_size, rx_buffer);
 	if (ret_code != SHA204_SUCCESS)
 		return ret_code;
 
 	// Supply delays and response size.
-	switch (op_code) {
+	switch (op_code)
+	{
 	case SHA204_CHECKMAC:
 		poll_delay = CHECKMAC_DELAY;
 		poll_timeout = CHECKMAC_EXEC_MAX - CHECKMAC_DELAY;
@@ -258,7 +255,8 @@ uint8_t sha204m_execute(uint8_t op_code, uint8_t param1, uint16_t param2,
 		poll_delay = NONCE_DELAY;
 		poll_timeout = NONCE_EXEC_MAX - NONCE_DELAY;
 		response_size = param1 == NONCE_MODE_PASSTHROUGH
-							? NONCE_RSP_SIZE_SHORT : NONCE_RSP_SIZE_LONG;
+							? NONCE_RSP_SIZE_SHORT
+							: NONCE_RSP_SIZE_LONG;
 		break;
 
 	case SHA204_PAUSE:
@@ -277,7 +275,8 @@ uint8_t sha204m_execute(uint8_t op_code, uint8_t param1, uint16_t param2,
 		poll_delay = READ_DELAY;
 		poll_timeout = READ_EXEC_MAX - READ_DELAY;
 		response_size = (param1 & SHA204_ZONE_COUNT_FLAG)
-							? READ_32_RSP_SIZE : READ_4_RSP_SIZE;
+							? READ_32_RSP_SIZE
+							: READ_4_RSP_SIZE;
 		break;
 
 	case SHA204_UPDATE_EXTRA:
@@ -308,15 +307,18 @@ uint8_t sha204m_execute(uint8_t op_code, uint8_t param1, uint16_t param2,
 	*p_buffer++ = param2 & 0xFF;
 	*p_buffer++ = param2 >> 8;
 
-	if (datalen1 > 0) {
+	if (datalen1 > 0)
+	{
 		memcpy(p_buffer, data1, datalen1);
 		p_buffer += datalen1;
 	}
-	if (datalen2 > 0) {
+	if (datalen2 > 0)
+	{
 		memcpy(p_buffer, data2, datalen2);
 		p_buffer += datalen2;
 	}
-	if (datalen3 > 0) {
+	if (datalen3 > 0)
+	{
 		memcpy(p_buffer, data3, datalen3);
 		p_buffer += datalen3;
 	}
@@ -325,9 +327,8 @@ uint8_t sha204m_execute(uint8_t op_code, uint8_t param1, uint16_t param2,
 
 	// Send command and receive response.
 	return sha204c_send_and_receive(&tx_buffer[0], response_size,
-				&rx_buffer[0],	poll_delay, poll_timeout);
+									&rx_buffer[0], poll_delay, poll_timeout);
 }
-
 
 /** \brief This function sends a CheckMAC command to the device.
  *
@@ -341,10 +342,9 @@ uint8_t sha204m_execute(uint8_t op_code, uint8_t param1, uint16_t param2,
  * \return status of the operation
  */
 uint8_t sha204m_check_mac(uint8_t *tx_buffer, uint8_t *rx_buffer,
-			uint8_t mode, uint8_t key_id, uint8_t *client_challenge, uint8_t *client_response, uint8_t *other_data)
+						  uint8_t mode, uint8_t key_id, uint8_t *client_challenge, uint8_t *client_response, uint8_t *other_data)
 {
-	if (!tx_buffer || !rx_buffer || !client_response || !other_data
-		|| (mode & ~CHECKMAC_MODE_MASK)	|| (key_id > SHA204_KEY_ID_MAX))
+	if (!tx_buffer || !rx_buffer || !client_response || !other_data || (mode & ~CHECKMAC_MODE_MASK) || (key_id > SHA204_KEY_ID_MAX))
 		// no null pointers allowed
 		// mode has to match an allowed CheckMac mode.
 		// key_id > 15 not allowed
@@ -353,7 +353,7 @@ uint8_t sha204m_check_mac(uint8_t *tx_buffer, uint8_t *rx_buffer,
 	tx_buffer[SHA204_COUNT_IDX] = CHECKMAC_COUNT;
 	tx_buffer[SHA204_OPCODE_IDX] = SHA204_CHECKMAC;
 	tx_buffer[CHECKMAC_MODE_IDX] = mode & CHECKMAC_MODE_MASK;
-	tx_buffer[CHECKMAC_KEYID_IDX]= key_id;
+	tx_buffer[CHECKMAC_KEYID_IDX] = key_id;
 	tx_buffer[CHECKMAC_KEYID_IDX + 1] = 0;
 	if (!client_challenge)
 		memset(&tx_buffer[CHECKMAC_CLIENT_CHALLENGE_IDX], 0, CHECKMAC_CLIENT_CHALLENGE_SIZE);
@@ -364,9 +364,8 @@ uint8_t sha204m_check_mac(uint8_t *tx_buffer, uint8_t *rx_buffer,
 	memcpy(&tx_buffer[CHECKMAC_DATA_IDX], other_data, CHECKMAC_OTHER_DATA_SIZE);
 
 	return sha204c_send_and_receive(&tx_buffer[0], CHECKMAC_RSP_SIZE, &rx_buffer[0],
-				CHECKMAC_DELAY, CHECKMAC_EXEC_MAX - CHECKMAC_DELAY);
+									CHECKMAC_DELAY, CHECKMAC_EXEC_MAX - CHECKMAC_DELAY);
 }
-
 
 /** \brief This function sends a DeriveKey command to the device.
  *
@@ -378,10 +377,9 @@ uint8_t sha204m_check_mac(uint8_t *tx_buffer, uint8_t *rx_buffer,
  * \return status of the operation
  */
 uint8_t sha204m_derive_key(uint8_t *tx_buffer, uint8_t *rx_buffer,
-			uint8_t random, uint8_t target_key, uint8_t *mac)
+						   uint8_t random, uint8_t target_key, uint8_t *mac)
 {
-	if (!tx_buffer || !rx_buffer || (random & ~DERIVE_KEY_RANDOM_FLAG)
-				 || (target_key > SHA204_KEY_ID_MAX))
+	if (!tx_buffer || !rx_buffer || (random & ~DERIVE_KEY_RANDOM_FLAG) || (target_key > SHA204_KEY_ID_MAX))
 		// no null pointers allowed
 		// random has to match an allowed DeriveKey mode.
 		// target_key > 15 not allowed
@@ -400,9 +398,8 @@ uint8_t sha204m_derive_key(uint8_t *tx_buffer, uint8_t *rx_buffer,
 		tx_buffer[SHA204_COUNT_IDX] = DERIVE_KEY_COUNT_SMALL;
 
 	return sha204c_send_and_receive(&tx_buffer[0], DERIVE_KEY_RSP_SIZE, &rx_buffer[0],
-				DERIVE_KEY_DELAY, DERIVE_KEY_EXEC_MAX - DERIVE_KEY_DELAY);
+									DERIVE_KEY_DELAY, DERIVE_KEY_EXEC_MAX - DERIVE_KEY_DELAY);
 }
-
 
 /** \brief This function sends a DevRev command to the device.
  *
@@ -421,13 +418,12 @@ uint8_t sha204m_dev_rev(uint8_t *tx_buffer, uint8_t *rx_buffer)
 
 	// Parameters are 0.
 	tx_buffer[DEVREV_PARAM1_IDX] =
-	tx_buffer[DEVREV_PARAM2_IDX] =
-	tx_buffer[DEVREV_PARAM2_IDX + 1] = 0;
+		tx_buffer[DEVREV_PARAM2_IDX] =
+			tx_buffer[DEVREV_PARAM2_IDX + 1] = 0;
 
 	return sha204c_send_and_receive(&tx_buffer[0], DEVREV_RSP_SIZE, &rx_buffer[0],
-				DEVREV_DELAY, DEVREV_EXEC_MAX - DEVREV_DELAY);
+									DEVREV_DELAY, DEVREV_EXEC_MAX - DEVREV_DELAY);
 }
-
 
 /** \brief This function sends a GenDig command to the device.
  *
@@ -439,15 +435,14 @@ uint8_t sha204m_dev_rev(uint8_t *tx_buffer, uint8_t *rx_buffer)
  * \return status of the operation
  */
 uint8_t sha204m_gen_dig(uint8_t *tx_buffer, uint8_t *rx_buffer,
-			uint8_t zone, uint8_t key_id, uint8_t *other_data)
+						uint8_t zone, uint8_t key_id, uint8_t *other_data)
 {
 	if (!tx_buffer || !rx_buffer || (zone > GENDIG_ZONE_DATA))
 		// no null pointers allowed
 		// zone has to match a zone (Config, Data, or OTP zone)
 		return SHA204_BAD_PARAM;
 
-	if (((zone == GENDIG_ZONE_OTP) && (key_id > SHA204_OTP_BLOCK_MAX))
-				|| ((zone == GENDIG_ZONE_DATA) && (key_id > SHA204_KEY_ID_MAX)))
+	if (((zone == GENDIG_ZONE_OTP) && (key_id > SHA204_OTP_BLOCK_MAX)) || ((zone == GENDIG_ZONE_DATA) && (key_id > SHA204_KEY_ID_MAX)))
 		// If OTP zone is used only valid OTP block values can be used.
 		// If Data zone is used key_id > 15 is not allowed.
 		return SHA204_BAD_PARAM;
@@ -465,10 +460,8 @@ uint8_t sha204m_gen_dig(uint8_t *tx_buffer, uint8_t *rx_buffer,
 		tx_buffer[SHA204_COUNT_IDX] = GENDIG_COUNT;
 
 	return sha204c_send_and_receive(&tx_buffer[0], GENDIG_RSP_SIZE, &rx_buffer[0],
-				GENDIG_DELAY, GENDIG_EXEC_MAX - GENDIG_DELAY);
-
+									GENDIG_DELAY, GENDIG_EXEC_MAX - GENDIG_DELAY);
 }
-
 
 /** \brief This function sends an HMAC command to the device.
  *
@@ -495,9 +488,8 @@ uint8_t sha204m_hmac(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t mode, uint1
 	tx_buffer[HMAC_KEYID_IDX + 1] = key_id >> 8;
 
 	return sha204c_send_and_receive(&tx_buffer[0], HMAC_RSP_SIZE, &rx_buffer[0],
-				HMAC_DELAY, HMAC_EXEC_MAX - HMAC_DELAY);
+									HMAC_DELAY, HMAC_EXEC_MAX - HMAC_DELAY);
 }
-
 
 /** \brief This function sends a Lock command to the device.
  *
@@ -509,8 +501,7 @@ uint8_t sha204m_hmac(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t mode, uint1
  */
 uint8_t sha204m_lock(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t zone, uint16_t summary)
 {
-	if (!tx_buffer || !rx_buffer || (zone & ~LOCK_ZONE_MASK)
-				|| ((zone & LOCK_ZONE_NO_CRC) && summary))
+	if (!tx_buffer || !rx_buffer || (zone & ~LOCK_ZONE_MASK) || ((zone & LOCK_ZONE_NO_CRC) && summary))
 		// no null pointers allowed
 		// zone has to match an allowed zone.
 		// If no CRC is required summary has to be 0.
@@ -519,12 +510,11 @@ uint8_t sha204m_lock(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t zone, uint1
 	tx_buffer[SHA204_COUNT_IDX] = LOCK_COUNT;
 	tx_buffer[SHA204_OPCODE_IDX] = SHA204_LOCK;
 	tx_buffer[LOCK_ZONE_IDX] = zone & LOCK_ZONE_MASK;
-	tx_buffer[LOCK_SUMMARY_IDX]= summary & 0xFF;
-	tx_buffer[LOCK_SUMMARY_IDX + 1]= summary >> 8;
+	tx_buffer[LOCK_SUMMARY_IDX] = summary & 0xFF;
+	tx_buffer[LOCK_SUMMARY_IDX + 1] = summary >> 8;
 	return sha204c_send_and_receive(&tx_buffer[0], LOCK_RSP_SIZE, &rx_buffer[0],
-				LOCK_DELAY, LOCK_EXEC_MAX - LOCK_DELAY);
+									LOCK_DELAY, LOCK_EXEC_MAX - LOCK_DELAY);
 }
-
 
 /** \brief This function sends a MAC command to the device.
  *
@@ -536,10 +526,9 @@ uint8_t sha204m_lock(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t zone, uint1
  * \return status of the operation
  */
 uint8_t sha204m_mac(uint8_t *tx_buffer, uint8_t *rx_buffer,
-			uint8_t mode, uint16_t key_id, uint8_t *challenge)
+					uint8_t mode, uint16_t key_id, uint8_t *challenge)
 {
-	if (!tx_buffer || !rx_buffer || (mode & ~MAC_MODE_MASK)
-				|| (!(mode & MAC_MODE_BLOCK2_TEMPKEY) && !challenge))
+	if (!tx_buffer || !rx_buffer || (mode & ~MAC_MODE_MASK) || (!(mode & MAC_MODE_BLOCK2_TEMPKEY) && !challenge))
 		// no null pointers allowed
 		// mode has to match an allowed MAC mode.
 		// If mode requires challenge data challenge cannot be null.
@@ -557,9 +546,8 @@ uint8_t sha204m_mac(uint8_t *tx_buffer, uint8_t *rx_buffer,
 	}
 
 	return sha204c_send_and_receive(&tx_buffer[0], MAC_RSP_SIZE, &rx_buffer[0],
-				MAC_DELAY, MAC_EXEC_MAX - MAC_DELAY);
+									MAC_DELAY, MAC_EXEC_MAX - MAC_DELAY);
 }
-
 
 /** \brief This function sends a Nonce command to the device.
  *
@@ -576,8 +564,7 @@ uint8_t sha204m_nonce(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t mode, uint
 {
 	uint8_t rx_size;
 
-	if (!tx_buffer || !rx_buffer || !numin
-				|| (mode > NONCE_MODE_PASSTHROUGH) || (mode == NONCE_MODE_INVALID))
+	if (!tx_buffer || !rx_buffer || !numin || (mode > NONCE_MODE_PASSTHROUGH) || (mode == NONCE_MODE_INVALID))
 		// no null pointers allowed
 		// mode has to match an allowed Nonce mode.
 		return SHA204_BAD_PARAM;
@@ -587,7 +574,7 @@ uint8_t sha204m_nonce(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t mode, uint
 
 	// 2. parameter is 0.
 	tx_buffer[NONCE_PARAM2_IDX] =
-	tx_buffer[NONCE_PARAM2_IDX + 1] = 0;
+		tx_buffer[NONCE_PARAM2_IDX + 1] = 0;
 
 	if (mode != NONCE_MODE_PASSTHROUGH)
 	{
@@ -603,9 +590,8 @@ uint8_t sha204m_nonce(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t mode, uint
 	}
 
 	return sha204c_send_and_receive(&tx_buffer[0], rx_size, &rx_buffer[0],
-				NONCE_DELAY, NONCE_EXEC_MAX - NONCE_DELAY);
+									NONCE_DELAY, NONCE_EXEC_MAX - NONCE_DELAY);
 }
-
 
 /** \brief This function sends a Pause command to the device.
  *
@@ -626,12 +612,11 @@ uint8_t sha204m_pause(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t selector)
 
 	// 2. parameter is 0.
 	tx_buffer[PAUSE_PARAM2_IDX] =
-	tx_buffer[PAUSE_PARAM2_IDX + 1] = 0;
+		tx_buffer[PAUSE_PARAM2_IDX + 1] = 0;
 
 	return sha204c_send_and_receive(&tx_buffer[0], PAUSE_RSP_SIZE, &rx_buffer[0],
-				PAUSE_DELAY, PAUSE_EXEC_MAX - PAUSE_DELAY);
+									PAUSE_DELAY, PAUSE_EXEC_MAX - PAUSE_DELAY);
 }
-
 
 /** \brief This function sends a Random command to the device.
  *
@@ -653,12 +638,11 @@ uint8_t sha204m_random(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t mode)
 
 	// 2. parameter is 0.
 	tx_buffer[RANDOM_PARAM2_IDX] =
-	tx_buffer[RANDOM_PARAM2_IDX + 1] = 0;
+		tx_buffer[RANDOM_PARAM2_IDX + 1] = 0;
 
 	return sha204c_send_and_receive(&tx_buffer[0], RANDOM_RSP_SIZE, &rx_buffer[0],
-				RANDOM_DELAY, RANDOM_EXEC_MAX - RANDOM_DELAY);
+									RANDOM_DELAY, RANDOM_EXEC_MAX - RANDOM_DELAY);
 }
-
 
 /** \brief This function sends a Read command to the device.
  *
@@ -672,37 +656,37 @@ uint8_t sha204m_read(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t zone, uint1
 {
 	uint8_t rx_size;
 
-	if (!tx_buffer || !rx_buffer || (zone & ~READ_ZONE_MASK)
-				|| ((zone & READ_ZONE_MODE_32_BYTES) && (zone == SHA204_ZONE_OTP)))
+	if (!tx_buffer || !rx_buffer || (zone & ~READ_ZONE_MASK) || ((zone & READ_ZONE_MODE_32_BYTES) && (zone == SHA204_ZONE_OTP)))
 		// no null pointers allowed
 		// zone has to match a valid param1 value.
 		// Reading a 32-byte from the OTP zone is not allowed.
 		return SHA204_BAD_PARAM;
 	address >>= 2;
-	if ((zone & SHA204_ZONE_MASK) == SHA204_ZONE_CONFIG) {
+	if ((zone & SHA204_ZONE_MASK) == SHA204_ZONE_CONFIG)
+	{
 		if (address > SHA204_ADDRESS_MASK_CONFIG)
 			return SHA204_BAD_PARAM;
 	}
-	else if ((zone & SHA204_ZONE_MASK) == SHA204_ZONE_OTP) {
+	else if ((zone & SHA204_ZONE_MASK) == SHA204_ZONE_OTP)
+	{
 		if (address > SHA204_ADDRESS_MASK_OTP)
 			return SHA204_BAD_PARAM;
 	}
-	else if ((zone & SHA204_ZONE_MASK) == SHA204_ZONE_DATA) {
+	else if ((zone & SHA204_ZONE_MASK) == SHA204_ZONE_DATA)
+	{
 		if (address > SHA204_ADDRESS_MASK)
 			return SHA204_BAD_PARAM;
 	}
 	tx_buffer[SHA204_COUNT_IDX] = READ_COUNT;
 	tx_buffer[SHA204_OPCODE_IDX] = SHA204_READ;
 	tx_buffer[READ_ZONE_IDX] = zone;
-	tx_buffer[READ_ADDR_IDX] = (uint8_t) (address & SHA204_ADDRESS_MASK);
+	tx_buffer[READ_ADDR_IDX] = (uint8_t)(address & SHA204_ADDRESS_MASK);
 	tx_buffer[READ_ADDR_IDX + 1] = 0;
 
 	rx_size = (zone & SHA204_ZONE_COUNT_FLAG) ? READ_32_RSP_SIZE : READ_4_RSP_SIZE;
 	return sha204c_send_and_receive(&tx_buffer[0], rx_size, &rx_buffer[0],
-				READ_DELAY, READ_EXEC_MAX - READ_DELAY);
+									READ_DELAY, READ_EXEC_MAX - READ_DELAY);
 }
-
-
 
 /** \brief This function sends an UpdateExtra command to the device.
  *
@@ -726,9 +710,8 @@ uint8_t sha204m_update_extra(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t mod
 	tx_buffer[UPDATE_VALUE_IDX + 1] = 0;
 
 	return sha204c_send_and_receive(&tx_buffer[0], UPDATE_RSP_SIZE, &rx_buffer[0],
-				UPDATE_DELAY, UPDATE_EXEC_MAX - UPDATE_DELAY);
+									UPDATE_DELAY, UPDATE_EXEC_MAX - UPDATE_DELAY);
 }
-
 
 /**\brief This function sends a Write command to the device.
  *
@@ -741,7 +724,7 @@ uint8_t sha204m_update_extra(uint8_t *tx_buffer, uint8_t *rx_buffer, uint8_t mod
  * \return status of the operation
  */
 uint8_t sha204m_write(uint8_t *tx_buffer, uint8_t *rx_buffer,
-			uint8_t zone, uint16_t address, uint8_t *new_value, uint8_t *mac)
+					  uint8_t zone, uint16_t address, uint8_t *new_value, uint8_t *mac)
 {
 	uint8_t *p_command;
 	uint8_t count;
@@ -752,15 +735,18 @@ uint8_t sha204m_write(uint8_t *tx_buffer, uint8_t *rx_buffer,
 		return SHA204_BAD_PARAM;
 
 	address >>= 2;
-	if ((zone & SHA204_ZONE_MASK) == SHA204_ZONE_CONFIG) {
+	if ((zone & SHA204_ZONE_MASK) == SHA204_ZONE_CONFIG)
+	{
 		if (address > SHA204_ADDRESS_MASK_CONFIG)
 			return SHA204_BAD_PARAM;
 	}
-	else if ((zone & SHA204_ZONE_MASK) == SHA204_ZONE_OTP) {
+	else if ((zone & SHA204_ZONE_MASK) == SHA204_ZONE_OTP)
+	{
 		if (address > SHA204_ADDRESS_MASK_OTP)
 			return SHA204_BAD_PARAM;
 	}
-	else if ((zone & SHA204_ZONE_MASK) == SHA204_ZONE_DATA) {
+	else if ((zone & SHA204_ZONE_MASK) == SHA204_ZONE_DATA)
+	{
 		if (address > SHA204_ADDRESS_MASK)
 			return SHA204_BAD_PARAM;
 	}
@@ -768,7 +754,7 @@ uint8_t sha204m_write(uint8_t *tx_buffer, uint8_t *rx_buffer,
 	p_command = &tx_buffer[SHA204_OPCODE_IDX];
 	*p_command++ = SHA204_WRITE;
 	*p_command++ = zone;
-	*p_command++ = (uint8_t) (address & SHA204_ADDRESS_MASK);
+	*p_command++ = (uint8_t)(address & SHA204_ADDRESS_MASK);
 	*p_command++ = 0;
 
 	count = (zone & SHA204_ZONE_COUNT_FLAG) ? SHA204_ZONE_ACCESS_32 : SHA204_ZONE_ACCESS_4;
@@ -782,8 +768,8 @@ uint8_t sha204m_write(uint8_t *tx_buffer, uint8_t *rx_buffer,
 	}
 
 	// Supply count.
-	tx_buffer[SHA204_COUNT_IDX] = (uint8_t) (p_command - &tx_buffer[0] + SHA204_CRC_SIZE);
+	tx_buffer[SHA204_COUNT_IDX] = (uint8_t)(p_command - &tx_buffer[0] + SHA204_CRC_SIZE);
 
 	return sha204c_send_and_receive(&tx_buffer[0], WRITE_RSP_SIZE, &rx_buffer[0],
-				WRITE_DELAY, WRITE_EXEC_MAX - WRITE_DELAY);
+									WRITE_DELAY, WRITE_EXEC_MAX - WRITE_DELAY);
 }
