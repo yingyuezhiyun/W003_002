@@ -132,5 +132,7 @@
 #define READ_DATA_END_IDX_32_BYTES		(33)					//index for the last data in 32 bytes write buffer
 
 
+#define ATSHA204_SLOT_SIZE          (32U)
+
 #endif /* ATSHA204_DEFINES_H_ */
 
