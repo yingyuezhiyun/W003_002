@@ -1,17 +1,17 @@
 /**
-* \addtogroup PIC32_EtherCAT_Slave PIC32_EtherCAT_Slave
+* \addtogroup EtherCAT_Slave EtherCAT_Slave
 * @{
 */
 
 /**
-\file PIC32_EtherCAT_SlaveObjects
+\file EtherCAT_SlaveObjects
 \author ET9300Utilities.ApplicationHandler (Version 1.3.6.0) | EthercatSSC@beckhoff.com
 
-\brief PIC32_EtherCAT_Slave specific objects<br>
+\brief EtherCAT_Slave specific objects<br>
 \brief NOTE : This file will be overwritten if a new object dictionary is generated!<br>
 */
 
-#if defined(_PIC32__ETHER_CAT__SLAVE_) && (_PIC32__ETHER_CAT__SLAVE_ == 1)
+#if defined(_ETHER_CATSLAVE_) && (_ETHER_CATSLAVE_ == 1)
 #define PROTO
 #else
 #define PROTO extern
@@ -63,7 +63,7 @@ OBJCONST UCHAR OBJMEM aName0x1600[] = "TX_DATA process data mapping\000"
 "SubIndex 008\000\377";
 #endif //#ifdef _OBJD_
 
-#ifndef _PIC32__ETHER_CAT__SLAVE_OBJECTS_H_
+#ifndef _ETHER_CATSLAVE_OBJECTS_H_
 /**
 * \brief Object structure
 */
@@ -79,13 +79,13 @@ UINT32 SI7; /* Subindex7 - Reference to 0x7000.7 */
 UINT32 SI8; /* Subindex8 - Reference to 0x7000.8 */
 } OBJ_STRUCT_PACKED_END
 TOBJ1600;
-#endif //#ifndef _PIC32__ETHER_CAT__SLAVE_OBJECTS_H_
+#endif //#ifndef _ETHER_CATSLAVE_OBJECTS_H_
 
 /**
 * \brief Object variable
 */
 PROTO TOBJ1600 TX_DATAProcessDataMapping0x1600
-#if defined(_PIC32__ETHER_CAT__SLAVE_) && (_PIC32__ETHER_CAT__SLAVE_ == 1)
+#if defined(_ETHER_CATSLAVE_) && (_ETHER_CATSLAVE_ == 1)
 ={8,0x70000110,0x70000210,0x70000310,0x70000410,0x70000510,0x70000610,0x70000710,0x70000810}
 #endif
 ;
@@ -140,7 +140,7 @@ OBJCONST UCHAR OBJMEM aName0x1A00[] = "RX_DATA process data mapping\000"
 "SubIndex 008\000\377";
 #endif //#ifdef _OBJD_
 
-#ifndef _PIC32__ETHER_CAT__SLAVE_OBJECTS_H_
+#ifndef _ETHER_CATSLAVE_OBJECTS_H_
 /**
 * \brief Object structure
 */
@@ -156,13 +156,13 @@ UINT32 SI7; /* Subindex7 - Reference to 0x6000.7 */
 UINT32 SI8; /* Subindex8 - Reference to 0x6000.8 */
 } OBJ_STRUCT_PACKED_END
 TOBJ1A00;
-#endif //#ifndef _PIC32__ETHER_CAT__SLAVE_OBJECTS_H_
+#endif //#ifndef _ETHER_CATSLAVE_OBJECTS_H_
 
 /**
 * \brief Object variable
 */
 PROTO TOBJ1A00 RX_DATAProcessDataMapping0x1A00
-#if defined(_PIC32__ETHER_CAT__SLAVE_) && (_PIC32__ETHER_CAT__SLAVE_ == 1)
+#if defined(_ETHER_CATSLAVE_) && (_ETHER_CATSLAVE_ == 1)
 ={8,0x60000110,0x60000210,0x60000310,0x60000410,0x60000510,0x60000610,0x60000710,0x60000810}
 #endif
 ;
@@ -196,7 +196,7 @@ OBJCONST TSDOINFOENTRYDESC    OBJMEM asEntryDesc0x1C12[] = {
 OBJCONST UCHAR OBJMEM aName0x1C12[] = "SyncManager 2 assignment\000\377";
 #endif //#ifdef _OBJD_
 
-#ifndef _PIC32__ETHER_CAT__SLAVE_OBJECTS_H_
+#ifndef _ETHER_CATSLAVE_OBJECTS_H_
 /**
 * \brief Object structure
 */
@@ -205,13 +205,13 @@ UINT16   u16SubIndex0;  /**< \brief Subindex 0 */
 UINT16 aEntries[1];  /**< \brief Subindex 1 - 1 */
 } OBJ_STRUCT_PACKED_END
 TOBJ1C12;
-#endif //#ifndef _PIC32__ETHER_CAT__SLAVE_OBJECTS_H_
+#endif //#ifndef _ETHER_CATSLAVE_OBJECTS_H_
 
 /**
 * \brief Object variable
 */
 PROTO TOBJ1C12 sRxPDOassign
-#if defined(_PIC32__ETHER_CAT__SLAVE_) && (_PIC32__ETHER_CAT__SLAVE_ == 1)
+#if defined(_ETHER_CATSLAVE_) && (_ETHER_CATSLAVE_ == 1)
 ={1,{0x1600}}
 #endif
 ;
@@ -245,7 +245,7 @@ OBJCONST TSDOINFOENTRYDESC    OBJMEM asEntryDesc0x1C13[] = {
 OBJCONST UCHAR OBJMEM aName0x1C13[] = "SyncManager 3 assignment\000\377";
 #endif //#ifdef _OBJD_
 
-#ifndef _PIC32__ETHER_CAT__SLAVE_OBJECTS_H_
+#ifndef _ETHER_CATSLAVE_OBJECTS_H_
 /**
 * \brief Object structure
 */
@@ -254,13 +254,13 @@ UINT16   u16SubIndex0;  /**< \brief Subindex 0 */
 UINT16 aEntries[1];  /**< \brief Subindex 1 - 1 */
 } OBJ_STRUCT_PACKED_END
 TOBJ1C13;
-#endif //#ifndef _PIC32__ETHER_CAT__SLAVE_OBJECTS_H_
+#endif //#ifndef _ETHER_CATSLAVE_OBJECTS_H_
 
 /**
 * \brief Object variable
 */
 PROTO TOBJ1C13 sTxPDOassign
-#if defined(_PIC32__ETHER_CAT__SLAVE_) && (_PIC32__ETHER_CAT__SLAVE_ == 1)
+#if defined(_ETHER_CATSLAVE_) && (_ETHER_CATSLAVE_ == 1)
 ={1,{0x1A00}}
 #endif
 ;
@@ -315,7 +315,7 @@ OBJCONST UCHAR OBJMEM aName0x6000[] = "RX_DATA\000"
 "RX_DAT08\000\377";
 #endif //#ifdef _OBJD_
 
-#ifndef _PIC32__ETHER_CAT__SLAVE_OBJECTS_H_
+#ifndef _ETHER_CATSLAVE_OBJECTS_H_
 /**
 * \brief Object structure
 */
@@ -331,13 +331,13 @@ UINT16 RX_DAT07; /* Subindex7 - RX_DAT07 */
 UINT16 RX_DAT08; /* Subindex8 - RX_DAT08 */
 } OBJ_STRUCT_PACKED_END
 TOBJ6000;
-#endif //#ifndef _PIC32__ETHER_CAT__SLAVE_OBJECTS_H_
+#endif //#ifndef _ETHER_CATSLAVE_OBJECTS_H_
 
 /**
 * \brief Object variable
 */
 PROTO TOBJ6000 RX_DATA0x6000
-#if defined(_PIC32__ETHER_CAT__SLAVE_) && (_PIC32__ETHER_CAT__SLAVE_ == 1)
+#if defined(_ETHER_CATSLAVE_) && (_ETHER_CATSLAVE_ == 1)
 ={8,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}
 #endif
 ;
@@ -392,7 +392,7 @@ OBJCONST UCHAR OBJMEM aName0x7000[] = "TX_DATA\000"
 "TX_DAT08\000\377";
 #endif //#ifdef _OBJD_
 
-#ifndef _PIC32__ETHER_CAT__SLAVE_OBJECTS_H_
+#ifndef _ETHER_CATSLAVE_OBJECTS_H_
 /**
 * \brief Object structure
 */
@@ -408,13 +408,13 @@ UINT16 TX_DAT07; /* Subindex7 - TX_DAT07 */
 UINT16 TX_DAT08; /* Subindex8 - TX_DAT08 */
 } OBJ_STRUCT_PACKED_END
 TOBJ7000;
-#endif //#ifndef _PIC32__ETHER_CAT__SLAVE_OBJECTS_H_
+#endif //#ifndef _ETHER_CATSLAVE_OBJECTS_H_
 
 /**
 * \brief Object variable
 */
 PROTO TOBJ7000 TX_DATA0x7000
-#if defined(_PIC32__ETHER_CAT__SLAVE_) && (_PIC32__ETHER_CAT__SLAVE_ == 1)
+#if defined(_ETHER_CATSLAVE_) && (_ETHER_CATSLAVE_ == 1)
 ={8,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}
 #endif
 ;
@@ -445,4 +445,4 @@ TOBJECT    OBJMEM ApplicationObjDic[] = {
 #undef PROTO
 
 /** @}*/
-#define _PIC32__ETHER_CAT__SLAVE_OBJECTS_H_
+#define _ETHER_CATSLAVE_OBJECTS_H_

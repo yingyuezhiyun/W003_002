@@ -4,20 +4,20 @@
 */
 
 /**
- * \addtogroup PIC32_EtherCAT_Slave PIC32_EtherCAT_Slave
+ * \addtogroup EtherCAT_Slave EtherCAT_Slave
  * @{
  */
 
 /**
-\file PIC32_EtherCAT_Slave.h
-\brief PIC32_EtherCAT_Slave function prototypes and defines
+\file EtherCAT_Slave.h
+\brief EtherCAT_Slave function prototypes and defines
 
 \version 1.0.0.11
  */
 
  
- #ifndef _PIC32__ETHER_CAT__SLAVE_H_
-#define _PIC32__ETHER_CAT__SLAVE_H_
+ #ifndef _ETHER_CATSLAVE_H_
+#define _ETHER_CATSLAVE_H_
 
 
 /*-----------------------------------------------------------------------------------------
@@ -35,13 +35,13 @@
 ------
 -----------------------------------------------------------------------------------------*/
 
-#endif //_PIC32__ETHER_CAT__SLAVE_H_
+#endif //_ETHER_CATSLAVE_H_
 
 //include custom application object dictionary 
-#include "PIC32_EtherCAT_SlaveObjects.h"
+#include "EtherCAT_SlaveObjects.h"
 
 
-#if defined(_PIC32__ETHER_CAT__SLAVE_) && (_PIC32__ETHER_CAT__SLAVE_ == 1)
+#if defined(_ETHER_CATSLAVE_) && (_ETHER_CATSLAVE_ == 1)
     #define PROTO
 #else
     #define PROTO extern

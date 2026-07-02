@@ -190,7 +190,7 @@ V4.00 ECAT 7: The return values for the AL-StatusCode were changed to UINT16
 #include    "emcy.h"
 
 
-#include "../PIC32_EtherCAT_Slave.h"
+#include "../EtherCAT_Slave.h"
 
 /*--------------------------------------------------------------------------------------
 ------

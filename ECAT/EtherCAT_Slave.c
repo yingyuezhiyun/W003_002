@@ -4,12 +4,12 @@
 */
 
 /**
-\addtogroup PIC32_EtherCAT_Slave PIC32_EtherCAT_Slave
+\addtogroup EtherCAT_Slave EtherCAT_Slave
 @{
 */
 
 /**
-\file PIC32_EtherCAT_Slave.c
+\file EtherCAT_Slave.c
 \brief Implementation
 
 \version 1.0.0.11
@@ -25,9 +25,9 @@
 
 #include "src/applInterface.h"
 
-#define _PIC32__ETHER_CAT__SLAVE_ 1
-#include "PIC32_EtherCAT_Slave.h"
-#undef _PIC32__ETHER_CAT__SLAVE_
+#define _ETHER_CATSLAVE_ 1
+#include "EtherCAT_Slave.h"
+#undef _ETHER_CATSLAVE_
 /*--------------------------------------------------------------------------------------
 ------
 ------    local types and defines
