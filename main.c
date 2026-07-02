@@ -45,13 +45,23 @@ glob_value_t glob_value = {
     .status = {.errors.val = 0, .state.val = 0},
 };
 
-
 void test()
 {
     sha204p_init();
     uint8_t wakeup_response_buffer[4] = {0};
     int ret = sha204c_wakeup(wakeup_response_buffer);
- 
+    sha204p_sleep();
+    uint8_t serial_number[9];
+    atsha204_read_sn(serial_number);
+    uint8_t data[32];
+    for (int i = 0; i < 15; i++)
+    {
+        ATSHA204_ReadSlot(i, data);
+    }
+
+    uint8_t config_data[88];
+    uint8_t device_id = 0xC8;
+    uint8_t read_config_status = sha204e_read_config_zone(device_id, config_data);
 }
 
 void main(void)

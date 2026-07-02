@@ -64,9 +64,9 @@ void sha204c_calculate_crc(uint8_t length, uint8_t *data, uint8_t *crc)
 
 	for (counter = 0; counter < length; counter++)
 	{
-		for (shift_register = 0x01; shift_register > 0x00; shift_register <<= 1)
+		for (shift_register = 0x01; shift_register > 0x00; shift_register = ((shift_register << 1) & 0x00ff))
 		{
-			data_bit = (data[counter] & shift_register) ? 1 : 0;
+			data_bit = (data[counter] & shift_register & 0x00FF) ? 1 : 0;
 			crc_bit = crc_register >> 15;
 			crc_register <<= 1;
 			if (data_bit != crc_bit)

@@ -5,6 +5,8 @@
 "./Core/src/ATSHA204/atsha204_api/atsha204_enc_write.obj"
 "./Core/src/ATSHA204/atsha204_api/atsha204_mac.obj"
 "./Core/src/ATSHA204/atsha204_api/atsha204_read_sn.obj"
+"./Core/src/ATSHA204/atsha204_api/atsha204_slot.obj"
+"./Core/src/ATSHA204/atsha204_api/sha204_examples.obj"
 "./Core/src/ATSHA204/atsha204_helper/sha204_helper.obj"
 "./Core/src/ATSHA204/atsha204_hw/i2c_phys.obj"
 "./Core/src/ATSHA204/atsha204_lib/sha204_comm.obj"
