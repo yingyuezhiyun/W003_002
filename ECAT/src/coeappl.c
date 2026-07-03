@@ -481,9 +481,6 @@ void COE_ObjInit(void)
     sSyncManOutPar.u16SyncTypesSupported    = SYNCTYPE_FREERUNSUPP            /* ECAT FreeRun Mode is supported */
                                               | SYNCTYPE_TIMESVARIABLE        /* the execution times depend on the connected modules */
                                               | SYNCTYPE_SYNCHRONSUPP         /* ECAT Synchron Mode is supported */
-                                              | SYNCTYPE_DCSYNC0SUPP          /* DC Sync0 Mode is supported */
-                                              | SYNCTYPE_DCSYNC1SUPP          /* DC Sync1 Mode is supported */
-                                              | SYNCTYPE_SUBCYCLESUPP         /*Subordinated application cycles supported*/
     ;
 
     /* subindex 5 contains the minimum cycle time the slave is able to support,

@@ -29,27 +29,27 @@
 * \brief Object entry descriptions<br>
 * <br>
 * SubIndex 0<br>
-* SubIndex 1 - Reference to 0x7000.1<br>
-* SubIndex 2 - Reference to 0x7000.2<br>
-* SubIndex 3 - Reference to 0x7000.3<br>
-* SubIndex 4 - Reference to 0x7000.4<br>
-* SubIndex 5 - Reference to 0x7000.5<br>
-* SubIndex 6 - Reference to 0x7000.6<br>
-* SubIndex 7 - Reference to 0x7000.7<br>
-* SubIndex 8 - Reference to 0x7000.8<br>
-* SubIndex 9 - Reference to 0x7000.9<br>
+* SubIndex 1 - SubIndex 001<br>
+* SubIndex 2 - SubIndex 002<br>
+* SubIndex 3 - SubIndex 003<br>
+* SubIndex 4 - SubIndex 004<br>
+* SubIndex 5 - SubIndex 005<br>
+* SubIndex 6 - SubIndex 006<br>
+* SubIndex 7 - SubIndex 007<br>
+* SubIndex 8 - SubIndex 008<br>
+* SubIndex 9 - SubIndex 009<br>
 */
 OBJCONST TSDOINFOENTRYDESC    OBJMEM asEntryDesc0x1600[] = {
 { DEFTYPE_UNSIGNED8 , 0x8 , ACCESS_READ },
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex1 - Reference to 0x7000.1 */
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex2 - Reference to 0x7000.2 */
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex3 - Reference to 0x7000.3 */
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex4 - Reference to 0x7000.4 */
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex5 - Reference to 0x7000.5 */
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex6 - Reference to 0x7000.6 */
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex7 - Reference to 0x7000.7 */
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex8 - Reference to 0x7000.8 */
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }}; /* Subindex9 - Reference to 0x7000.9 */
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex1 - SubIndex 001 */
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex2 - SubIndex 002 */
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex3 - SubIndex 003 */
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex4 - SubIndex 004 */
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex5 - SubIndex 005 */
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex6 - SubIndex 006 */
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex7 - SubIndex 007 */
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex8 - SubIndex 008 */
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }}; /* Subindex9 - SubIndex 009 */
 
 /**
 * \brief Object/Entry names
@@ -110,23 +110,23 @@ PROTO TOBJ1600 OutputsProcessDataMapping0x1600
 * \brief Object entry descriptions<br>
 * <br>
 * SubIndex 0<br>
-* SubIndex 1 - Reference to 0x6000.1<br>
-* SubIndex 2 - Reference to 0x6000.2<br>
-* SubIndex 3 - Reference to 0x6000.3<br>
-* SubIndex 4 - Reference to 0x6000.4<br>
-* SubIndex 5 - Reference to 0x6000.5<br>
-* SubIndex 6 - Reference to 0x6000.6<br>
-* SubIndex 7 - Reference to 0x6000.7<br>
+* SubIndex 1 - SubIndex 001<br>
+* SubIndex 2 - SubIndex 002<br>
+* SubIndex 3 - SubIndex 003<br>
+* SubIndex 4 - SubIndex 004<br>
+* SubIndex 5 - SubIndex 005<br>
+* SubIndex 6 - SubIndex 006<br>
+* SubIndex 7 - SubIndex 007<br>
 */
 OBJCONST TSDOINFOENTRYDESC    OBJMEM asEntryDesc0x1A00[] = {
 { DEFTYPE_UNSIGNED8 , 0x8 , ACCESS_READ },
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex1 - Reference to 0x6000.1 */
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex2 - Reference to 0x6000.2 */
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex3 - Reference to 0x6000.3 */
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex4 - Reference to 0x6000.4 */
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex5 - Reference to 0x6000.5 */
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex6 - Reference to 0x6000.6 */
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }}; /* Subindex7 - Reference to 0x6000.7 */
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex1 - SubIndex 001 */
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex2 - SubIndex 002 */
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex3 - SubIndex 003 */
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex4 - SubIndex 004 */
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex5 - SubIndex 005 */
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex6 - SubIndex 006 */
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }}; /* Subindex7 - SubIndex 007 */
 
 /**
 * \brief Object/Entry names
@@ -334,7 +334,7 @@ TOBJ6000;
 */
 PROTO TOBJ6000 Inputs0x6000
 #if defined(_ETHER_CATSLAVE_) && (_ETHER_CATSLAVE_ == 1)
-={7,0x00,0x00,0x00,0x00,0x00,0x00,0x00}
+={7,0x00000000,0x0000,0x0000,0x00000000,0x00000000,0x0000,0x0000}
 #endif
 ;
 /** @}*/
@@ -342,12 +342,12 @@ PROTO TOBJ6000 Inputs0x6000
 
 
 /******************************************************************************
-*                    Object 0x7000 : TX_DATA
+*                    Object 0x7000 : Outputs
 ******************************************************************************/
 /**
-* \addtogroup 0x7000 0x7000 | TX_DATA
+* \addtogroup 0x7000 0x7000 | Outputs
 * @{
-* \brief Object 0x7000 (TX_DATA) definition
+* \brief Object 0x7000 (Outputs) definition
 */
 #ifdef _OBJD_
 /**
@@ -415,7 +415,7 @@ TOBJ7000;
 */
 PROTO TOBJ7000 Outputs0x7000
 #if defined(_ETHER_CATSLAVE_) && (_ETHER_CATSLAVE_ == 1)
-={9,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}
+={9,0x00000000,0x00000000,0x00000000,0x0000,0x0000,0x00000000,0x00000000,0x0000,0x0000}
 #endif
 ;
 /** @}*/
@@ -429,17 +429,17 @@ PROTO TOBJ7000 Outputs0x7000
 #ifdef _OBJD_
 TOBJECT    OBJMEM ApplicationObjDic[] = {
 /* Object 0x1600 */
-{NULL , NULL ,  0x1600 , {DEFTYPE_PDOMAPPING , 9 | (OBJCODE_REC << 8)} , asEntryDesc0x1600 , aName0x1600 , &OutputsProcessDataMapping0x1600, NULL , NULL , 0x0000 },
+{NULL , NULL ,  0x1600 , {DEFTYPE_UNSIGNED8 , 9 | (OBJCODE_REC << 8)} , asEntryDesc0x1600 , aName0x1600 , &OutputsProcessDataMapping0x1600, NULL , NULL , 0x0000 },
 /* Object 0x1A00 */
-{NULL , NULL ,  0x1A00 , {DEFTYPE_PDOMAPPING , 7 | (OBJCODE_REC << 8)} , asEntryDesc0x1A00 , aName0x1A00 , &InputsProcessDataMapping0x1A00, NULL , NULL , 0x0000 },
+{NULL , NULL ,  0x1A00 , {DEFTYPE_UNSIGNED8 , 7 | (OBJCODE_REC << 8)} , asEntryDesc0x1A00 , aName0x1A00 , &InputsProcessDataMapping0x1A00, NULL , NULL , 0x0000 },
 /* Object 0x1C12 */
 {NULL , NULL ,  0x1C12 , {DEFTYPE_UNSIGNED16 , 1 | (OBJCODE_ARR << 8)} , asEntryDesc0x1C12 , aName0x1C12 , &sRxPDOassign, NULL , NULL , 0x0000 },
 /* Object 0x1C13 */
 {NULL , NULL ,  0x1C13 , {DEFTYPE_UNSIGNED16 , 1 | (OBJCODE_ARR << 8)} , asEntryDesc0x1C13 , aName0x1C13 , &sTxPDOassign, NULL , NULL , 0x0000 },
 /* Object 0x6000 */
-{NULL , NULL ,  0x6000 , {DEFTYPE_RECORD , 7 | (OBJCODE_REC << 8)} , asEntryDesc0x6000 , aName0x6000 , &Inputs0x6000, NULL , NULL , 0x0000 },
+{NULL , NULL ,  0x6000 , {DEFTYPE_UNSIGNED8 , 7 | (OBJCODE_REC << 8)} , asEntryDesc0x6000 , aName0x6000 , &Inputs0x6000, NULL , NULL , 0x0000 },
 /* Object 0x7000 */
-{NULL , NULL ,  0x7000 , {DEFTYPE_RECORD , 9 | (OBJCODE_REC << 8)} , asEntryDesc0x7000 , aName0x7000 , &Outputs0x7000, NULL , NULL , 0x0000 },
+{NULL , NULL ,  0x7000 , {DEFTYPE_UNSIGNED8 , 9 | (OBJCODE_REC << 8)} , asEntryDesc0x7000 , aName0x7000 , &Outputs0x7000, NULL , NULL , 0x0000 },
 {NULL,NULL, 0xFFFF, {0, 0}, NULL, NULL, NULL, NULL}};
 #endif    //#ifdef _OBJD_
 #undef PROTO

@@ -116,7 +116,6 @@ PROTO    void       PDO_ReadInputs(void);
 PROTO    void       PDO_InputMapping(void);
 
 PROTO    void       ECAT_SetLedIndication(void);
-PROTO    void       CalcSMCycleTime(void);
 
 
 

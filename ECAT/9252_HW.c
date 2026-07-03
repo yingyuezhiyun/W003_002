@@ -895,15 +895,15 @@ void ECAT_DisableEscInt(void)
      leading to transient AL status codes like 0x0016 and ESM bouncing.
   */
   Interrupt_disable(INT_ECAT_ISR_XINT);
-  Interrupt_disable(INT_ECAT_SYNC0_ISR_XINT);
-  Interrupt_disable(INT_ECAT_SYNC1_ISR_XINT);
+  // Interrupt_disable(INT_ECAT_SYNC0_ISR_XINT);
+  // Interrupt_disable(INT_ECAT_SYNC1_ISR_XINT);
 }
 
 void ECAT_EnableEscInt(void)
 {
   Interrupt_enable(INT_ECAT_ISR_XINT);
-  Interrupt_enable(INT_ECAT_SYNC0_ISR_XINT);
-  Interrupt_enable(INT_ECAT_SYNC1_ISR_XINT);
+  // Interrupt_enable(INT_ECAT_SYNC0_ISR_XINT);
+  // Interrupt_enable(INT_ECAT_SYNC1_ISR_XINT);
 }
 
 
