@@ -128,18 +128,18 @@ __weak __interrupt void INT_Elmo_CAN_1_ISR(void)
 //     Interrupt_clearACKGroup(INT_myEPWM0_INTERRUPT_ACK_GROUP);
 // }
 
-uint32_t dma0_isr_count = 0;
-uint32_t dma1_isr_count = 0;
+// uint32_t dma0_isr_count = 0;
+// uint32_t dma1_isr_count = 0;
 __weak __interrupt void INT_DMA0_ISR(void)
 {
-    dma0_isr_count++;
+    // dma0_isr_count++;
     CDG1_Volt_Update();
     Interrupt_clearACKGroup(INT_myDMA0_INTERRUPT_ACK_GROUP);
 }
 
 __weak __interrupt void INT_DMA1_ISR(void)
 {
-    dma1_isr_count++;
+    // dma1_isr_count++;
     CDG2_Volt_Update();
     Interrupt_clearACKGroup(INT_myDMA1_INTERRUPT_ACK_GROUP);
 }

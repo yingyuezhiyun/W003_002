@@ -542,7 +542,7 @@ void myDMA0_init(){
     DMA_configBurst(myDMA0_BASE, 1U, 0, 0);
     DMA_configTransfer(myDMA0_BASE, 8U, 0, 1);
     DMA_configWrap(myDMA0_BASE, 65535U, 0, 65535U, 0);
-    DMA_configMode(myDMA0_BASE, DMA_TRIGGER_ADCC1, DMA_CFG_ONESHOT_ENABLE | DMA_CFG_CONTINUOUS_ENABLE | DMA_CFG_SIZE_16BIT);
+    DMA_configMode(myDMA0_BASE, DMA_TRIGGER_ADCC1, DMA_CFG_ONESHOT_DISABLE | DMA_CFG_CONTINUOUS_ENABLE | DMA_CFG_SIZE_16BIT);
     DMA_setInterruptMode(myDMA0_BASE, DMA_INT_AT_END);
     DMA_enableInterrupt(myDMA0_BASE);
     DMA_enableOverrunInterrupt(myDMA0_BASE);
@@ -555,7 +555,7 @@ void myDMA1_init(){
     DMA_configBurst(myDMA1_BASE, 1U, 0, 0);
     DMA_configTransfer(myDMA1_BASE, 8U, 0, 1);
     DMA_configWrap(myDMA1_BASE, 65535U, 0, 65535U, 0);
-    DMA_configMode(myDMA1_BASE, DMA_TRIGGER_ADCA1, DMA_CFG_ONESHOT_ENABLE | DMA_CFG_CONTINUOUS_ENABLE | DMA_CFG_SIZE_16BIT);
+    DMA_configMode(myDMA1_BASE, DMA_TRIGGER_ADCA1, DMA_CFG_ONESHOT_DISABLE | DMA_CFG_CONTINUOUS_ENABLE | DMA_CFG_SIZE_16BIT);
     DMA_setInterruptMode(myDMA1_BASE, DMA_INT_AT_END);
     DMA_enableInterrupt(myDMA1_BASE);
     DMA_enableOverrunInterrupt(myDMA1_BASE);
