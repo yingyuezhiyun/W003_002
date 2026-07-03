@@ -7,7 +7,7 @@
 
 
 ///Enable/disable EtherCAT support
-#define ECAT_ENABLE (0)
+#define ECAT_ENABLE (1)
 
 ///Enable/disable CDG ADC calibration
 #define CDG_ADC_CALIB_EN (1U)

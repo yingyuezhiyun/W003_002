@@ -38,7 +38,7 @@
 #endif //_ETHER_CATSLAVE_H_
 
 //include custom application object dictionary 
-#include "EtherCAT_SlaveObjects.h"
+#include "EtherCATSlaveObjects.h"
 
 
 #if defined(_ETHER_CATSLAVE_) && (_ETHER_CATSLAVE_ == 1)

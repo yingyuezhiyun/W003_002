@@ -14,7 +14,7 @@
 "./Core/src/mode_ctrl/mode_press.obj"
 "./Core/src/mode_ctrl/mode_root.obj"
 "./ECAT/9252_HW.obj"
-"./ECAT/EtherCAT_Slave.obj"
+"./ECAT/EtherCATSlave.obj"
 "./ECAT/SPIDriver.obj"
 "./ECAT/src/coeappl.obj"
 "./ECAT/src/ecatappl.obj"

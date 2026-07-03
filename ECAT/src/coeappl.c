@@ -112,7 +112,7 @@ V4.00 ECAT 1: The handling of the Sync Manager Parameter was included according 
 #define _OBJD_
 
 /*Add Application specific Objects*/
-#include "../EtherCAT_Slave.h"
+#include "../EtherCATSlave.h"
 
 
 #undef _OBJD_

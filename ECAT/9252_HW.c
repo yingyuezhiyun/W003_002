@@ -73,7 +73,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 
 #include "SPIDriver.h"
 
-#define USE_GLOBAL_INTERRUPT (1)
+#define USE_GLOBAL_INTERRUPT (0)
 
 // NOTE: This project ports SSC LAN9252 SPI PDI to TI C2000.
 // Do NOT define PIC32_HW here; that would pull PIC32 headers and ISR attributes.

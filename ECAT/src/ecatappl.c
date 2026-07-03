@@ -125,7 +125,7 @@ V4.00 APPL 6: The main function was split in MainInit and MainLoop
 #undef _APPL_INTERFACE_
 /* ECATCHANGE_END(V5.11) ECAT11*/
 
-#include "../EtherCAT_Slave.h"
+#include "../EtherCATSlave.h"
 
 
 
