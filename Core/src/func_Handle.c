@@ -14,6 +14,11 @@
 
 /*********************************************************************** 数据处理 ****************************************************************/
 
+#pragma DATA_SECTION(cdg1_samples, "ramgs0")
+uint16_t cdg1_samples[CDG_SAMPLE_COUNT];
+#pragma DATA_SECTION(cdg2_samples, "ramgs0")
+uint16_t cdg2_samples[CDG_SAMPLE_COUNT];
+
 #define ADC_OFFSET 32768.0f
 #define ADC_SCALE 32768.0f
 #define NTC_BETA (3950.0f)
@@ -64,6 +69,10 @@ void Data_handle()
     if (updateCount >= 4) // 10ms 更新一次
     {
         updateCount = 0;
+        glob_value.measure.adc_batt = ADC_readResult(ADC_D_RESULT_BASE, ADC_D_BATT);
+        glob_value.measure.adc_pwr = ADC_readResult(ADC_A_RESULT_BASE, ADC_A_PWR);
+        glob_value.measure.adc_temp = ADC_readResult(ADC_D_RESULT_BASE, ADC_D_Temp);
+
         // 计算供电电压
         measure->power_voltage = (float)(measure->adc_pwr - ADC_OFFSET) / ADC_SCALE * 30.0f;
         // 计算电池电压
@@ -87,11 +96,14 @@ void Data_handle()
     valvePositionPercent_Update();
 }
 
-
-void bubble_sort(uint16_t data[], uint8_t size) {
-    for (uint8_t i = 0; i < size - 1; i++) {
-        for (uint8_t j = 0; j < size - 1 - i; j++) {
-            if (data[j] > data[j + 1]) {
+void bubble_sort(uint16_t data[], uint8_t size)
+{
+    for (uint8_t i = 0; i < size - 1; i++)
+    {
+        for (uint8_t j = 0; j < size - 1 - i; j++)
+        {
+            if (data[j] > data[j + 1])
+            {
                 uint16_t temp = data[j];
                 data[j] = data[j + 1];
                 data[j + 1] = temp;
@@ -99,65 +111,21 @@ void bubble_sort(uint16_t data[], uint8_t size) {
         }
     }
 }
-#define CDG_SAMPLE_COUNT (8)
-#define CDG_FILT_LEN (2)
 
-/// @brief 更新 CDG 电压和 CDG 模式相关的计算。
-void CDG_Volt_Update()
+void CDG_Volt_Update(uint8_t ch)
 {
-
     measure_t *measure = &glob_value.measure;
     Param_Config_t *paramCfg = &glob_value.paramCfg;
     middle_data_t *middleData = &glob_value.middleData;
-    setparam_t *set = &glob_value.set;
-    static uint16_t cdg1_samples[CDG_SAMPLE_COUNT] = {0};
-    static uint16_t cdg2_samples[CDG_SAMPLE_COUNT] = {0};
-    static uint8_t cdg_sample_index = 0;
-
-    cdg1_samples[cdg_sample_index] = measure->adc_cdg1;
-    cdg2_samples[cdg_sample_index] = measure->adc_cdg2;
-    cdg_sample_index++;
-    if (cdg_sample_index < CDG_SAMPLE_COUNT)
-    {
-        return;
-    }
-    bubble_sort(cdg1_samples, CDG_SAMPLE_COUNT);
-    bubble_sort(cdg2_samples, CDG_SAMPLE_COUNT);
-    float cdg1_filt_sum = 0.0f, cdg2_filt_sum = 0.0f;
-    for (size_t i = CDG_FILT_LEN; i < CDG_SAMPLE_COUNT - CDG_FILT_LEN; i++)
-    {
-        cdg1_filt_sum += cdg1_samples[i];
-        cdg2_filt_sum += cdg2_samples[i];
-    }
-    measure->adc_cdg1 = (uint16_t)(cdg1_filt_sum / (CDG_SAMPLE_COUNT - 2 * CDG_FILT_LEN));
-    measure->adc_cdg2 = (uint16_t)(cdg2_filt_sum / (CDG_SAMPLE_COUNT - 2 * CDG_FILT_LEN));
-    cdg_sample_index = 0;
-
-#if (CDG_ADC_CALIB_EN)
-    float vadc1 = (float)measure->adc_cdg1 * paramCfg->CDG_cfg.CDG1_adc_k + paramCfg->CDG_cfg.CDG1_adc_b;
-#else
-    float vadc1 = (float)(measure->adc_cdg1 - ADC_OFFSET) / ADC_SCALE * 10.2f;
-#endif
-    measure->cdg1_volt = vadc1 * 0.0309275743F + measure->cdg1_volt * 0.9690724257F;
-
-#if (CDG_ADC_CALIB_EN)
-    float vadc2 = (float)measure->adc_cdg2 * paramCfg->CDG_cfg.CDG2_adc_k + paramCfg->CDG_cfg.CDG2_adc_b;
-#else
-    float vadc2 = (float)(measure->adc_cdg2 - ADC_OFFSET) / ADC_SCALE * 10.2f;
-#endif
-    measure->cdg2_volt = vadc2 * 0.0309275743F + measure->cdg2_volt * 0.9690724257F;
-
     const float UP_THRESHOLD = 0.99f;
     const float DOWN_THRESHOLD = 0.9f;
     switch (paramCfg->CDG_cfg.CDG_Mode)
     {
     case GAUGE_CDG1:
         middleData->CDG_RangeSel = CDG_RANGE_BIG;
-        middleData->cdg_volt = measure->cdg1_volt;
         break;
     case GAUGE_CDG2:
         middleData->CDG_RangeSel = CDG_RANGE_SMALL;
-        middleData->cdg_volt = measure->cdg2_volt;
         break;
     case GAUGE_AUTO:
         if (measure->cdg2_volt / 10.0 >= UP_THRESHOLD)
@@ -168,18 +136,65 @@ void CDG_Volt_Update()
         {
             middleData->CDG_RangeSel = CDG_RANGE_SMALL;
         }
-        if (middleData->CDG_RangeSel == CDG_RANGE_BIG)
-        {
-            middleData->cdg_volt = measure->cdg1_volt;
-        }
-        else
-        {
-            middleData->cdg_volt = measure->cdg2_volt;
-        }
         break;
     default:
         break;
     }
+
+    if (middleData->CDG_RangeSel == CDG_RANGE_BIG)
+    {
+        middleData->cdg_volt = measure->cdg1_volt;
+    }
+    else
+    {
+        middleData->cdg_volt = measure->cdg2_volt;
+    }
+
+    if (middleData->CDG_RangeSel == ch)
+    {
+        ProcessWithDA(middleData->cdg_volt);
+    }
+}
+
+void CDG1_Volt_Update()
+{
+
+    measure_t *measure = &glob_value.measure;
+    Param_Config_t *paramCfg = &glob_value.paramCfg;
+    bubble_sort(cdg1_samples, CDG_SAMPLE_COUNT);
+    float cdg1_filt_sum = 0.0f;
+    for (size_t i = CDG_FILT_LEN; i < CDG_SAMPLE_COUNT - CDG_FILT_LEN; i++)
+    {
+        cdg1_filt_sum += cdg1_samples[i];
+    }
+    measure->adc_cdg1 = (uint16_t)(cdg1_filt_sum / (CDG_SAMPLE_COUNT - 2 * CDG_FILT_LEN));
+#if (CDG_ADC_CALIB_EN)
+    float vadc1 = (float)measure->adc_cdg1 * paramCfg->CDG_cfg.CDG1_adc_k + paramCfg->CDG_cfg.CDG1_adc_b;
+#else
+    float vadc1 = (float)(measure->adc_cdg1 - ADC_OFFSET) / ADC_SCALE * 15f;
+#endif
+    measure->cdg1_volt = vadc1 * 0.0309275743F + measure->cdg1_volt * 0.9690724257F;
+    CDG_Volt_Update(CDG_RANGE_BIG);
+}
+
+void CDG2_Volt_Update()
+{
+    measure_t *measure = &glob_value.measure;
+    Param_Config_t *paramCfg = &glob_value.paramCfg;
+    bubble_sort(cdg2_samples, CDG_SAMPLE_COUNT);
+    float cdg2_filt_sum = 0.0f;
+    for (size_t i = CDG_FILT_LEN; i < CDG_SAMPLE_COUNT - CDG_FILT_LEN; i++)
+    {
+        cdg2_filt_sum += cdg2_samples[i];
+    }
+    measure->adc_cdg2 = (uint16_t)(cdg2_filt_sum / (CDG_SAMPLE_COUNT - 2 * CDG_FILT_LEN));
+#if (CDG_ADC_CALIB_EN)
+    float vadc2 = (float)measure->adc_cdg2 * paramCfg->CDG_cfg.CDG2_adc_k + paramCfg->CDG_cfg.CDG2_adc_b;
+#else
+    float vadc2 = (float)(measure->adc_cdg2 - ADC_OFFSET) / ADC_SCALE * 15f;
+#endif
+    measure->cdg2_volt = vadc2 * 0.0309275743F + measure->cdg2_volt * 0.9690724257F;
+    CDG_Volt_Update(CDG_RANGE_SMALL);
 }
 
 /*********************************************************************** 状态显示 ****************************************************************/
@@ -529,4 +544,19 @@ void BIT_Init()
     HostRs232_Init();
 
     ServicePortInit();
+
+    DMA_Config();
+}
+
+void DMA_Config()
+{
+    // CDG1
+    DMA_configTransfer(myDMA0_BASE, CDG_SAMPLE_COUNT, 0, 1);
+    DMA_configAddresses(myDMA0_BASE, (uint16_t *)&cdg1_samples, (uint16_t *)(ADC_C_RESULT_BASE));
+    // CDG2
+    DMA_configTransfer(myDMA1_BASE, CDG_SAMPLE_COUNT, 0, 1);
+    DMA_configAddresses(myDMA1_BASE, (uint16_t *)&cdg2_samples, (uint16_t *)(ADC_A_RESULT_BASE));
+
+    DMA_startChannel(myDMA0_BASE);
+    DMA_startChannel(myDMA1_BASE);
 }

@@ -338,6 +338,28 @@ void CPU_TIMER0_init();
 
 //*****************************************************************************
 //
+// DMA Configurations
+//
+//*****************************************************************************
+#define myDMA0_SRCADDRESS 0 
+#define myDMA0_DESTADDRESS 0 
+#define myDMA0_BASE DMA_CH1_BASE 
+#define myDMA0_BURSTSIZE 1U
+#define myDMA0_TRANSFERSIZE 8U
+#define myDMA0_SRC_WRAPSIZE 65535U
+#define myDMA0_DEST_WRAPSIZE 65535U
+void myDMA0_init();
+#define myDMA1_SRCADDRESS 0 
+#define myDMA1_DESTADDRESS 0 
+#define myDMA1_BASE DMA_CH2_BASE 
+#define myDMA1_BURSTSIZE 1U
+#define myDMA1_TRANSFERSIZE 8U
+#define myDMA1_SRC_WRAPSIZE 65535U
+#define myDMA1_DEST_WRAPSIZE 65535U
+void myDMA1_init();
+
+//*****************************************************************************
+//
 // EPWM Configurations
 //
 //*****************************************************************************
@@ -353,7 +375,7 @@ void CPU_TIMER0_init();
 #define myEPWM0_DBFED 0
 #define myEPWM0_TZA_ACTION EPWM_TZ_ACTION_HIGH_Z
 #define myEPWM0_TZB_ACTION EPWM_TZ_ACTION_HIGH_Z
-#define myEPWM0_INTERRUPT_SOURCE EPWM_INT_TBCTR_ZERO
+#define myEPWM0_INTERRUPT_SOURCE EPWM_INT_TBCTR_DISABLED
 #define myEPWM1_BASE EPWM2_BASE
 #define myEPWM1_TBPRD 25000
 #define myEPWM1_COUNTER_MODE EPWM_COUNTER_MODE_UP
@@ -478,11 +500,17 @@ extern __interrupt void INT_CPU_TIMER2_ISR(void);
 #define INT_CPU_TIMER0_INTERRUPT_ACK_GROUP INTERRUPT_ACK_GROUP1
 extern __interrupt void INT_CPU_TIMER0_ISR(void);
 
-// Interrupt Settings for INT_myEPWM0
+// Interrupt Settings for INT_myDMA0
 // ISR need to be defined for the registered interrupts
-#define INT_myEPWM0 INT_EPWM1
-#define INT_myEPWM0_INTERRUPT_ACK_GROUP INTERRUPT_ACK_GROUP3
-extern __interrupt void INT_EPWM0_ISR(void);
+#define INT_myDMA0 INT_DMA_CH1
+#define INT_myDMA0_INTERRUPT_ACK_GROUP INTERRUPT_ACK_GROUP7
+extern __interrupt void INT_DMA0_ISR(void);
+
+// Interrupt Settings for INT_myDMA1
+// ISR need to be defined for the registered interrupts
+#define INT_myDMA1 INT_DMA_CH2
+#define INT_myDMA1_INTERRUPT_ACK_GROUP INTERRUPT_ACK_GROUP7
+extern __interrupt void INT_DMA1_ISR(void);
 
 // Interrupt Settings for INT_ECAT_ISR_XINT
 // ISR need to be defined for the registered interrupts
@@ -566,6 +594,7 @@ void	Board_init();
 void	ADC_init();
 void	CAN_init();
 void	CPUTIMER_init();
+void	DMA_init();
 void	EPWM_init();
 void	GPIO_init();
 void	I2C_init();

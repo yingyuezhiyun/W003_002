@@ -53,6 +53,7 @@ void Board_init()
 	ADC_init();
 	CAN_init();
 	CPUTIMER_init();
+	DMA_init();
 	EPWM_init();
 	GPIO_init();
 	I2C_init();
@@ -248,7 +249,7 @@ void ADC_A_init(){
 	//
 	// Sets the priority mode of the SOCs.
 	//
-	ADC_setSOCPriority(ADC_A_BASE, ADC_PRI_ALL_ROUND_ROBIN);
+	ADC_setSOCPriority(ADC_A_BASE, ADC_PRI_SOC0_HIPRI);
 	//
 	// Start of Conversion 0 Configuration
 	//
@@ -275,6 +276,17 @@ void ADC_A_init(){
 	//
 	ADC_setupSOC(ADC_A_BASE, ADC_SOC_NUMBER1, ADC_TRIGGER_EPWM2_SOCA, ADC_CH_ADCIN2_ADCIN3, 64U);
 	ADC_setInterruptSOCTrigger(ADC_A_BASE, ADC_SOC_NUMBER1, ADC_INT_SOC_TRIGGER_NONE);
+	//
+	// ADC Interrupt 1 Configuration
+	// 		Source	: ADC_SOC_NUMBER0
+	// 		Interrupt Source: enabled
+	//		Continuous Mode	: enabled
+	//
+	//
+	ADC_setInterruptSource(ADC_A_BASE, ADC_INT_NUMBER1, ADC_SOC_NUMBER0);
+	ADC_clearInterruptStatus(ADC_A_BASE, ADC_INT_NUMBER1);
+	ADC_enableContinuousMode(ADC_A_BASE, ADC_INT_NUMBER1);
+	ADC_enableInterrupt(ADC_A_BASE, ADC_INT_NUMBER1);
 }
 
 void ADC_C_init(){
@@ -289,7 +301,7 @@ void ADC_C_init(){
 	//
 	// Sets the timing of the end-of-conversion pulse
 	//
-	ADC_setInterruptPulseMode(ADC_C_BASE, ADC_PULSE_END_OF_ACQ_WIN);
+	ADC_setInterruptPulseMode(ADC_C_BASE, ADC_PULSE_END_OF_CONV);
 	//
 	// Powers up the analog-to-digital converter core.
 	//
@@ -321,6 +333,17 @@ void ADC_C_init(){
 	//
 	ADC_setupSOC(ADC_C_BASE, ADC_SOC_NUMBER0, ADC_TRIGGER_EPWM1_SOCA, ADC_CH_ADCIN2_ADCIN3, 256U);
 	ADC_setInterruptSOCTrigger(ADC_C_BASE, ADC_SOC_NUMBER0, ADC_INT_SOC_TRIGGER_NONE);
+	//
+	// ADC Interrupt 1 Configuration
+	// 		Source	: ADC_SOC_NUMBER0
+	// 		Interrupt Source: enabled
+	//		Continuous Mode	: enabled
+	//
+	//
+	ADC_setInterruptSource(ADC_C_BASE, ADC_INT_NUMBER1, ADC_SOC_NUMBER0);
+	ADC_clearInterruptStatus(ADC_C_BASE, ADC_INT_NUMBER1);
+	ADC_enableContinuousMode(ADC_C_BASE, ADC_INT_NUMBER1);
+	ADC_enableInterrupt(ADC_C_BASE, ADC_INT_NUMBER1);
 }
 
 void ADC_D_init(){
@@ -504,6 +527,44 @@ void CPU_TIMER0_init(){
 
 //*****************************************************************************
 //
+// DMA Configurations
+//
+//*****************************************************************************
+void DMA_init(){
+    DMA_initController();
+	myDMA0_init();
+	myDMA1_init();
+}
+
+void myDMA0_init(){
+    DMA_setEmulationMode(DMA_EMULATION_STOP);
+    DMA_configAddresses(myDMA0_BASE, (const void *)0, (const void *)0);
+    DMA_configBurst(myDMA0_BASE, 1U, 0, 0);
+    DMA_configTransfer(myDMA0_BASE, 8U, 0, 1);
+    DMA_configWrap(myDMA0_BASE, 65535U, 0, 65535U, 0);
+    DMA_configMode(myDMA0_BASE, DMA_TRIGGER_ADCC1, DMA_CFG_ONESHOT_ENABLE | DMA_CFG_CONTINUOUS_ENABLE | DMA_CFG_SIZE_16BIT);
+    DMA_setInterruptMode(myDMA0_BASE, DMA_INT_AT_END);
+    DMA_enableInterrupt(myDMA0_BASE);
+    DMA_enableOverrunInterrupt(myDMA0_BASE);
+    DMA_enableTrigger(myDMA0_BASE);
+    DMA_stopChannel(myDMA0_BASE);
+}
+void myDMA1_init(){
+    DMA_setEmulationMode(DMA_EMULATION_STOP);
+    DMA_configAddresses(myDMA1_BASE, (const void *)0, (const void *)0);
+    DMA_configBurst(myDMA1_BASE, 1U, 0, 0);
+    DMA_configTransfer(myDMA1_BASE, 8U, 0, 1);
+    DMA_configWrap(myDMA1_BASE, 65535U, 0, 65535U, 0);
+    DMA_configMode(myDMA1_BASE, DMA_TRIGGER_ADCA1, DMA_CFG_ONESHOT_ENABLE | DMA_CFG_CONTINUOUS_ENABLE | DMA_CFG_SIZE_16BIT);
+    DMA_setInterruptMode(myDMA1_BASE, DMA_INT_AT_END);
+    DMA_enableInterrupt(myDMA1_BASE);
+    DMA_enableOverrunInterrupt(myDMA1_BASE);
+    DMA_enableTrigger(myDMA1_BASE);
+    DMA_stopChannel(myDMA1_BASE);
+}
+
+//*****************************************************************************
+//
 // EPWM Configurations
 //
 //*****************************************************************************
@@ -543,9 +604,6 @@ void EPWM_init(){
     EPWM_disableRisingEdgeDelayCountShadowLoadMode(myEPWM0_BASE);	
     EPWM_setFallingEdgeDelayCountShadowLoadMode(myEPWM0_BASE, EPWM_FED_LOAD_ON_CNTR_ZERO);	
     EPWM_disableFallingEdgeDelayCountShadowLoadMode(myEPWM0_BASE);	
-    EPWM_enableInterrupt(myEPWM0_BASE);	
-    EPWM_setInterruptSource(myEPWM0_BASE, EPWM_INT_TBCTR_ZERO);	
-    EPWM_setInterruptEventCount(myEPWM0_BASE, 1);	
     EPWM_enableADCTrigger(myEPWM0_BASE, EPWM_SOC_A);	
     EPWM_setADCTriggerSource(myEPWM0_BASE, EPWM_SOC_A, EPWM_SOC_TBCTR_ZERO);	
     EPWM_setADCTriggerEventPrescale(myEPWM0_BASE, EPWM_SOC_A, 1);	
@@ -845,10 +903,15 @@ void INTERRUPT_init(){
 	Interrupt_register(INT_CPU_TIMER0, &INT_CPU_TIMER0_ISR);
 	Interrupt_enable(INT_CPU_TIMER0);
 	
-	// Interrupt Settings for INT_myEPWM0
+	// Interrupt Settings for INT_myDMA0
 	// ISR need to be defined for the registered interrupts
-	Interrupt_register(INT_myEPWM0, &INT_EPWM0_ISR);
-	Interrupt_enable(INT_myEPWM0);
+	Interrupt_register(INT_myDMA0, &INT_DMA0_ISR);
+	Interrupt_enable(INT_myDMA0);
+	
+	// Interrupt Settings for INT_myDMA1
+	// ISR need to be defined for the registered interrupts
+	Interrupt_register(INT_myDMA1, &INT_DMA1_ISR);
+	Interrupt_enable(INT_myDMA1);
 	
 	// Interrupt Settings for INT_ECAT_ISR_XINT
 	// ISR need to be defined for the registered interrupts

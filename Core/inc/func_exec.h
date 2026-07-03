@@ -32,8 +32,11 @@ void Data_handle();
 void valvePositionPercent_Update();
 
 /// @brief 更新 CDG 电压和 CDG 模式相关的计算。
-void CDG_Volt_Update();
+void CDG1_Volt_Update();
 
+void CDG2_Volt_Update();
+
+void DMA_Config();
 
 #ifdef __cplusplus
 }

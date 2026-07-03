@@ -17,8 +17,12 @@
             "interruptHandler": "INT_CPU_TIMER0_ISR"
         },
         {
-            "interruptName": "INT_myEPWM0",
-            "interruptHandler": "INT_EPWM0_ISR"
+            "interruptName": "INT_myDMA0",
+            "interruptHandler": "INT_DMA0_ISR"
+        },
+        {
+            "interruptName": "INT_myDMA1",
+            "interruptHandler": "INT_DMA1_ISR"
         },
         {
             "interruptName": "INT_ECAT_ISR_XINT",

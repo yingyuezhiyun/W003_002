@@ -109,39 +109,39 @@ __weak __interrupt void INT_Elmo_CAN_1_ISR(void)
 {
 }
 
-__weak __interrupt void INT_EPWM0_ISR(void)
+// __weak __interrupt void INT_EPWM0_ISR(void)
+// {
+//     // 50us 节拍：读取“上一周期”ADC结果（RESULT 在转换完成时更新）
+//     // 快速采样：EPWM1 SOCA 触发，每 50us 更新一次
+//     glob_value.measure.adc_cdg1 = ADC_readResult(ADC_C_RESULT_BASE, ADC_C_CDG1);
+//     glob_value.measure.adc_cdg2 = ADC_readResult(ADC_A_RESULT_BASE, ADC_A_CDG2);
+//     CDG_Volt_Update();
+//     Mode_Ctx_t *ctx = &glob_value.modeCtx;
+//     middle_data_t *middleData = &glob_value.middleData;
+//     if (ctx->hsm->type == MODE_PRESSURE)
+//     {
+//         //todo :输入压力算法
+//         ProcessWithDA(middleData->cdg_volt);
+//     }   
+//     // 清 ePWM 中断标志 + PIE ACK
+//     EPWM_clearEventTriggerInterruptFlag(myEPWM0_BASE);
+//     Interrupt_clearACKGroup(INT_myEPWM0_INTERRUPT_ACK_GROUP);
+// }
+
+uint32_t dma0_isr_count = 0;
+uint32_t dma1_isr_count = 0;
+__weak __interrupt void INT_DMA0_ISR(void)
 {
-    // 50us 节拍：读取“上一周期”ADC结果（RESULT 在转换完成时更新）
-    // 快速采样：EPWM1 SOCA 触发，每 50us 更新一次
-    glob_value.measure.adc_cdg1 = ADC_readResult(ADC_C_RESULT_BASE, ADC_C_CDG1);
-    glob_value.measure.adc_cdg2 = ADC_readResult(ADC_A_RESULT_BASE, ADC_A_CDG2);
-    CDG_Volt_Update();
-    Mode_Ctx_t *ctx = &glob_value.modeCtx;
-    middle_data_t *middleData = &glob_value.middleData;
-    if (ctx->hsm->type == MODE_PRESSURE)
-    {
-        //todo :输入压力算法
-        ProcessWithDA(middleData->cdg_volt);
-    }
-    
+    dma0_isr_count++;
+    CDG1_Volt_Update();
+    Interrupt_clearACKGroup(INT_myDMA0_INTERRUPT_ACK_GROUP);
+}
 
-    // 慢速采样：默认由 EPWM2 SOCA 触发
-    // 用 200 分频（50us * 200 = 10ms）把慢速通道“取数/刷新”节拍化。
-    static uint16_t slow_div = 0;
-    slow_div++;
-    if (slow_div >= 200U)
-    {
-        slow_div = 0U;
-
-        // NOTE:PWR和BATT硬件接反了，软件上做了对应调整
-        glob_value.measure.adc_batt = ADC_readResult(ADC_D_RESULT_BASE, ADC_D_BATT);
-        glob_value.measure.adc_pwr = ADC_readResult(ADC_A_RESULT_BASE, ADC_A_PWR);
-        glob_value.measure.adc_temp = ADC_readResult(ADC_D_RESULT_BASE, ADC_D_Temp);
-    }
-
-    // 清 ePWM 中断标志 + PIE ACK
-    EPWM_clearEventTriggerInterruptFlag(myEPWM0_BASE);
-    Interrupt_clearACKGroup(INT_myEPWM0_INTERRUPT_ACK_GROUP);
+__weak __interrupt void INT_DMA1_ISR(void)
+{
+    dma1_isr_count++;
+    CDG2_Volt_Update();
+    Interrupt_clearACKGroup(INT_myDMA1_INTERRUPT_ACK_GROUP);
 }
 
 // __weak __interrupt void INT_EPWM1_ISR(void)
