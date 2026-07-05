@@ -102,7 +102,7 @@ static uint8_t calib_func(const char *arg, printf_t pprintf)
 static uint8_t reboot_func(const char *arg, printf_t pprintf)
 {
 	uint8_t ok = RC_SUCCESS;
-	hostResetDevice();
+	SysCtl_resetDevice();
 	return ok;
 }
 
