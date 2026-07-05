@@ -87,6 +87,21 @@ void Data_handle()
     valvePositionPercent_Update();
 }
 
+
+void bubble_sort(uint16_t data[], uint8_t size) {
+    for (uint8_t i = 0; i < size - 1; i++) {
+        for (uint8_t j = 0; j < size - 1 - i; j++) {
+            if (data[j] > data[j + 1]) {
+                uint16_t temp = data[j];
+                data[j] = data[j + 1];
+                data[j + 1] = temp;
+            }
+        }
+    }
+}
+#define CDG_SAMPLE_COUNT (8)
+#define CDG_FILT_LEN (2)
+
 /// @brief 更新 CDG 电压和 CDG 模式相关的计算。
 void CDG_Volt_Update()
 {
@@ -95,6 +110,28 @@ void CDG_Volt_Update()
     Param_Config_t *paramCfg = &glob_value.paramCfg;
     middle_data_t *middleData = &glob_value.middleData;
     setparam_t *set = &glob_value.set;
+    static uint16_t cdg1_samples[CDG_SAMPLE_COUNT] = {0};
+    static uint16_t cdg2_samples[CDG_SAMPLE_COUNT] = {0};
+    static uint8_t cdg_sample_index = 0;
+
+    cdg1_samples[cdg_sample_index] = measure->adc_cdg1;
+    cdg2_samples[cdg_sample_index] = measure->adc_cdg2;
+    cdg_sample_index++;
+    if (cdg_sample_index < CDG_SAMPLE_COUNT)
+    {
+        return;
+    }
+    bubble_sort(cdg1_samples, CDG_SAMPLE_COUNT);
+    bubble_sort(cdg2_samples, CDG_SAMPLE_COUNT);
+    float cdg1_filt_sum = 0.0f, cdg2_filt_sum = 0.0f;
+    for (size_t i = CDG_FILT_LEN; i < CDG_SAMPLE_COUNT - CDG_FILT_LEN; i++)
+    {
+        cdg1_filt_sum += cdg1_samples[i];
+        cdg2_filt_sum += cdg2_samples[i];
+    }
+    measure->adc_cdg1 = (uint16_t)(cdg1_filt_sum / (CDG_SAMPLE_COUNT - 2 * CDG_FILT_LEN));
+    measure->adc_cdg2 = (uint16_t)(cdg2_filt_sum / (CDG_SAMPLE_COUNT - 2 * CDG_FILT_LEN));
+    cdg_sample_index = 0;
 
 #if (CDG_ADC_CALIB_EN)
     float vadc1 = (float)measure->adc_cdg1 * paramCfg->CDG_cfg.CDG1_adc_k + paramCfg->CDG_cfg.CDG1_adc_b;
