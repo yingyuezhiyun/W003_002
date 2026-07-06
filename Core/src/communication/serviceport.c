@@ -99,6 +99,13 @@ static uint8_t calib_func(const char *arg, printf_t pprintf)
     return ok == 1U ? RC_SUCCESS : RC_BUSY;
 }
 
+static uint8_t reboot_func(const char *arg, printf_t pprintf)
+{
+	uint8_t ok = RC_SUCCESS;
+	SysCtl_resetDevice();
+	return ok;
+}
+
 /// @brief 命令列表，可执行相应功能，设置参数值，直接读取参数（不需要转换计算的参数）
 static Command_t commands[] = {
     CMD_FUNC_ENTRY("SA", save_params_func),                                                  // 保存参数
@@ -163,6 +170,8 @@ static Command_t commands[] = {
     CMD_READ_FLOAT("PRL", "CDG2_K+%E", glob_value.paramCfg.CDG_cfg.CDG2_adc_k),              // 读取 CDG2 ADC 转换系数 k
     CMD_READ_FLOAT("PRM", "CDG2_B+%E", glob_value.paramCfg.CDG_cfg.CDG2_adc_b),              // 读取 CDG2 ADC 转换系数 b
     CMD_FUNC_ENTRY("J4", calib_func),                                                        // 校准标定
+    CMD_READ_CSTR("R38", "Version+" HOST_VERSION),                                           // 获取设备软件版本号
+    CMD_FUNC_ENTRY("REBOOT", reboot_func),                                                   // 复位
     {NULL, CMD_NONE, NULL, NULL, DT_NONE, 0},
 };
 
