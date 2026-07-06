@@ -15,11 +15,7 @@
 #include "serviceport.h"
 #include "param_store.h"
 
-#if ECAT_ENABLE
-#include "ECAT/9252_HW.h"
-#include "ECAT/src/ecatappl.h"
-#include "ECAT/src/applInterface.h"
-#endif
+
 
 glob_value_t glob_value = {
     .tick0p1ms = 0,
@@ -43,8 +39,8 @@ glob_value_t glob_value = {
     },
     .modeCtx = {0},
     .status = {.errors.val = 0, .state.val = 0},
+    .pending = {.ECAT_PDI = 0, .ECAT_SYNC0 = 0, .ECAT_SYNC1 = 0},
 };
-
 void main(void)
 {
     Device_init();
@@ -68,12 +64,7 @@ void main(void)
     while (1)
     {
         // 处理 EtherCAT 主循环
-#if ECAT_ENABLE
-        if (glob_value.status.errors.content.ecat == 0)
-        {
-            MainLoop();
-        }
-#endif
+        ECAT_Poll();
 
         // 处理串口数据
         SCI_Poll();

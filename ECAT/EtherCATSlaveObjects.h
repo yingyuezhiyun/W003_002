@@ -17,44 +17,117 @@
 #define PROTO extern
 #endif
 /******************************************************************************
-*                    Object 0x1600 : Outputs process data mapping
+*                    Object 0x1600 : RxPdo process data mapping
 ******************************************************************************/
 /**
-* \addtogroup 0x1600 0x1600 | Outputs process data mapping
+* \addtogroup 0x1600 0x1600 | RxPdo process data mapping
 * @{
-* \brief Object 0x1600 (Outputs process data mapping) definition
+* \brief Object 0x1600 (RxPdo process data mapping) definition
 */
 #ifdef _OBJD_
 /**
 * \brief Object entry descriptions<br>
 * <br>
 * SubIndex 0<br>
-* SubIndex 1 - SubIndex 001<br>
-* SubIndex 2 - SubIndex 002<br>
-* SubIndex 3 - SubIndex 003<br>
-* SubIndex 4 - SubIndex 004<br>
-* SubIndex 5 - SubIndex 005<br>
-* SubIndex 6 - SubIndex 006<br>
-* SubIndex 7 - SubIndex 007<br>
-* SubIndex 8 - SubIndex 008<br>
-* SubIndex 9 - SubIndex 009<br>
+* SubIndex 1 - Reference to 0x7000.1<br>
+* SubIndex 2 - Reference to 0x7000.2<br>
+* SubIndex 3 - Reference to 0x7000.3<br>
+* SubIndex 4 - Reference to 0x7000.4<br>
+* SubIndex 5 - Reference to 0x7000.5<br>
+* SubIndex 6 - Reference to 0x7000.6<br>
+* SubIndex 7 - Reference to 0x7000.7<br>
 */
 OBJCONST TSDOINFOENTRYDESC    OBJMEM asEntryDesc0x1600[] = {
 { DEFTYPE_UNSIGNED8 , 0x8 , ACCESS_READ },
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex1 - SubIndex 001 */
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex2 - SubIndex 002 */
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex3 - SubIndex 003 */
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex4 - SubIndex 004 */
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex5 - SubIndex 005 */
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex6 - SubIndex 006 */
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex7 - SubIndex 007 */
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex8 - SubIndex 008 */
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }}; /* Subindex9 - SubIndex 009 */
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex1 - Reference to 0x7000.1 */
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex2 - Reference to 0x7000.2 */
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex3 - Reference to 0x7000.3 */
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex4 - Reference to 0x7000.4 */
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex5 - Reference to 0x7000.5 */
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex6 - Reference to 0x7000.6 */
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }}; /* Subindex7 - Reference to 0x7000.7 */
 
 /**
 * \brief Object/Entry names
 */
-OBJCONST UCHAR OBJMEM aName0x1600[] = "Outputs process data mapping\000"
+OBJCONST UCHAR OBJMEM aName0x1600[] = "RxPdo process data mapping\000"
+"SubIndex 001\000"
+"SubIndex 002\000"
+"SubIndex 003\000"
+"SubIndex 004\000"
+"SubIndex 005\000"
+"SubIndex 006\000"
+"SubIndex 007\000\377";
+#endif //#ifdef _OBJD_
+
+#ifndef _ETHER_CATSLAVE_OBJECTS_H_
+/**
+* \brief Object structure
+*/
+typedef struct OBJ_STRUCT_PACKED_START {
+UINT16 u16SubIndex0;
+UINT32 SI1; /* Subindex1 - Reference to 0x7000.1 */
+UINT32 SI2; /* Subindex2 - Reference to 0x7000.2 */
+UINT32 SI3; /* Subindex3 - Reference to 0x7000.3 */
+UINT32 SI4; /* Subindex4 - Reference to 0x7000.4 */
+UINT32 SI5; /* Subindex5 - Reference to 0x7000.5 */
+UINT32 SI6; /* Subindex6 - Reference to 0x7000.6 */
+UINT32 SI7; /* Subindex7 - Reference to 0x7000.7 */
+} OBJ_STRUCT_PACKED_END
+TOBJ1600;
+#endif //#ifndef _ETHER_CATSLAVE_OBJECTS_H_
+
+/**
+* \brief Object variable
+*/
+PROTO TOBJ1600 RxPdoProcessDataMapping0x1600
+#if defined(_ETHER_CATSLAVE_) && (_ETHER_CATSLAVE_ == 1)
+={7,0x70000120,0x70000210,0x70000310,0x70000420,0x70000520,0x70000610,0x70000710}
+#endif
+;
+/** @}*/
+
+
+
+/******************************************************************************
+*                    Object 0x1A00 : TxPdo process data mapping
+******************************************************************************/
+/**
+* \addtogroup 0x1A00 0x1A00 | TxPdo process data mapping
+* @{
+* \brief Object 0x1A00 (TxPdo process data mapping) definition
+*/
+#ifdef _OBJD_
+/**
+* \brief Object entry descriptions<br>
+* <br>
+* SubIndex 0<br>
+* SubIndex 1 - Reference to 0x6000.1<br>
+* SubIndex 2 - Reference to 0x6000.2<br>
+* SubIndex 3 - Reference to 0x6000.3<br>
+* SubIndex 4 - Reference to 0x6000.4<br>
+* SubIndex 5 - Reference to 0x6000.5<br>
+* SubIndex 6 - Reference to 0x6000.6<br>
+* SubIndex 7 - Reference to 0x6000.7<br>
+* SubIndex 8 - Reference to 0x6000.8<br>
+* SubIndex 9 - Reference to 0x6000.9<br>
+*/
+OBJCONST TSDOINFOENTRYDESC    OBJMEM asEntryDesc0x1A00[] = {
+{ DEFTYPE_UNSIGNED8 , 0x8 , ACCESS_READ },
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex1 - Reference to 0x6000.1 */
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex2 - Reference to 0x6000.2 */
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex3 - Reference to 0x6000.3 */
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex4 - Reference to 0x6000.4 */
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex5 - Reference to 0x6000.5 */
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex6 - Reference to 0x6000.6 */
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex7 - Reference to 0x6000.7 */
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex8 - Reference to 0x6000.8 */
+{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }}; /* Subindex9 - Reference to 0x6000.9 */
+
+/**
+* \brief Object/Entry names
+*/
+OBJCONST UCHAR OBJMEM aName0x1A00[] = "TxPdo process data mapping\000"
 "SubIndex 001\000"
 "SubIndex 002\000"
 "SubIndex 003\000"
@@ -72,81 +145,6 @@ OBJCONST UCHAR OBJMEM aName0x1600[] = "Outputs process data mapping\000"
 */
 typedef struct OBJ_STRUCT_PACKED_START {
 UINT16 u16SubIndex0;
-UINT32 SI1; /* Subindex1 - Reference to 0x7000.1 */
-UINT32 SI2; /* Subindex2 - Reference to 0x7000.2 */
-UINT32 SI3; /* Subindex3 - Reference to 0x7000.3 */
-UINT32 SI4; /* Subindex4 - Reference to 0x7000.4 */
-UINT32 SI5; /* Subindex5 - Reference to 0x7000.5 */
-UINT32 SI6; /* Subindex6 - Reference to 0x7000.6 */
-UINT32 SI7; /* Subindex7 - Reference to 0x7000.7 */
-UINT32 SI8; /* Subindex8 - Reference to 0x7000.8 */
-UINT32 SI9; /* Subindex9 - Reference to 0x7000.9 */
-} OBJ_STRUCT_PACKED_END
-TOBJ1600;
-#endif //#ifndef _ETHER_CATSLAVE_OBJECTS_H_
-
-/**
-* \brief Object variable
-*/
-PROTO TOBJ1600 OutputsProcessDataMapping0x1600
-#if defined(_ETHER_CATSLAVE_) && (_ETHER_CATSLAVE_ == 1)
-={9,0x70000120,0x70000220,0x70000320,0x70000410,0x70000510,0x70000620,0x70000720,0x70000810,0x70000910}
-#endif
-;
-/** @}*/
-
-
-
-/******************************************************************************
-*                    Object 0x1A00 : Inputs process data mapping
-******************************************************************************/
-/**
-* \addtogroup 0x1A00 0x1A00 | Inputs process data mapping
-* @{
-* \brief Object 0x1A00 (Inputs process data mapping) definition
-*/
-#ifdef _OBJD_
-/**
-* \brief Object entry descriptions<br>
-* <br>
-* SubIndex 0<br>
-* SubIndex 1 - SubIndex 001<br>
-* SubIndex 2 - SubIndex 002<br>
-* SubIndex 3 - SubIndex 003<br>
-* SubIndex 4 - SubIndex 004<br>
-* SubIndex 5 - SubIndex 005<br>
-* SubIndex 6 - SubIndex 006<br>
-* SubIndex 7 - SubIndex 007<br>
-*/
-OBJCONST TSDOINFOENTRYDESC    OBJMEM asEntryDesc0x1A00[] = {
-{ DEFTYPE_UNSIGNED8 , 0x8 , ACCESS_READ },
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex1 - SubIndex 001 */
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex2 - SubIndex 002 */
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex3 - SubIndex 003 */
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex4 - SubIndex 004 */
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex5 - SubIndex 005 */
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }, /* Subindex6 - SubIndex 006 */
-{ DEFTYPE_UNSIGNED32 , 0x20 , ACCESS_READ }}; /* Subindex7 - SubIndex 007 */
-
-/**
-* \brief Object/Entry names
-*/
-OBJCONST UCHAR OBJMEM aName0x1A00[] = "Inputs process data mapping\000"
-"SubIndex 001\000"
-"SubIndex 002\000"
-"SubIndex 003\000"
-"SubIndex 004\000"
-"SubIndex 005\000"
-"SubIndex 006\000"
-"SubIndex 007\000\377";
-#endif //#ifdef _OBJD_
-
-#ifndef _ETHER_CATSLAVE_OBJECTS_H_
-/**
-* \brief Object structure
-*/
-typedef struct OBJ_STRUCT_PACKED_START {
-UINT16 u16SubIndex0;
 UINT32 SI1; /* Subindex1 - Reference to 0x6000.1 */
 UINT32 SI2; /* Subindex2 - Reference to 0x6000.2 */
 UINT32 SI3; /* Subindex3 - Reference to 0x6000.3 */
@@ -154,6 +152,8 @@ UINT32 SI4; /* Subindex4 - Reference to 0x6000.4 */
 UINT32 SI5; /* Subindex5 - Reference to 0x6000.5 */
 UINT32 SI6; /* Subindex6 - Reference to 0x6000.6 */
 UINT32 SI7; /* Subindex7 - Reference to 0x6000.7 */
+UINT32 SI8; /* Subindex8 - Reference to 0x6000.8 */
+UINT32 SI9; /* Subindex9 - Reference to 0x6000.9 */
 } OBJ_STRUCT_PACKED_END
 TOBJ1A00;
 #endif //#ifndef _ETHER_CATSLAVE_OBJECTS_H_
@@ -161,9 +161,9 @@ TOBJ1A00;
 /**
 * \brief Object variable
 */
-PROTO TOBJ1A00 InputsProcessDataMapping0x1A00
+PROTO TOBJ1A00 TxPdoProcessDataMapping0x1A00
 #if defined(_ETHER_CATSLAVE_) && (_ETHER_CATSLAVE_ == 1)
-={7,0x60000120,0x60000210,0x60000310,0x60000420,0x60000520,0x60000610,0x60000710}
+={9,0x60000120,0x60000220,0x60000320,0x60000410,0x60000510,0x60000620,0x60000720,0x60000810,0x60000910}
 #endif
 ;
 /** @}*/
@@ -269,12 +269,93 @@ PROTO TOBJ1C13 sTxPDOassign
 
 
 /******************************************************************************
-*                    Object 0x6000 : Inputs
+*                    Object 0x6000 : TxPdo
 ******************************************************************************/
 /**
-* \addtogroup 0x6000 0x6000 | Inputs
+* \addtogroup 0x6000 0x6000 | TxPdo
 * @{
-* \brief Object 0x6000 (Inputs) definition
+* \brief Object 0x6000 (TxPdo) definition
+*/
+#ifdef _OBJD_
+/**
+* \brief Object entry descriptions<br>
+* <br>
+* SubIndex 0<br>
+* SubIndex 1 - Actual Pressure<br>
+* SubIndex 2 - Actual Position<br>
+* SubIndex 3 - General_Control_Setpoint<br>
+* SubIndex 4 - Control_Mode<br>
+* SubIndex 5 - Pressure_Sensor_Select<br>
+* SubIndex 6 - Pressure_Sensor1_Range<br>
+* SubIndex 7 - Pressure_Sensor2_Range<br>
+* SubIndex 8 - STATUS<br>
+* SubIndex 9 - ERROR<br>
+*/
+OBJCONST TSDOINFOENTRYDESC    OBJMEM asEntryDesc0x6000[] = {
+{ DEFTYPE_UNSIGNED8 , 0x8 , ACCESS_READ },
+{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }, /* Subindex1 - Actual Pressure */
+{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }, /* Subindex2 - Actual Position */
+{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }, /* Subindex3 - General_Control_Setpoint */
+{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }, /* Subindex4 - Control_Mode */
+{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }, /* Subindex5 - Pressure_Sensor_Select */
+{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }, /* Subindex6 - Pressure_Sensor1_Range */
+{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }, /* Subindex7 - Pressure_Sensor2_Range */
+{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }, /* Subindex8 - STATUS */
+{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }}; /* Subindex9 - ERROR */
+
+/**
+* \brief Object/Entry names
+*/
+OBJCONST UCHAR OBJMEM aName0x6000[] = "TxPdo\000"
+"Actual Pressure\000"
+"Actual Position\000"
+"General_Control_Setpoint\000"
+"Control_Mode\000"
+"Pressure_Sensor_Select\000"
+"Pressure_Sensor1_Range\000"
+"Pressure_Sensor2_Range\000"
+"STATUS\000"
+"ERROR\000\377";
+#endif //#ifdef _OBJD_
+
+#ifndef _ETHER_CATSLAVE_OBJECTS_H_
+/**
+* \brief Object structure
+*/
+typedef struct OBJ_STRUCT_PACKED_START {
+UINT16 u16SubIndex0;
+float ActualPressure; /* Subindex1 - Actual Pressure */
+float ActualPosition; /* Subindex2 - Actual Position */
+float General_Control_Setpoint; /* Subindex3 - General_Control_Setpoint */
+UINT16 Control_Mode; /* Subindex4 - Control_Mode */
+UINT16 Pressure_Sensor_Select; /* Subindex5 - Pressure_Sensor_Select */
+float Pressure_Sensor1_Range; /* Subindex6 - Pressure_Sensor1_Range */
+float Pressure_Sensor2_Range; /* Subindex7 - Pressure_Sensor2_Range */
+UINT16 STATUS; /* Subindex8 - STATUS */
+UINT16 ERROR; /* Subindex9 - ERROR */
+} OBJ_STRUCT_PACKED_END
+TOBJ6000;
+#endif //#ifndef _ETHER_CATSLAVE_OBJECTS_H_
+
+/**
+* \brief Object variable
+*/
+PROTO TOBJ6000 TxPdo0x6000
+#if defined(_ETHER_CATSLAVE_) && (_ETHER_CATSLAVE_ == 1)
+={9,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}
+#endif
+;
+/** @}*/
+
+
+
+/******************************************************************************
+*                    Object 0x7000 : RxPdo
+******************************************************************************/
+/**
+* \addtogroup 0x7000 0x7000 | RxPdo
+* @{
+* \brief Object 0x7000 (RxPdo) definition
 */
 #ifdef _OBJD_
 /**
@@ -289,20 +370,20 @@ PROTO TOBJ1C13 sTxPDOassign
 * SubIndex 6 - Init<br>
 * SubIndex 7 - REMAIN<br>
 */
-OBJCONST TSDOINFOENTRYDESC    OBJMEM asEntryDesc0x6000[] = {
+OBJCONST TSDOINFOENTRYDESC    OBJMEM asEntryDesc0x7000[] = {
 { DEFTYPE_UNSIGNED8 , 0x8 , ACCESS_READ },
-{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }, /* Subindex1 - General_Control_Setpoint */
-{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }, /* Subindex2 - Control_Mode */
-{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }, /* Subindex3 - Pressure_Sensor_Select */
-{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }, /* Subindex4 - Pressure_Sensor1_Range */
-{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }, /* Subindex5 - Pressure_Sensor2_Range */
-{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }, /* Subindex6 - Init */
-{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }}; /* Subindex7 - REMAIN */
+{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE | OBJACCESS_TXPDOMAPPING }, /* Subindex1 - General_Control_Setpoint */
+{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE | OBJACCESS_TXPDOMAPPING }, /* Subindex2 - Control_Mode */
+{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE | OBJACCESS_TXPDOMAPPING }, /* Subindex3 - Pressure_Sensor_Select */
+{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE | OBJACCESS_TXPDOMAPPING }, /* Subindex4 - Pressure_Sensor1_Range */
+{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE | OBJACCESS_TXPDOMAPPING }, /* Subindex5 - Pressure_Sensor2_Range */
+{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE | OBJACCESS_TXPDOMAPPING }, /* Subindex6 - Init */
+{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE | OBJACCESS_TXPDOMAPPING }}; /* Subindex7 - REMAIN */
 
 /**
 * \brief Object/Entry names
 */
-OBJCONST UCHAR OBJMEM aName0x6000[] = "Inputs\000"
+OBJCONST UCHAR OBJMEM aName0x7000[] = "RxPdo\000"
 "General_Control_Setpoint\000"
 "Control_Mode\000"
 "Pressure_Sensor_Select\000"
@@ -318,94 +399,13 @@ OBJCONST UCHAR OBJMEM aName0x6000[] = "Inputs\000"
 */
 typedef struct OBJ_STRUCT_PACKED_START {
 UINT16 u16SubIndex0;
-UINT32 General_Control_Setpoint; /* Subindex1 - General_Control_Setpoint */
+float General_Control_Setpoint; /* Subindex1 - General_Control_Setpoint */
 UINT16 Control_Mode; /* Subindex2 - Control_Mode */
 UINT16 Pressure_Sensor_Select; /* Subindex3 - Pressure_Sensor_Select */
-UINT32 Pressure_Sensor1_Range; /* Subindex4 - Pressure_Sensor1_Range */
-UINT32 Pressure_Sensor2_Range; /* Subindex5 - Pressure_Sensor2_Range */
+float Pressure_Sensor1_Range; /* Subindex4 - Pressure_Sensor1_Range */
+float Pressure_Sensor2_Range; /* Subindex5 - Pressure_Sensor2_Range */
 UINT16 Init; /* Subindex6 - Init */
 UINT16 REMAIN; /* Subindex7 - REMAIN */
-} OBJ_STRUCT_PACKED_END
-TOBJ6000;
-#endif //#ifndef _ETHER_CATSLAVE_OBJECTS_H_
-
-/**
-* \brief Object variable
-*/
-PROTO TOBJ6000 Inputs0x6000
-#if defined(_ETHER_CATSLAVE_) && (_ETHER_CATSLAVE_ == 1)
-={7,0x00000000,0x0000,0x0000,0x00000000,0x00000000,0x0000,0x0000}
-#endif
-;
-/** @}*/
-
-
-
-/******************************************************************************
-*                    Object 0x7000 : Outputs
-******************************************************************************/
-/**
-* \addtogroup 0x7000 0x7000 | Outputs
-* @{
-* \brief Object 0x7000 (Outputs) definition
-*/
-#ifdef _OBJD_
-/**
-* \brief Object entry descriptions<br>
-* <br>
-* SubIndex 0<br>
-* SubIndex 1 - Actual Pressure<br>
-* SubIndex 2 - Actual Position<br>
-* SubIndex 3 - General_Control_Setpoint<br>
-* SubIndex 4 - Control_Mode<br>
-* SubIndex 5 - Pressure_Sensor_Select<br>
-* SubIndex 6 - Pressure_Sensor1_Range<br>
-* SubIndex 7 - Pressure_Sensor2_Range<br>
-* SubIndex 8 - STATUS<br>
-* SubIndex 9 - REMAIN<br>
-*/
-OBJCONST TSDOINFOENTRYDESC    OBJMEM asEntryDesc0x7000[] = {
-{ DEFTYPE_UNSIGNED8 , 0x8 , ACCESS_READ },
-{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE | OBJACCESS_TXPDOMAPPING }, /* Subindex1 - Actual Pressure */
-{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE | OBJACCESS_TXPDOMAPPING }, /* Subindex2 - Actual Position */
-{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE | OBJACCESS_TXPDOMAPPING }, /* Subindex3 - General_Control_Setpoint */
-{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE | OBJACCESS_TXPDOMAPPING }, /* Subindex4 - Control_Mode */
-{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE | OBJACCESS_TXPDOMAPPING }, /* Subindex5 - Pressure_Sensor_Select */
-{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE | OBJACCESS_TXPDOMAPPING }, /* Subindex6 - Pressure_Sensor1_Range */
-{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE | OBJACCESS_TXPDOMAPPING }, /* Subindex7 - Pressure_Sensor2_Range */
-{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE | OBJACCESS_TXPDOMAPPING }, /* Subindex8 - STATUS */
-{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE | OBJACCESS_TXPDOMAPPING }}; /* Subindex9 - REMAIN */
-
-/**
-* \brief Object/Entry names
-*/
-OBJCONST UCHAR OBJMEM aName0x7000[] = "Outputs\000"
-"Actual Pressure\000"
-"Actual Position\000"
-"General_Control_Setpoint\000"
-"Control_Mode\000"
-"Pressure_Sensor_Select\000"
-"Pressure_Sensor1_Range\000"
-"Pressure_Sensor2_Range\000"
-"STATUS\000"
-"REMAIN\000\377";
-#endif //#ifdef _OBJD_
-
-#ifndef _ETHER_CATSLAVE_OBJECTS_H_
-/**
-* \brief Object structure
-*/
-typedef struct OBJ_STRUCT_PACKED_START {
-UINT16 u16SubIndex0;
-UINT32 ActualPressure; /* Subindex1 - Actual Pressure */
-UINT32 ActualPosition; /* Subindex2 - Actual Position */
-UINT32 General_Control_Setpoint; /* Subindex3 - General_Control_Setpoint */
-UINT16 Control_Mode; /* Subindex4 - Control_Mode */
-UINT16 Pressure_Sensor_Select; /* Subindex5 - Pressure_Sensor_Select */
-UINT32 Pressure_Sensor1_Range; /* Subindex6 - Pressure_Sensor1_Range */
-UINT32 Pressure_Sensor2_Range; /* Subindex7 - Pressure_Sensor2_Range */
-UINT16 STATUS; /* Subindex8 - STATUS */
-UINT16 REMAIN; /* Subindex9 - REMAIN */
 } OBJ_STRUCT_PACKED_END
 TOBJ7000;
 #endif //#ifndef _ETHER_CATSLAVE_OBJECTS_H_
@@ -413,9 +413,9 @@ TOBJ7000;
 /**
 * \brief Object variable
 */
-PROTO TOBJ7000 Outputs0x7000
+PROTO TOBJ7000 RxPdo0x7000
 #if defined(_ETHER_CATSLAVE_) && (_ETHER_CATSLAVE_ == 1)
-={9,0x00000000,0x00000000,0x00000000,0x0000,0x0000,0x00000000,0x00000000,0x0000,0x0000}
+={7,0x00,0x00,0x00,0x00,0x00,0x00,0x00}
 #endif
 ;
 /** @}*/
@@ -429,17 +429,17 @@ PROTO TOBJ7000 Outputs0x7000
 #ifdef _OBJD_
 TOBJECT    OBJMEM ApplicationObjDic[] = {
 /* Object 0x1600 */
-{NULL , NULL ,  0x1600 , {DEFTYPE_UNSIGNED8 , 9 | (OBJCODE_REC << 8)} , asEntryDesc0x1600 , aName0x1600 , &OutputsProcessDataMapping0x1600, NULL , NULL , 0x0000 },
+{NULL , NULL ,  0x1600 , {DEFTYPE_PDOMAPPING , 7 | (OBJCODE_REC << 8)} , asEntryDesc0x1600 , aName0x1600 , &RxPdoProcessDataMapping0x1600, NULL , NULL , 0x0000 },
 /* Object 0x1A00 */
-{NULL , NULL ,  0x1A00 , {DEFTYPE_UNSIGNED8 , 7 | (OBJCODE_REC << 8)} , asEntryDesc0x1A00 , aName0x1A00 , &InputsProcessDataMapping0x1A00, NULL , NULL , 0x0000 },
+{NULL , NULL ,  0x1A00 , {DEFTYPE_PDOMAPPING , 9 | (OBJCODE_REC << 8)} , asEntryDesc0x1A00 , aName0x1A00 , &TxPdoProcessDataMapping0x1A00, NULL , NULL , 0x0000 },
 /* Object 0x1C12 */
 {NULL , NULL ,  0x1C12 , {DEFTYPE_UNSIGNED16 , 1 | (OBJCODE_ARR << 8)} , asEntryDesc0x1C12 , aName0x1C12 , &sRxPDOassign, NULL , NULL , 0x0000 },
 /* Object 0x1C13 */
 {NULL , NULL ,  0x1C13 , {DEFTYPE_UNSIGNED16 , 1 | (OBJCODE_ARR << 8)} , asEntryDesc0x1C13 , aName0x1C13 , &sTxPDOassign, NULL , NULL , 0x0000 },
 /* Object 0x6000 */
-{NULL , NULL ,  0x6000 , {DEFTYPE_UNSIGNED8 , 7 | (OBJCODE_REC << 8)} , asEntryDesc0x6000 , aName0x6000 , &Inputs0x6000, NULL , NULL , 0x0000 },
+{NULL , NULL ,  0x6000 , {DEFTYPE_RECORD , 9 | (OBJCODE_REC << 8)} , asEntryDesc0x6000 , aName0x6000 , &TxPdo0x6000, NULL , NULL , 0x0000 },
 /* Object 0x7000 */
-{NULL , NULL ,  0x7000 , {DEFTYPE_UNSIGNED8 , 9 | (OBJCODE_REC << 8)} , asEntryDesc0x7000 , aName0x7000 , &Outputs0x7000, NULL , NULL , 0x0000 },
+{NULL , NULL ,  0x7000 , {DEFTYPE_RECORD , 7 | (OBJCODE_REC << 8)} , asEntryDesc0x7000 , aName0x7000 , &RxPdo0x7000, NULL , NULL , 0x0000 },
 {NULL,NULL, 0xFFFF, {0, 0}, NULL, NULL, NULL, NULL}};
 #endif    //#ifdef _OBJD_
 #undef PROTO

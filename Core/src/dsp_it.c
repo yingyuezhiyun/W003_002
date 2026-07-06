@@ -23,9 +23,11 @@ __weak __interrupt void ECAT_Lan9252IrqIsr(void)
 {
 #if ECAT_ENABLE
     // LAN9252 IRQ is level/edge depending on config;  falling edge.
-    ECAT_DisableEscInt();
-    PDI_Isr();
-    ECAT_EnableEscInt();
+    // ECAT_DisableEscInt();
+    // PDI_Isr();
+    // ECAT_EnableEscInt();
+    glob_value.pending.ECAT_PDI++;
+
 #endif
     Interrupt_clearACKGroup(INT_ECAT_ISR_XINT_INTERRUPT_ACK_GROUP);
 }
@@ -39,9 +41,10 @@ __weak __interrupt void ECAT_Sync0Isr(void)
 #if defined(INTERRUPTS_SUPPORTED) && defined(DC_SUPPORTED)
     // Interrupt_disable(INT_ECAT_SYNC0_ISR_XINT);
     ECAT_DisableEscInt();
-//    Sync0_Isr();
+    //    Sync0_Isr();
     // Interrupt_enable(INT_ECAT_SYNC0_ISR_XINT);
     ECAT_EnableEscInt();
+    glob_value.pending.ECAT_SYNC0++;
 #endif
 #endif
     Interrupt_clearACKGroup(INT_ECAT_SYNC0_ISR_XINT_INTERRUPT_ACK_GROUP);
@@ -56,9 +59,10 @@ __weak __interrupt void ECAT_Sync1Isr(void)
 #if defined(INTERRUPTS_SUPPORTED) && defined(DC_SUPPORTED)
     // Interrupt_disable(INT_ECAT_SYNC1_ISR_XINT);
     ECAT_DisableEscInt();
-//    Sync1_Isr();
+    //    Sync1_Isr();
     // Interrupt_enable(INT_ECAT_SYNC1_ISR_XINT);
     ECAT_EnableEscInt();
+    glob_value.pending.ECAT_SYNC1++;
 #endif
 #endif
     Interrupt_clearACKGroup(INT_ECAT_SYNC1_ISR_XINT_INTERRUPT_ACK_GROUP);
@@ -122,7 +126,7 @@ __weak __interrupt void INT_Elmo_CAN_1_ISR(void)
 //     {
 //         //todo :输入压力算法
 //         ProcessWithDA(middleData->cdg_volt);
-//     }   
+//     }
 //     // 清 ePWM 中断标志 + PIE ACK
 //     EPWM_clearEventTriggerInterruptFlag(myEPWM0_BASE);
 //     Interrupt_clearACKGroup(INT_myEPWM0_INTERRUPT_ACK_GROUP);

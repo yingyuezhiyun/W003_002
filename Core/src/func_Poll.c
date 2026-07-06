@@ -12,6 +12,31 @@
 #include "math.h"
 #include "func_exec.h"
 
+#if ECAT_ENABLE
+#include "ECAT/9252_HW.h"
+#include "ECAT/src/ecatappl.h"
+#include "ECAT/src/applInterface.h"
+#endif
+/*********************************************************************** ECAT数据处理 ****************************************************************/
+
+/// @brief 处理 EtherCAT 轮询任务。
+void ECAT_Poll()
+{
+#if ECAT_ENABLE
+    if (glob_value.status.errors.content.ecat == 0)
+    {
+        if (glob_value.pending.ECAT_PDI > 0)
+        {
+            glob_value.pending.ECAT_PDI = 0;
+            ECAT_DisableEscInt();
+            PDI_Isr();
+            ECAT_EnableEscInt();
+        }
+        MainLoop();
+    }
+#endif
+}
+
 /*********************************************************************** 串口数据处理 ****************************************************************/
 
 /// @brief 处理串口解析轮询任务。

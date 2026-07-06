@@ -295,17 +295,33 @@ UINT16 APPL_GenerateMapping(UINT16 *pInputSize,UINT16 *pOutputSize)
 void APPL_InputMapping(UINT16* pData)
 {
     /*
-     * Slave -> Master (TxPDO): 0x1C13 (SM3) -> 0x1A00 -> 0x6000.1..0x6000.8
-     * Fixed mapping: 8 x UINT16 = 16 bytes.
+     * Slave -> Master (TxPDO): 0x1C13 (SM3) -> 0x1A00 -> 0x6000.1..
+     * 
      */
-    // pData[0] = RX_DATA0x6000.RX_DAT01;
-    // pData[1] = RX_DATA0x6000.RX_DAT02;
-    // pData[2] = RX_DATA0x6000.RX_DAT03;
-    // pData[3] = RX_DATA0x6000.RX_DAT04;
-    // pData[4] = RX_DATA0x6000.RX_DAT05;
-    // pData[5] = RX_DATA0x6000.RX_DAT06;
-    // pData[6] = RX_DATA0x6000.RX_DAT07;
-    // pData[7] = RX_DATA0x6000.RX_DAT08;
+    union
+    {
+        float f32;
+        UINT16 u16[2];
+    } conv;
+    conv.f32 = TxPdo0x6000.ActualPressure;
+    pData[0] = conv.u16[0];
+    pData[1] = conv.u16[1];
+    conv.f32 = TxPdo0x6000.ActualPosition;
+    pData[2] = conv.u16[0];
+    pData[3] = conv.u16[1];
+    conv.f32 = TxPdo0x6000.General_Control_Setpoint;
+    pData[4] = conv.u16[0];
+    pData[5] = conv.u16[1];
+    pData[6] = TxPdo0x6000.Control_Mode;
+    pData[7] = TxPdo0x6000.Pressure_Sensor_Select;
+    conv.f32 = TxPdo0x6000.Pressure_Sensor1_Range;
+    pData[8] = conv.u16[0];
+    pData[9] = conv.u16[1];
+    conv.f32 = TxPdo0x6000.Pressure_Sensor2_Range;
+    pData[10] = conv.u16[0];
+    pData[11] = conv.u16[1];
+    pData[12] = TxPdo0x6000.STATUS;
+    pData[13] = TxPdo0x6000.ERROR;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -318,17 +334,27 @@ void APPL_InputMapping(UINT16* pData)
 void APPL_OutputMapping(UINT16* pData)
 {
     /*
-     * Master -> Slave (RxPDO): 0x1C12 (SM2) -> 0x1600 -> 0x7000.1..0x7000.8
-     * Fixed mapping: 8 x UINT16 = 16 bytes.
+     * Master -> Slave (RxPDO): 0x1C12 (SM2) -> 0x1600 -> 0x7000.1..0x7000.
+     * 
      */
-    // TX_DATA0x7000.TX_DAT01 = pData[0];
-    // TX_DATA0x7000.TX_DAT02 = pData[1];
-    // TX_DATA0x7000.TX_DAT03 = pData[2];
-    // TX_DATA0x7000.TX_DAT04 = pData[3];
-    // TX_DATA0x7000.TX_DAT05 = pData[4];
-    // TX_DATA0x7000.TX_DAT06 = pData[5];
-    // TX_DATA0x7000.TX_DAT07 = pData[6];
-    // TX_DATA0x7000.TX_DAT08 = pData[7];
+    union
+    {
+        float f32;
+        UINT16 u16[2];
+    } conv;
+    conv.u16[0] = pData[0];
+    conv.u16[1] = pData[1];
+    RxPdo0x7000.General_Control_Setpoint = conv.f32;
+    RxPdo0x7000.Control_Mode = pData[2];
+    RxPdo0x7000.Pressure_Sensor_Select = pData[3];
+    conv.u16[0] = pData[4];
+    conv.u16[1] = pData[5];
+    RxPdo0x7000.Pressure_Sensor1_Range = conv.f32;
+    conv.u16[0] = pData[6];
+    conv.u16[1] = pData[7];
+    RxPdo0x7000.Pressure_Sensor2_Range = conv.f32;
+    RxPdo0x7000.Init = pData[8];
+    RxPdo0x7000.REMAIN = pData[9];
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

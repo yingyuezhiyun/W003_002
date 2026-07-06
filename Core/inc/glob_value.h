@@ -89,7 +89,7 @@ typedef struct
     } temp;
     struct
     {
-        float period;//调用周期
+        float period; // 调用周期
         int32_t kp;
         int32_t ki;
         float percent;        // 开度百分比
@@ -162,6 +162,13 @@ typedef struct
 
 typedef struct
 {
+    uint8_t ECAT_PDI;   ///< EtherCAT PDI 中断挂起标志
+    uint8_t ECAT_SYNC0; ///< EtherCAT SYNC0 中断挂起标志
+    uint8_t ECAT_SYNC1; ///< EtherCAT SYNC1 中断挂起标志
+} Pending_t;
+
+typedef struct
+{
     volatile uint32_t tick0p1ms; ///< 全局 tick（0.1ms）
     measure_t measure;           ///< 测量值
     setparam_t set;              ///< 设置参数
@@ -169,6 +176,7 @@ typedef struct
     Param_Config_t paramCfg;     ///< 配置参数
     Status_t status;             ///< 状态信息
     Mode_Ctx_t modeCtx;          ///< 模式上下文
+    Pending_t pending;           ///< 中断挂起标志
 } glob_value_t;                  // 全局变量结构体
 
 extern glob_value_t glob_value;
