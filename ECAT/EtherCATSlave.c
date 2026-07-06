@@ -392,44 +392,4 @@ UINT16 APPL_GetDeviceID()
 
 
 
-#if USE_DEFAULT_MAIN
-/////////////////////////////////////////////////////////////////////////////////////////
-/**
-
- \brief    This is the main function
-
-*////////////////////////////////////////////////////////////////////////////////////////
-#if _PIC24
-int main(void)
-#else
-void main(void)
-#endif
-{
-    /* initialize the Hardware and the EtherCAT Slave Controller */
-#if FC1100_HW
-    if(HW_Init())
-    {
-        HW_Release();
-        return;
-    }
-#else
-    HW_Init();
-#endif
-    MainInit();
-
-    bRunApplication = TRUE;
-    do
-    {
-        MainLoop();
-        
-    } while (bRunApplication == TRUE);
-
-    HW_Release();
-#if _PIC24
-    return 0;
-#endif
-}
-#endif //#if USE_DEFAULT_MAIN
-/** @} */
-
 

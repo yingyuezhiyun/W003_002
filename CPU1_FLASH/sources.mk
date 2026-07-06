@@ -129,7 +129,6 @@ Core/src/communication \
 Core/src \
 Core/src/mode_ctrl \
 ECAT \
-ECAT/src \
 device \
 device/driverlib \
 
