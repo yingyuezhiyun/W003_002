@@ -7,7 +7,7 @@ PAGE 0 :  /* Program Memory */
 
    RAMLS_DATA       : origin = 0x008000, length = 0x001000
    RAMLS_PROG       : origin = 0x009000, length = 0x002000
-   RAMGS_DATA       : origin = 0x00C000, length = 0x010000
+   RAMGS_DATA       : origin = 0x00D000, length = 0x00F000
 
    BEGIN           	: origin = 0x084000, length = 0x000002
    RAMM0           	: origin = 0x000122, length = 0x0006DE
@@ -99,7 +99,7 @@ SECTIONS
    .const              : > FLASH_APP,       PAGE = 0,       ALIGN(8)
 #else
    .pinit              : > FLASHB,       PAGE = 0,       ALIGN(8)
-   .ebss               : >> RAMLS5 | RAMGS0 | RAMGS1,    PAGE = 1
+   .ebss               : >> RAMLS5 | RAMGS1 | RAMGS2 | RAMGS3 | RAMGS4 | RAMGS5 | RAMGS6 | RAMGS7 | RAMGS8 | RAMGS9 | RAMGS10 | RAMGS11 | RAMGS12 | RAMGS13,    PAGE = 1
    .esysmem            : > RAMLS5,       PAGE = 1
    .cio                : > RAMLS5,       PAGE = 1
    /* Initalized sections go in Flash */

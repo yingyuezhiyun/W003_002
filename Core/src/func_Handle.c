@@ -169,7 +169,7 @@ void CDG1_Volt_Update()
     }
     measure->adc_cdg1 = (uint16_t)(cdg1_filt_sum / (CDG_SAMPLE_COUNT - 2 * CDG_FILT_LEN));
 #if (CDG_ADC_CALIB_EN)
-    float vadc1 = (float)measure->adc_cdg1 * paramCfg->CDG_cfg.CDG1_adc_k + paramCfg->CDG_cfg.CDG1_adc_b;
+    float vadc1 = (float)measure->adc_cdg1 * paramCfg->CDG_cfg.CDG1_adc_k / 1000.0f + paramCfg->CDG_cfg.CDG1_adc_b;
 #else
     float vadc1 = (float)(measure->adc_cdg1 - ADC_OFFSET) / ADC_SCALE * 15f;
 #endif
@@ -189,7 +189,7 @@ void CDG2_Volt_Update()
     }
     measure->adc_cdg2 = (uint16_t)(cdg2_filt_sum / (CDG_SAMPLE_COUNT - 2 * CDG_FILT_LEN));
 #if (CDG_ADC_CALIB_EN)
-    float vadc2 = (float)measure->adc_cdg2 * paramCfg->CDG_cfg.CDG2_adc_k + paramCfg->CDG_cfg.CDG2_adc_b;
+    float vadc2 = (float)measure->adc_cdg2 * paramCfg->CDG_cfg.CDG2_adc_k / 1000.0f + paramCfg->CDG_cfg.CDG2_adc_b;
 #else
     float vadc2 = (float)(measure->adc_cdg2 - ADC_OFFSET) / ADC_SCALE * 15f;
 #endif

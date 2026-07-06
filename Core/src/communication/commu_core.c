@@ -324,7 +324,7 @@ void SCI_Parse(SCI_RX_t *sci)
 					sci->rxBuf[readPos + lineLen] = saved;
 				}
 				/* 跳过处理的换行符 */
-				readPos = i /* + 1U */;
+				readPos = i + 1U;
 			}
 		}
 
