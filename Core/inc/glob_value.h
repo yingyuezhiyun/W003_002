@@ -39,9 +39,9 @@ typedef struct
         struct
         {
             uint8_t calib : 1;       ///< 标定错误
-            uint8_t pos : 1;         ///< 位置错误
-            uint8_t press : 1;       ///< 压力错误
-            uint8_t hold : 1;        ///< 保持错误
+            // uint8_t pos : 1;         ///< 位置错误
+            // uint8_t press : 1;       ///< 压力错误
+            // uint8_t hold : 1;        ///< 保持错误
             uint8_t low_temp : 1;    ///< 低温错误
             uint8_t high_temp : 1;   ///< 高温错误
             uint8_t epprom : 1;      ///< EEPROM 错误

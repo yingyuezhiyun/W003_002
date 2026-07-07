@@ -293,8 +293,8 @@ PROTO TOBJ1C13 sTxPDOassign
 */
 OBJCONST TSDOINFOENTRYDESC    OBJMEM asEntryDesc0x6000[] = {
 { DEFTYPE_UNSIGNED8 , 0x8 , ACCESS_READ },
-{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }, /* Subindex1 - Actual Pressure */
-{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }, /* Subindex2 - Actual Position */
+{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }, /* Subindex1 - Actual_Pressure */
+{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }, /* Subindex2 - Actual_Position */
 { DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }, /* Subindex3 - General_Control_Setpoint */
 { DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }, /* Subindex4 - Control_Mode */
 { DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }, /* Subindex5 - Pressure_Sensor_Select */
@@ -307,8 +307,8 @@ OBJCONST TSDOINFOENTRYDESC    OBJMEM asEntryDesc0x6000[] = {
 * \brief Object/Entry names
 */
 OBJCONST UCHAR OBJMEM aName0x6000[] = "TxPdo\000"
-"Actual Pressure\000"
-"Actual Position\000"
+"Actual_Pressure\000"
+"Actual_Position\000"
 "General_Control_Setpoint\000"
 "Control_Mode\000"
 "Pressure_Sensor_Select\000"
@@ -324,8 +324,8 @@ OBJCONST UCHAR OBJMEM aName0x6000[] = "TxPdo\000"
 */
 typedef struct OBJ_STRUCT_PACKED_START {
 UINT16 u16SubIndex0;
-float ActualPressure; /* Subindex1 - Actual Pressure */
-float ActualPosition; /* Subindex2 - Actual Position */
+float Actual_Pressure; /* Subindex1 - Actual Pressure */
+float Actual_Position; /* Subindex2 - Actual Position */
 float General_Control_Setpoint; /* Subindex3 - General_Control_Setpoint */
 UINT16 Control_Mode; /* Subindex4 - Control_Mode */
 UINT16 Pressure_Sensor_Select; /* Subindex5 - Pressure_Sensor_Select */

@@ -24,10 +24,21 @@
 #include "src/ecat_def.h"
 
 #include "src/applInterface.h"
-
+#include "glob_cfg.h"
+#include "glob_value.h"
 #define _ETHER_CATSLAVE_ 1
 #include "EtherCATSlave.h"
 #undef _ETHER_CATSLAVE_
+
+enum
+{
+    STATUS_INIT,
+    STATUS_INITING,
+    STATUS_LOCKED,
+    STATUS_NORMAL,
+    STATUS_FAULT,
+};
+
 /*--------------------------------------------------------------------------------------
 ------
 ------    local types and defines
@@ -303,10 +314,10 @@ void APPL_InputMapping(UINT16* pData)
         float f32;
         UINT16 u16[2];
     } conv;
-    conv.f32 = TxPdo0x6000.ActualPressure;
+    conv.f32 = TxPdo0x6000.Actual_Pressure;
     pData[0] = conv.u16[0];
     pData[1] = conv.u16[1];
-    conv.f32 = TxPdo0x6000.ActualPosition;
+    conv.f32 = TxPdo0x6000.Actual_Position;
     pData[2] = conv.u16[0];
     pData[3] = conv.u16[1];
     conv.f32 = TxPdo0x6000.General_Control_Setpoint;
@@ -355,6 +366,51 @@ void APPL_OutputMapping(UINT16* pData)
     RxPdo0x7000.Pressure_Sensor2_Range = conv.f32;
     RxPdo0x7000.Init = pData[8];
     RxPdo0x7000.REMAIN = pData[9];
+
+    //执行命令
+    Param_Config_t *cfg = &glob_value.paramCfg;
+    setparam_t *set = &glob_value.set;
+    Locks_t *locks = &glob_value.set.locks;
+    Mode_Ctx_t *ctx = &glob_value.modeCtx;
+    Status_t *status = &glob_value.status;
+    if (RxPdo0x7000.Control_Mode >= 0 && RxPdo0x7000.Control_Mode <= 1)
+    {
+        set->setpointType = RxPdo0x7000.Control_Mode;
+    }
+    if (RxPdo0x7000.General_Control_Setpoint >= 0 && RxPdo0x7000.General_Control_Setpoint <= 100)
+    {
+        set->setpointValue = RxPdo0x7000.General_Control_Setpoint;
+    }
+    if (RxPdo0x7000.Pressure_Sensor_Select >= 0 && RxPdo0x7000.Pressure_Sensor_Select <= 2)
+    {
+        cfg->CDG_cfg.CDG_Mode = RxPdo0x7000.Pressure_Sensor_Select;
+    }
+    cfg->CDG_cfg.CDG1_Range = RxPdo0x7000.Pressure_Sensor1_Range;
+    cfg->CDG_cfg.CDG2_Range = RxPdo0x7000.Pressure_Sensor2_Range;
+    if (glob_value.set.setpointType == SETPOINT_TYPE_PRESSURE)
+    {
+        Mode_HSM_Request_CMD(MODE_CMD_SET_PRESSURE_PERCENT, glob_value.set.setpointValue);
+    }
+    else
+    {
+        Mode_HSM_Request_CMD(MODE_CMD_SET_POSITION_PERCENT, glob_value.set.setpointValue);
+    }
+    switch (RxPdo0x7000.Init)
+    {
+    case 0:
+        break;
+    case 1:
+        if (locks->content.calib && ctx->calibSubState < CALIB_SUB_DONE/*  && status->errors.content.calib == 0 */)
+        {
+            Mode_HSM_Request_CMD(MODE_CMD_CALIB, 0.0f);
+        }
+        break;
+    case 2:
+        Mode_HSM_Request_CMD(MODE_CMD_CALIB, 0.0f);
+        break;
+    default:
+        break;
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -364,11 +420,49 @@ void APPL_OutputMapping(UINT16* pData)
 *////////////////////////////////////////////////////////////////////////////////////////
 void APPL_Application(void)
 {
-#if _WIN32
-   #pragma message ("Warning: Implement the slave application")
-#else
-    #warning "Implement the slave application"
-#endif
+
+    Mode_Ctx_t *ctx = &glob_value.modeCtx;
+    Status_t *status = &glob_value.status;
+    Locks_t *locks = &glob_value.set.locks;
+    measure_t *measure = &glob_value.measure;
+    Param_Config_t *cfg = &glob_value.paramCfg;
+    setparam_t *set = &glob_value.set;
+
+    //数据更新
+    TxPdo0x6000.Actual_Pressure = measure->pressurePercent;
+    TxPdo0x6000.Actual_Position = measure->positionPercent;
+    TxPdo0x6000.General_Control_Setpoint = set->setpointValue;
+    TxPdo0x6000.Control_Mode = set->setpointType;
+    TxPdo0x6000.Pressure_Sensor_Select = cfg->CDG_cfg.CDG_Mode;
+    TxPdo0x6000.Pressure_Sensor1_Range = cfg->CDG_cfg.CDG1_Range;
+    TxPdo0x6000.Pressure_Sensor2_Range = cfg->CDG_cfg.CDG2_Range;   
+    TxPdo0x6000.ERROR = status->errors.val;
+    if (TxPdo0x6000.ERROR != 0)
+    {
+        TxPdo0x6000.STATUS = STATUS_FAULT;
+    }
+    else
+    {
+        if (locks->content.calib)
+        {
+            if (ctx->calibSubState > CALIB_SUB_INIT && ctx->calibSubState < CALIB_SUB_DONE)
+            {
+                TxPdo0x6000.STATUS = STATUS_INITING;
+            }
+            else
+            {
+                TxPdo0x6000.STATUS = STATUS_INIT;
+            }
+        }             
+        else if (locks->content.key)
+        {
+            TxPdo0x6000.STATUS = STATUS_LOCKED;
+        }
+        else
+        {
+            TxPdo0x6000.STATUS = STATUS_NORMAL;
+        }
+    }
 }
 
 #if EXPLICIT_DEVICE_ID

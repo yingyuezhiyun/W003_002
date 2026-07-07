@@ -231,11 +231,11 @@ void Lan9252_ResetPulse(void)
 {
   // LAN_RST# is active low
   GPIO_writePin((uint32_t)ECAT_EN, 1U); // default high
-  delay_ms(1000);
+  delay_ms(50);
   GPIO_writePin((uint32_t)ECAT_EN, 0U); // assert reset
-  delay_ms(1000);
+  delay_ms(50);
   GPIO_writePin((uint32_t)ECAT_EN, 1U); // deassert reset
-  delay_ms(1000);
+  delay_ms(50);
 }
 /*******************************************************************************
   Function:
@@ -254,12 +254,12 @@ UINT8 HW_Init(void)
   Lan9252_ResetPulse();
   UINT16 intMask;
   UINT32 data;
-  UINT32 loopCnt = 200;
+  INT32 loopCnt = 200;
   do
   {
     data = SPIReadDWord(LAN9252_BYTE_TEST_REG);
-    delay_ms(100);
-  } while (0x87654321 != data && loopCnt--);
+    delay_ms(10);
+  } while (0x87654321 != data && loopCnt-- > 0);
   if (data != 0x87654321)
   {
     return 1; // LAN9252 not responding
@@ -270,11 +270,11 @@ UINT8 HW_Init(void)
   {
     intMask = 0x93;
     HW_EscWriteWord(intMask, ESC_AL_EVENTMASK_OFFSET);
-    delay_ms(100);
+    delay_ms(10);
     intMask = 0;
     HW_EscReadWord(intMask, ESC_AL_EVENTMASK_OFFSET);
-    delay_ms(100);
-  } while (intMask != 0x93 && loopCnt--);
+    delay_ms(10);
+  } while (intMask != 0x93 && loopCnt-- > 0);
   if (intMask != 0x93)
   {
     return 1; // LAN9252 not responding
