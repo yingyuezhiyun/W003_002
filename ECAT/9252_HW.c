@@ -280,6 +280,10 @@ UINT8 HW_Init(void)
     return 1; // LAN9252 not responding
   }
 
+  //todo 配置站别名寄存器 如拨码开关值
+  intMask = 1002;
+  HW_EscWriteWord(intMask, ESC_SLAVE_ALIAS_OFFSET);
+
   // Configure LAN9252 host interrupt output behavior (direct LAN9252 regs)
   // IRQ enable, IRQ polarity, IRQ buffer type in Interrupt Configuration register.
   // Write 0x54 - 0x00000101
