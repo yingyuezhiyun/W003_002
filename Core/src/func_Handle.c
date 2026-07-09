@@ -275,6 +275,13 @@ void Status_handle()
             GPIO_writePin(POS_OPEN_LED, 0);
             GPIO_writePin(POS_CLOSE_LED, 1);
         }
+        else if (status->errors.content.ecat == 1)
+        {
+            GPIO_writePin(RUN_LED, 1);
+            GPIO_writePin(BATT_LED, 0);
+            GPIO_writePin(POS_OPEN_LED, 0);
+            GPIO_writePin(POS_CLOSE_LED, 0);
+        }
 
         GPIO_writePin(POS_OPEN_TTL_OUT, 1);
         GPIO_writePin(POS_CLOSE_TTL_OUT, 1);
