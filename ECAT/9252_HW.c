@@ -52,7 +52,8 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 #include "driverlib.h"
 #include "device.h"
 #include "board.h"
-
+#include "glob_cfg.h"
+#include "glob_value.h"
 
 
 // #include "F28x_Project.h"
@@ -280,8 +281,8 @@ UINT8 HW_Init(void)
     return 1; // LAN9252 not responding
   }
 
-  //todo 配置站别名寄存器 如拨码开关值
-  intMask = 1002;
+  //配置站别名寄存器 
+  intMask = glob_value.paramCfg.ECAT_Alias;
   HW_EscWriteWord(intMask, ESC_SLAVE_ALIAS_OFFSET);
 
   // Configure LAN9252 host interrupt output behavior (direct LAN9252 regs)

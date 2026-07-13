@@ -201,7 +201,7 @@ void CDG2_Volt_Update()
 
 #define LED_BLINK_PERIOD_MS (500U)   // 500ms
 #define CALIB_BLINK_PERIOD_MS (500U) // 500ms
-#define BATT_BLINK_PERIOD_MS (400U)  // 400ms
+#define BATT_BLINK_PERIOD_MS (200U)  // 400ms
 /// @brief 处理状态显示,LED 灯等。
 void Status_handle()
 {

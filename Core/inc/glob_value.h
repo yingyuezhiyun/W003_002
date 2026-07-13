@@ -103,7 +103,8 @@ typedef struct
         int32_t DownK;        // 下降K初值
         int32_t DownKmin;     // 下降小量程K值
         int32_t DownKMax;
-    } Press_Ctrl; // 压力控制参数
+    } Press_Ctrl;        // 压力控制参数
+    uint16_t ECAT_Alias; ///< EtherCAT 别名
     uint8_t remain;
 } Param_Config_t;
 
