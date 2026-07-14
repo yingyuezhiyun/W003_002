@@ -112,6 +112,42 @@ void bubble_sort(uint16_t data[], uint8_t size)
     }
 }
 
+void quickSortDig(uint16_t arr[], int left, int right) {
+    if (left >= right) return;
+
+    int i = left;
+    int j = right;
+    uint16_t pivot = arr[left]; // 取第一个元素为基准，此时 arr[left] 视为“坑”
+
+    while (i < j) {
+        // 从右向左找小于 pivot 的数，填入左边的坑
+        while (i < j && arr[j] >= pivot) {
+            j--;
+        }
+        if (i < j) {
+            arr[i] = arr[j]; // 填坑，此时 arr[j] 成为新坑
+            i++;
+        }
+
+        // 从左向右找大于 pivot 的数，填入右边的坑
+        while (i < j && arr[i] <= pivot) {
+            i++;
+        }
+        if (i < j) {
+            arr[j] = arr[i]; // 填坑，此时 arr[i] 成为新坑
+            j--;
+        }
+    }
+    
+    // 最后将基准值填入最后的坑
+    arr[i] = pivot;
+
+    // 递归排序
+    quickSortDig(arr, left, i - 1);
+    quickSortDig(arr, i + 1, right);
+}
+
+
 void CDG_Volt_Update(uint8_t ch)
 {
     measure_t *measure = &glob_value.measure;
@@ -161,7 +197,8 @@ void CDG1_Volt_Update()
 
     measure_t *measure = &glob_value.measure;
     Param_Config_t *paramCfg = &glob_value.paramCfg;
-    bubble_sort(cdg1_samples, CDG_SAMPLE_COUNT);
+    // bubble_sort(cdg1_samples, CDG_SAMPLE_COUNT);    
+    quickSortDig(cdg1_samples, 0, CDG_SAMPLE_COUNT - 1);
     float cdg1_filt_sum = 0.0f;
     for (size_t i = CDG_FILT_LEN; i < CDG_SAMPLE_COUNT - CDG_FILT_LEN; i++)
     {
@@ -181,7 +218,8 @@ void CDG2_Volt_Update()
 {
     measure_t *measure = &glob_value.measure;
     Param_Config_t *paramCfg = &glob_value.paramCfg;
-    bubble_sort(cdg2_samples, CDG_SAMPLE_COUNT);
+    // bubble_sort(cdg2_samples, CDG_SAMPLE_COUNT);
+    quickSortDig(cdg2_samples, 0, CDG_SAMPLE_COUNT - 1);
     float cdg2_filt_sum = 0.0f;
     for (size_t i = CDG_FILT_LEN; i < CDG_SAMPLE_COUNT - CDG_FILT_LEN; i++)
     {

@@ -72,5 +72,5 @@
 #define BIT_PERIOD_MS (10) 
 
 
-#define CDG_SAMPLE_COUNT (8)
-#define CDG_FILT_LEN (2)
+#define CDG_SAMPLE_COUNT (32)
+#define CDG_FILT_LEN (8)
