@@ -357,7 +357,7 @@ If this switch is set, then also "FOE_SUPPORTED" shall be set.  */
 /** 
 OP_PD_REQUIRED: If this switch is reset the state transition SAFEOP_2_OP will also successful if no process data was received. The watchdog will only be active when first process data was received (bEcatFirstOutputsReceived) */
 #ifndef OP_PD_REQUIRED
-#define OP_PD_REQUIRED                            0 //Allow SAFEOP->OP even if master sends outputs only after OP
+#define OP_PD_REQUIRED                            1 //This define was already evaluated by ET9300 Project Handler(V. 1.3.3.0)!
 #endif
 
 /** 
@@ -395,7 +395,7 @@ STATIC_OBJECT_DIC: If this switch is set, the object dictionary is "build" stati
 /** 
 ESC_EEPROM_ACCESS_SUPPORT: If this switch is set the slave stack provides functions to access the EEPROM. */
 #ifndef ESC_EEPROM_ACCESS_SUPPORT
-#define ESC_EEPROM_ACCESS_SUPPORT                 0 //This define was already evaluated by ET9300 Project Handler(V. 1.3.3.0)!
+#define ESC_EEPROM_ACCESS_SUPPORT                 1 //This define was already evaluated by ET9300 Project Handler(V. 1.3.3.0)!
 #endif
 
 
@@ -812,7 +812,7 @@ VENDOR_ID: Object 0x1018 SI1 (Vendor ID)	 <br>
 An unique EtherCAT Vendor ID is required. Please find all valid Vendor IDs listed at www.ethercat.org/en/vendor_id_list.html.<br>
 If your company is not listed, please assign an ID for free at www.ethercat.org/memberarea/vendor_id.asp */
 #ifndef VENDOR_ID
-#define VENDOR_ID                                 0x1
+#define VENDOR_ID                                 0x000004D8
 #endif
 
 /** 
@@ -955,7 +955,7 @@ MAX_PD_OUTPUT_SIZE: Maximum size of the process output data (Sync Manager 2) for
 MIN_PD_CYCLE_TIME: Minimum cycle time in ns the slave is supporting <br>
 (entry 0x1C32:05 or entry 0x1C33:05) */
 #ifndef MIN_PD_CYCLE_TIME
-#define MIN_PD_CYCLE_TIME                         0x186A0
+#define MIN_PD_CYCLE_TIME                         0xF4240
 #endif
 
 /** 

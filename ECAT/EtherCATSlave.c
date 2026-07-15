@@ -474,13 +474,8 @@ void APPL_Application(void)
 *////////////////////////////////////////////////////////////////////////////////////////
 UINT16 APPL_GetDeviceID()
 {
-#if _WIN32
-   #pragma message ("Warning: Implement explicit Device ID latching")
-#else
-    #warning "Implement explicit Device ID latching"
-#endif
-    /* Explicit Device 5 is expected by Explicit Device ID conformance tests*/
-    return 0x5;
+    UINT16 DeviceID = glob_value.paramCfg.ECAT_ID ;
+    return DeviceID;
 }
 #endif
 

@@ -85,7 +85,7 @@ SET_OBJECT_PARAMS(set_cdg1_b_param, glob_value.paramCfg.CDG_cfg.CDG1_adc_b)
 SET_OBJECT_PARAMS(set_cdg2_k_param, glob_value.paramCfg.CDG_cfg.CDG2_adc_k)
 SET_OBJECT_PARAMS(set_cdg2_b_param, glob_value.paramCfg.CDG_cfg.CDG2_adc_b)
 SET_OBJECT_PARAMS(set_ECAT_Alias_param, glob_value.paramCfg.ECAT_Alias)
-
+SET_OBJECT_PARAMS(set_ECAT_ID_param, glob_value.paramCfg.ECAT_ID)
 
 SET_PRESSCTRL_PARAMS(set_pressctrl_MidSpeed_param, g_lMidSpeed)
 SET_PRESSCTRL_PARAMS(set_pressctrl_MaxSpeed_param, g_lMaxSpeed)
@@ -151,6 +151,7 @@ static Command_t commands[] = {
     CMD_PARAM_ENTRY("PSL", set_cdg2_k_param),                                                // 设置 CDG2 ADC 转换系数 k
     CMD_PARAM_ENTRY("PSM", set_cdg2_b_param),                                                // 设置 CDG2 ADC 转换系数 b
     CMD_PARAM_ENTRY("PSN", set_ECAT_Alias_param),                                            // 设置 EtherCAT 别名
+    CMD_PARAM_ENTRY("PSO", set_ECAT_ID_param),                                               // 设置 EtherCAT ID
     CMD_READ_INT32("PR1", "Kp+%ld", g_lKp),                                                  // 读取压力控制 KP 参数
     CMD_READ_INT32("PR2", "Ki+%ld", g_lKi),                                                  // 读取压力控制 KI 参数
     CMD_READ_INT32("PR4", "UpBaseStep+%ld", g_lUpBaseStep),                                  // 读取压力控制 设置上升稳定K值
@@ -168,11 +169,12 @@ static Command_t commands[] = {
     CMD_READ_FLOAT("PRG", "Period+%.1f", glob_value.paramCfg.Press_Ctrl.period),             // 读取压力控制 算法调用周期 ms
     CMD_READ_FLOAT("PRH", "MotorTempHighThr+%.1f", glob_value.paramCfg.temp.high_threshold), // 读取电机保护温度阈值 高温
     CMD_READ_FLOAT("PRI", "MotorTempLowThr+%.1f", glob_value.paramCfg.temp.low_threshold),   // 读取电机保护温度阈值 低温
-    CMD_READ_FLOAT("PRJ", "CDG1_K+%0.6E", glob_value.paramCfg.CDG_cfg.CDG1_adc_k),              // 读取 CDG1 ADC 转换系数 k
-    CMD_READ_FLOAT("PRK", "CDG1_B+%0.6E", glob_value.paramCfg.CDG_cfg.CDG1_adc_b),              // 读取 CDG1 ADC 转换系数 b
-    CMD_READ_FLOAT("PRL", "CDG2_K+%0.6E", glob_value.paramCfg.CDG_cfg.CDG2_adc_k),              // 读取 CDG2 ADC 转换系数 k
-    CMD_READ_FLOAT("PRM", "CDG2_B+%0.6E", glob_value.paramCfg.CDG_cfg.CDG2_adc_b),              // 读取 CDG2 ADC 转换系数 b
+    CMD_READ_FLOAT("PRJ", "CDG1_K+%0.6E", glob_value.paramCfg.CDG_cfg.CDG1_adc_k),           // 读取 CDG1 ADC 转换系数 k
+    CMD_READ_FLOAT("PRK", "CDG1_B+%0.6E", glob_value.paramCfg.CDG_cfg.CDG1_adc_b),           // 读取 CDG1 ADC 转换系数 b
+    CMD_READ_FLOAT("PRL", "CDG2_K+%0.6E", glob_value.paramCfg.CDG_cfg.CDG2_adc_k),           // 读取 CDG2 ADC 转换系数 k
+    CMD_READ_FLOAT("PRM", "CDG2_B+%0.6E", glob_value.paramCfg.CDG_cfg.CDG2_adc_b),           // 读取 CDG2 ADC 转换系数 b
     CMD_READ_INT16("PRN", "ECAT_Alias+%u", glob_value.paramCfg.ECAT_Alias),                  // 读取 EtherCAT 别名
+    CMD_READ_INT16("PRO", "ECAT_ID+%u", glob_value.paramCfg.ECAT_ID),                        // 读取 EtherCAT ID
     CMD_FUNC_ENTRY("J4", calib_func),                                                        // 校准标定
     CMD_READ_CSTR("R38", "Version+" HOST_VERSION),                                           // 获取设备软件版本号
     CMD_FUNC_ENTRY("REBOOT", reboot_func),                                                   // 复位

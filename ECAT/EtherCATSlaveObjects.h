@@ -281,8 +281,8 @@ PROTO TOBJ1C13 sTxPDOassign
 * \brief Object entry descriptions<br>
 * <br>
 * SubIndex 0<br>
-* SubIndex 1 - Actual Pressure<br>
-* SubIndex 2 - Actual Position<br>
+* SubIndex 1 - Actual_Pressure<br>
+* SubIndex 2 - Actual_Position<br>
 * SubIndex 3 - General_Control_Setpoint<br>
 * SubIndex 4 - Control_Mode<br>
 * SubIndex 5 - Pressure_Sensor_Select<br>

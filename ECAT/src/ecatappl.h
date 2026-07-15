@@ -117,6 +117,16 @@ PROTO    void       PDO_InputMapping(void);
 
 PROTO    void       ECAT_SetLedIndication(void);
 
+#ifndef ESC_RD
+#define ESC_RD 0 /**< \brief Read access to EEPROM*/
+#endif
+#ifndef ESC_WR
+#define ESC_WR 1 /**< \brief Write access to EEPROM*/
+#endif
+
+PROTO    UINT16     ESC_EepromAccess(UINT32 wordaddress, UINT16 wordsize, UINT16 MBXMEM *pData, UINT8 access);
+PROTO    UINT16     ESC_EepromWriteCRC(void);
+
 
 
 
