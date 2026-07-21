@@ -168,9 +168,11 @@ void DispatchLine(char *line, commandsEntry_t *commands_list_head, printf_t ppri
 	}
 	UART_ResponseCode_t responseCode = RC_NO_COMMAND;
 	char *command = line;
+	uint8_t find = 0;
 	for (commandsEntry_t *current = commands_list_head; current != NULL; current = current->next)
 	{
 		Command_t *cmd = (Command_t *)current->entry;
+		find = 0;
 		/* 遍历命令表，直到遇到 command == NULL */
 		for (i = 0U; cmd[i].command != NULL; ++i)
 		{
@@ -184,6 +186,7 @@ void DispatchLine(char *line, commandsEntry_t *commands_list_head, printf_t ppri
 						responseCode = cmd[i].func(NULL, pprintf);
 						command = (char *)cmd[i].command;
 					}
+					find = 1;
 				}
 				break;
 
@@ -198,6 +201,7 @@ void DispatchLine(char *line, commandsEntry_t *commands_list_head, printf_t ppri
 						responseCode = cmd[i].func(arg, pprintf);
 						command = (char *)cmd[i].command;
 					}
+					find = 1;
 				}
 			}
 			break;
@@ -239,9 +243,14 @@ void DispatchLine(char *line, commandsEntry_t *commands_list_head, printf_t ppri
 						break;
 					}
 					responseCode = RC_READ;
+					find = 1;
 				}
 				break;
 			default:
+				break;
+			}
+			if (find)
+			{
 				break;
 			}
 		}

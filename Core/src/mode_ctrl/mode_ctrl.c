@@ -188,6 +188,11 @@ uint8_t Mode_HSM_Request_CMD(Mode_Command_Type cmd, float param)
             set->pressurePercent = param;
             ctx->hsm->next = &Mode_Press; // 压力模式下执行
             break;
+        case MODE_CMD_VALVE_TEST:
+            ctx->nextCmd.cmd = cmd;
+            result = 1;
+            ctx->hsm->next = &Mode_Valve_test; // 阀门测试模式下执行
+            break;
         default:
             break;
         }

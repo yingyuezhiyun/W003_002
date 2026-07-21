@@ -16,6 +16,7 @@
 #include "LibCtrl/PressCtrlAPI.h"
 #include "commu_core.h"
 #include "param_store.h"
+#include "valve_test.h"
 
 static SCI_RX_t ServicePortSCI = {
     .sci_base = ServicePort_SCI_BASE,
@@ -95,6 +96,10 @@ SET_PRESSCTRL_PARAMS(set_pressctrl_DownKmin_param, g_lDownKmin)
 SET_PRESSCTRL_PARAMS(set_pressctrl_DownKMax_param, g_lDownKMax)
 SET_PRESSCTRL_PARAMS(set_pressctrl_MinBaseStep_param, g_lMinBaseStep)
 
+SET_OBJECT_PARAMS(set_valve_test_Amp_param, valve_test_param.Amp)
+SET_OBJECT_PARAMS(set_valve_test_Freq_param, valve_test_param.Freq)
+SET_OBJECT_PARAMS(set_valve_test_Pos_param, valve_test_param.pos)
+
 static uint8_t calib_func(const char *arg, printf_t pprintf)
 {
     uint8_t ok = Mode_HSM_Request_CMD(MODE_CMD_CALIB, 0.0f);
@@ -103,9 +108,44 @@ static uint8_t calib_func(const char *arg, printf_t pprintf)
 
 static uint8_t reboot_func(const char *arg, printf_t pprintf)
 {
-	uint8_t ok = RC_SUCCESS;
-	SysCtl_resetDevice();
-	return ok;
+    uint8_t ok = RC_SUCCESS;
+    SysCtl_resetDevice();
+    return ok;
+}
+
+static uint8_t valve_test_func(const char *arg, printf_t pprintf)
+{
+    uint8_t ok = Mode_HSM_Request_CMD(MODE_CMD_VALVE_TEST, 0.0f);
+    return ok == 1U ? RC_SUCCESS : RC_BUSY;
+}
+static uint8_t pos_test_func(const char *arg, printf_t pprintf)
+{
+    float value;
+    uint8_t ok;
+    if (ParseFloatValue(arg, &value) && (value >= 0.0f) && (value <= 100.0f))
+    {
+        ok = Mode_HSM_Request_CMD(MODE_CMD_SET_POSITION_PERCENT, value);
+        if (ok == 1U)
+        {
+            return RC_SUCCESS;
+        }
+    }
+    return RC_PARAM_ERROR;
+}
+
+static uint8_t press_test_func(const char *arg, printf_t pprintf)
+{
+    float value;
+    uint8_t ok;
+    if (ParseFloatValue(arg, &value) && (value >= 0.0f) && (value <= 100.0f))
+    {
+        ok = Mode_HSM_Request_CMD(MODE_CMD_SET_PRESSURE_PERCENT, value);
+        if (ok == 1U)
+        {
+            return RC_SUCCESS;
+        }
+    }
+    return RC_PARAM_ERROR;
 }
 
 /// @brief 命令列表，可执行相应功能，设置参数值，直接读取参数（不需要转换计算的参数）
@@ -169,15 +209,22 @@ static Command_t commands[] = {
     CMD_READ_FLOAT("PRG", "Period+%.1f", glob_value.paramCfg.Press_Ctrl.period),             // 读取压力控制 算法调用周期 ms
     CMD_READ_FLOAT("PRH", "MotorTempHighThr+%.1f", glob_value.paramCfg.temp.high_threshold), // 读取电机保护温度阈值 高温
     CMD_READ_FLOAT("PRI", "MotorTempLowThr+%.1f", glob_value.paramCfg.temp.low_threshold),   // 读取电机保护温度阈值 低温
-    CMD_READ_FLOAT("PRJ", "CDG1_K+%0.6E", glob_value.paramCfg.CDG_cfg.CDG1_adc_k),           // 读取 CDG1 ADC 转换系数 k
-    CMD_READ_FLOAT("PRK", "CDG1_B+%0.6E", glob_value.paramCfg.CDG_cfg.CDG1_adc_b),           // 读取 CDG1 ADC 转换系数 b
-    CMD_READ_FLOAT("PRL", "CDG2_K+%0.6E", glob_value.paramCfg.CDG_cfg.CDG2_adc_k),           // 读取 CDG2 ADC 转换系数 k
-    CMD_READ_FLOAT("PRM", "CDG2_B+%0.6E", glob_value.paramCfg.CDG_cfg.CDG2_adc_b),           // 读取 CDG2 ADC 转换系数 b
+    CMD_READ_FLOAT("PRJ", "CDG1_K+%0.6f", glob_value.paramCfg.CDG_cfg.CDG1_adc_k),           // 读取 CDG1 ADC 转换系数 k
+    CMD_READ_FLOAT("PRK", "CDG1_B+%0.6f", glob_value.paramCfg.CDG_cfg.CDG1_adc_b),           // 读取 CDG1 ADC 转换系数 b
+    CMD_READ_FLOAT("PRL", "CDG2_K+%0.6f", glob_value.paramCfg.CDG_cfg.CDG2_adc_k),           // 读取 CDG2 ADC 转换系数 k
+    CMD_READ_FLOAT("PRM", "CDG2_B+%0.6f", glob_value.paramCfg.CDG_cfg.CDG2_adc_b),           // 读取 CDG2 ADC 转换系数 b
     CMD_READ_INT16("PRN", "ECAT_Alias+%u", glob_value.paramCfg.ECAT_Alias),                  // 读取 EtherCAT 别名
     CMD_READ_INT16("PRO", "ECAT_ID+%u", glob_value.paramCfg.ECAT_ID),                        // 读取 EtherCAT ID
     CMD_FUNC_ENTRY("J4", calib_func),                                                        // 校准标定
     CMD_READ_CSTR("R38", "Version+" HOST_VERSION),                                           // 获取设备软件版本号
     CMD_FUNC_ENTRY("REBOOT", reboot_func),                                                   // 复位
+    CMD_FUNC_ENTRY("TVALVE", valve_test_func),                                               // 阀门测试
+    CMD_PARAM_ENTRY("TPOS", pos_test_func),                                                  // 阀门位置测试
+    CMD_PARAM_ENTRY("TPRESS", press_test_func),                                              // 阀门压力测试
+    CMD_PARAM_ENTRY("TVA", set_valve_test_Amp_param),                                        // 设置阀门测试幅值
+    CMD_PARAM_ENTRY("TVF", set_valve_test_Freq_param),                                       // 设置阀门测试频率
+    CMD_PARAM_ENTRY("TVP", set_valve_test_Pos_param),                                        // 设置阀门测试位置
+
     {NULL, CMD_NONE, NULL, NULL, DT_NONE, 0},
 };
 

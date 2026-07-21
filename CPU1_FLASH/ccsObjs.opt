@@ -13,6 +13,7 @@
 "./Core/src/mode_ctrl/mode_position.obj"
 "./Core/src/mode_ctrl/mode_press.obj"
 "./Core/src/mode_ctrl/mode_root.obj"
+"./Core/src/mode_ctrl/mode_valve_test.obj"
 "./ECAT/9252_HW.obj"
 "./ECAT/EtherCATSlave.obj"
 "./ECAT/SPIDriver.obj"

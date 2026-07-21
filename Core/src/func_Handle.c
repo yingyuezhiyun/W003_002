@@ -11,6 +11,7 @@
 #include "board.h"
 #include "math.h"
 #include "func_exec.h"
+#include "LibCtrl/PressCtrlAPI.h"
 
 /*********************************************************************** 数据处理 ****************************************************************/
 
@@ -188,7 +189,8 @@ void CDG_Volt_Update(uint8_t ch)
 
     if (middleData->CDG_RangeSel == ch)
     {
-        ProcessWithDA(middleData->cdg_volt);
+        // ProcessWithDA(middleData->cdg_volt);
+        g_fValue = middleData->cdg_volt;
     }
 }
 

@@ -27,6 +27,7 @@ typedef enum
     MODE_CMD_SET_KEY_LOCK,         ///< 设置按键锁
     MODE_CMD_SET_KEY_UNLOCK,       ///< 解除按键锁
     MODE_CMD_SET_POSITION_PERCENT, ///< 设置目标位置（百分比 0~100）
+    MODE_CMD_VALVE_TEST,           ///< 阀门测试模式
     MODE_CMD_FULL_OPEN,            ///< 全开
     MODE_CMD_FULL_CLOSE,           ///< 全关
     MODE_CMD_SET_PRESSURE_PERCENT, ///< 设置目标压力（百分比 0~100）
@@ -110,6 +111,7 @@ struct Mode_Ctx_s
 extern HsmState_t Mode_Calib;
 extern HsmState_t Mode_Position;
 extern HsmState_t Mode_Press;
+extern HsmState_t Mode_Valve_test;
 extern HsmState_t Mode_Root;
 
 void ModeHSM_Init(Mode_Ctx_t *ctx);
