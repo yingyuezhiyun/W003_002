@@ -463,7 +463,7 @@ void BIT_handle()
     // 供电状态检测
     if (measure->power_voltage >= 22.7f && measure->power_voltage <= 25.3f)
     {
-        status->errors.content.pwr = 0; // 供电正常
+        // status->errors.content.pwr = 0; // 供电正常
         measure->powerType = PWR_TYPE_EXTERNAL;
         batt_low_count = 0;
     }
@@ -485,7 +485,7 @@ void BIT_handle()
         batt_low_count++;
         if (batt_low_count > 10) // 连续超过10次（100ms）认为是电池供电异常
         {
-            status->errors.content.pwr = 1; // 供电错误
+            // status->errors.content.pwr = 1; // 供电错误
             measure->powerType = PWR_TYPE_NONE;
         }
     }
@@ -496,7 +496,7 @@ void BIT_handle()
         temp_err_count++;
         if (temp_err_count > 100) // 1秒
         {
-            status->errors.content.high_temp = 1; // 高温错误
+            // status->errors.content.high_temp = 1; // 高温错误
         }
     }
     else if (measure->temperature <= paramCfg->temp.low_threshold)
@@ -504,7 +504,7 @@ void BIT_handle()
         temp_err_count++;
         if (temp_err_count > 100) // 1秒
         {
-            status->errors.content.low_temp = 1; // 低温错误
+            // status->errors.content.low_temp = 1; // 低温错误
         }
     }
     else
@@ -519,7 +519,7 @@ void BIT_handle()
         motor_stall_count++;
         if (motor_stall_count > 100) // 连续超过100次（1000ms）认为是电机堵转
         {
-            status->errors.content.motor_stall = 1; // 电机堵转错误
+            // status->errors.content.motor_stall = 1; // 电机堵转错误
         }
     }
     else

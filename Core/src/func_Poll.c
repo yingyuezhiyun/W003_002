@@ -137,23 +137,23 @@ void Key_TTL_Poll()
         state->all_key_down_cnt = 0;
     }
 
-    ///**************TTL 功能************************/
-    if (state->pos_close_ttl_in == 1) // （电路反向设计）外部TTL 输入有效时为低电平，内部为高电平
-    {
-        Mode_HSM_Request_CMD(MODE_CMD_SET_KEY_LOCK, 0.0f); // TTL 输入有效，执行按键锁定命令
-        state->last_pos_close_ttl_in = state->pos_close_ttl_in;
-    }
-    else if (state->last_pos_close_ttl_in != state->pos_close_ttl_in)
-    {
-        Mode_HSM_Request_CMD(MODE_CMD_SET_KEY_UNLOCK, 0.0f); // TTL 输入无效，执行按键解锁命令
-        state->last_pos_close_ttl_in = state->pos_close_ttl_in;
-    }
-#if 0 // 目前不使用外部 全开TTL 输入控制全开，避免误触发导致安全风险
-    else if (state->pos_open_ttl_in == 1)
-    {
-        Mode_HSM_Request_CMD(MODE_CMD_FULL_OPEN, 0.0f);
-    }
-#endif
+//     ///**************TTL 功能************************/
+//     if (state->pos_close_ttl_in == 1) // （电路反向设计）外部TTL 输入有效时为低电平，内部为高电平
+//     {
+//         Mode_HSM_Request_CMD(MODE_CMD_SET_KEY_LOCK, 0.0f); // TTL 输入有效，执行按键锁定命令
+//         state->last_pos_close_ttl_in = state->pos_close_ttl_in;
+//     }
+//     else if (state->last_pos_close_ttl_in != state->pos_close_ttl_in)
+//     {
+//         Mode_HSM_Request_CMD(MODE_CMD_SET_KEY_UNLOCK, 0.0f); // TTL 输入无效，执行按键解锁命令
+//         state->last_pos_close_ttl_in = state->pos_close_ttl_in;
+//     }
+// #if 0 // 目前不使用外部 全开TTL 输入控制全开，避免误触发导致安全风险
+//     else if (state->pos_open_ttl_in == 1)
+//     {
+//         Mode_HSM_Request_CMD(MODE_CMD_FULL_OPEN, 0.0f);
+//     }
+// #endif
 }
 
 /************************************************************************ elmo状态轮询 **************************************************************/
