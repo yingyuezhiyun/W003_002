@@ -14,7 +14,8 @@
 -----------------------------------------------------------------------------------------*/
 #include <stdlib.h>
 #include <string.h>
-
+#include <stdint.h>
+#include "inc/hw_types.h"
 /*-----------------------------------------------------------------------------------------
 ------	
 ------	Slave Sample Code Configuration Defines
@@ -418,61 +419,47 @@ TRUE: Will be used for variables from type BOOL  */
 #endif
 
 /** 
-BOOL: Should be adapted to the boolean type of the microcontroller */
+Use stdint fixed-width types to avoid platform char-width issues
+on targets like TI C28 where `char` is 16-bit. Map common SSC types
+to exact-width integer types.
+*/
 #ifndef BOOL
-#define BOOL                                      unsigned char
+#define BOOL                                      uint8_t
 #endif
 
-/** 
-UINT8: Should be adapted to the unsigned8 type of the microcontroller  */
 #ifndef UINT8
-#define UINT8                                     unsigned char
+#define UINT8                                     uint8_t
 #endif
 
-/** 
-UINT16: Should be adapted to the unsigned16 type of the microcontroller  */
 #ifndef UINT16
-#define UINT16                                    unsigned short
+#define UINT16                                    uint16_t
 #endif
 
-/** 
-UINT32: Should be adapted to the unsigned32 type of the microcontroller  */
 #ifndef UINT32
-#define UINT32                                    unsigned long
+#define UINT32                                    uint32_t
 #endif
 
-/** 
-USHORT: Should be adapted to the unsigned16 type of the microcontroller */
 #ifndef USHORT
-#define USHORT                                    unsigned short
+#define USHORT                                    uint16_t
 #endif
 
-/** 
-INT8: Should be adapted to the integer8 type of the microcontroller */
 #ifndef INT8
-#define INT8                                      
+#define INT8                                      int8_t
 #endif
 
-/** 
-INT16: Should be adapted to the integer16 type of the microcontroller  */
 #ifndef INT16
-#define INT16                                     short
+#define INT16                                     int16_t
 #endif
 
-/** 
-INT32: Should be adapted to the integer32 type of the microcontroller */
 #ifndef INT32
-#define INT32                                     long
+#define INT32                                     int32_t
 #endif
 
-/** 
-CHAR: Should be adapted to the character type of the microcontroller */
+/** Keep CHAR/UCHAR as generic char aliases; use UINT8/INT8 for explicit 8-bit values */
 #ifndef CHAR
 #define CHAR                                      char
 #endif
 
-/** 
-UCHAR: Should be adapted to the unsigned character type of the microcontroller */
 #ifndef UCHAR
 #define UCHAR                                     unsigned char
 #endif
@@ -550,7 +537,14 @@ if the microcontroller does not support different memory types, MBXMEM shall be 
 MBXMEMCPY: Should be defined to the memcpy function for MBXMEM memory, if the microcontroller<br>
 does not support different memory types, MBXMEMCPY shall be defined to a 'normal' memcpy function */
 #ifndef MBXMEMCPY
+#if MBX_16BIT_ACCESS
+/* MBX memory is organized as 16-bit storage units on this platform.
+	Provide byte access macros and a MBX-aware memcpy fallback so code
+	that expects byte-wise access works correctly on TI C28-like targets. */
+#define MBXMEMCPY(destMBX, src, len)               MBXMemCpyToMBX((destMBX),(src),(len))
+#else
 #define MBXMEMCPY                                 memcpy
+#endif
 #endif
 
 /** 
@@ -566,6 +560,52 @@ does not support different memory types, MBXMEMSET shall be defined to a 'normal
 #ifndef MBXMEMSET
 #define MBXMEMSET                                 memset
 #endif
+
+/* Byte access helpers for MBX memory to handle platforms where the
+	 smallest accessible unit is 16 bits (e.g. TI C28 where char==16bit).
+	 These macros return/set the logical byte at byte index 'i'. */
+#if MBX_16BIT_ACCESS
+	#if BIG_ENDIAN_16BIT
+		#define MBX_GET_BYTE(p, i) ((uint8_t)((((UINT16 MBXMEM*)(p))[(i)>>1] >> (((i)&1) ? 0 : 8)) & 0xFF))
+		#define MBX_SET_BYTE(p, i, v) do { UINT16 MBXMEM *__w = ((UINT16 MBXMEM*)(p)) + ((i)>>1); UINT16 __tmp = *__w; if ((i)&1) __tmp = (uint16_t)((__tmp & 0xFF00) | ((uint16_t)(v) & 0xFF)); else __tmp = (uint16_t)((__tmp & 0x00FF) | (((uint16_t)(v) & 0xFF) << 8)); *__w = __tmp; } while(0)
+	#else
+		#define MBX_GET_BYTE(p, i) ((uint8_t)((((UINT16 MBXMEM*)(p))[(i)>>1] >> (((i)&1) ? 8 : 0)) & 0xFF))
+		#define MBX_SET_BYTE(p, i, v) do { UINT16 MBXMEM *__w = ((UINT16 MBXMEM*)(p)) + ((i)>>1); UINT16 __tmp = *__w; if ((i)&1) __tmp = (uint16_t)((__tmp & 0x00FF) | (((uint16_t)(v) & 0xFF) << 8)); else __tmp = (uint16_t)((__tmp & 0xFF00) | ((uint16_t)(v) & 0xFF)); *__w = __tmp; } while(0)
+	#endif
+#else
+	#define MBX_GET_BYTE(p, i) (((uint8_t*)(p))[i])
+	#define MBX_SET_BYTE(p, i, v) (((uint8_t*)(p))[i] = (uint8_t)(v))
+#endif
+
+/* MBX-aware memcpy: copy 'len' bytes from normal memory 'src' into MBX memory 'destMBX'.
+	 This is intentionally simple and byte-wise to preserve correctness on 16-bit-access targets. */
+static inline void MBXMemCpyToMBX(void *destMBX, const void *src, size_t len)
+{
+#if MBX_16BIT_ACCESS
+		const uint8_t *s = (const uint8_t *)src;
+		size_t i;
+		for (i = 0; i < len; ++i)
+		{
+				MBX_SET_BYTE(destMBX, i, s[i]);
+		}
+#else
+		memcpy(destMBX, src, len);
+#endif
+}
+
+static inline void MBXMemCpyFromMBX(void *dest, const void *srcMBX, size_t len)
+{
+#if MBX_16BIT_ACCESS
+	uint8_t *d = (uint8_t *)dest;
+	size_t i;
+	for (i = 0; i < len; ++i)
+	{
+		d[i] = MBX_GET_BYTE(srcMBX, i);
+	}
+#else
+	memcpy(dest, srcMBX, len);
+#endif
+}
 
 /** 
 MBXSTRLEN: Should be defined to the strlen function for MBXMEM memory, if the microcontroller<br>
@@ -612,7 +652,11 @@ if the microcontroller does not support different memory types, OBJMEM shall be 
 OBJTOMBXMEMCPY: Should be defined to the memcpy function for copying OBJMEM memory to MBXMEM memory, if the microcontroller<br>
 does not support different memory types, OBJTOMBXMEMCPY shall be defined to a 'normal' memcpy function */
 #ifndef OBJTOMBXMEMCPY
+#if MBX_16BIT_ACCESS
+#define OBJTOMBXMEMCPY(destMBX, src, len)         MBXMemCpyToMBX((destMBX),(src),(len))
+#else
 #define OBJTOMBXMEMCPY                            memcpy
+#endif
 #endif
 
 /** 
