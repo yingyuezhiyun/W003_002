@@ -1,3 +1,9 @@
+/*
+* This source file is part of the EtherCAT Slave Stack Code licensed by Beckhoff Automation GmbH & Co KG, 33415 Verl, Germany.
+* The corresponding license agreement applies. This hint shall not be removed.
+* https://www.beckhoff.com/media/downloads/slave-stack-code/ethercat_ssc_license.pdf
+*/
+
 /**
 \addtogroup CoE CAN Application Profile over EtherCAT
 @{
@@ -9,8 +15,21 @@
 \brief Implementation
 This file contains an example for CoE services and the CoE object dictionary
 
-\version 5.11
+\version 5.13
 
+<br>Changes to version V5.12:<br>
+V5.13 CIA402 3: change define "CIA402_DEVICE" to "CiA402_SAMPLE_APPLICATION"<br>
+V5.13 COE1: handling objects with 255 entries<br>
+V5.13 COE10: change 0x10F1.1 access from "rw" to "ro"<br>
+V5.13 COE2: handle Backup entries with the code VAR<br>
+V5.13 COE6: add 0x10F0.2 (Backup parameter changed)<br>
+V5.13 COE7: define 0x1C3x.13 Shift Time too short, just define variable because expected in DC mode but shift mode is not supported by the SSC<br>
+<br>Changes to version V5.11:<br>
+V5.12 COE1: load backup value after the complete OD was initialized<br>
+V5.12 COE4: add time stamp object (0x10F8) and update diagnosis handling<br>
+V5.12 COE8: fix invalid size calculation to init backup entries<br>
+V5.12 ECAT1: update SM Parameter measurement (based on the system time), enhancement for input only devices and no mailbox support, use only 16Bit pointer in process data length caluclation<br>
+V5.12 ECAT5: update Sync error counter/flag handling,check enum memory alignment depending on the processor,in case of a polled timer disable ESC interrupts during DC_CheckWatchdog<br>
 <br>Changes to version V5.10:<br>
 V5.11 COE1: update invalid end entry in the object dictionaries (error with some compilers)<br>
 V5.11 COE3: change 0x10F3.2 (Sync Error limit) from UINT32 to UINT16 (according to the ETG.1020)<br>
@@ -20,7 +39,7 @@ V5.11 ECAT4: enhance SM/Sync monitoring for input/output only slaves<br>
 V5.10 COE1: Define one entry description for all 0x1C3x objects and change data type of SI11,12,13 to UINT16 (according ETG.1020)<br>
 V5.10 COE2: Change return value of Get ObjectSize to UINT32<br>
             Change object size to UINT32<br>
-V5.10 ECAT13: Update Synchronisation handling (FreeRun,SM Sync, Sync0, Sync1)<br>
+V5.10 ECAT13: Update Synchronization handling (FreeRun,SM Sync, Sync0, Sync1)<br>
               Compare DC UINT configuration (by ESC Config data) vs. DC activation register settings<br>
               Update 0x1C3x entries<br>
 <br>Changes to version V5.0:<br>
@@ -105,13 +124,13 @@ V4.00 ECAT 1: The handling of the Sync Manager Parameter was included according 
 #define _COEAPPL_    1
 #include "coeappl.h"
 #undef _COEAPPL_
-/* ECATCHANGE_START(V5.11) ECAT10*/
 /*remove definition of _COEAPPL_ (#ifdef is used in coeappl.h)*/
-/* ECATCHANGE_END(V5.11) ECAT10*/
 
 #define _OBJD_
 
+
 /*Add Application specific Objects*/
+/*ECATCHANGE_START(V5.13) CIA402 3*/
 #include "../EtherCATSlave.h"
 
 
@@ -201,7 +220,7 @@ OBJCONST TSDOINFOENTRYDESC    OBJMEM sEntryDesc0x1009 = {DEFTYPE_VISIBLESTRING,B
 /**
  * \brief 0x1009 (Hardware version) object name
  */
-OBJCONST UCHAR OBJMEM aName0x1009[] = "Hardware version";
+OBJCONST UCHAR OBJMEM aName0x1009[] = "Manufacturer Hardware version";
 
 
 /*---------------------------------------------
@@ -213,14 +232,14 @@ OBJCONST UCHAR OBJMEM aName0x1009[] = "Hardware version";
 CHAR acSoftwareversion[] = DEVICE_SW_VERSION;
 
 /**
- * \brief 0x1009 (Hardware version) entry description
+ * \brief 0x100A (Software version) entry description
  */
 OBJCONST TSDOINFOENTRYDESC    OBJMEM sEntryDesc0x100A = {DEFTYPE_VISIBLESTRING,BYTE2BIT(DEVICE_SW_VERSION_LEN), ACCESS_READ};
 
 /**
- * \brief 0x1009 (Hardware version) object name
+ * \brief 0x100A (Software version) object name
  */
-OBJCONST UCHAR OBJMEM aName0x100A[] = "Software version";
+OBJCONST UCHAR OBJMEM aName0x100A[] = "Manufacturer Software version";
 
 
 
@@ -228,17 +247,6 @@ OBJCONST UCHAR OBJMEM aName0x100A[] = "Software version";
 /*---------------------------------------------
 -    0x1018
 -----------------------------------------------*/
-/**
- * \brief 0x1018 (Identity) object structure
- */
-typedef struct OBJ_STRUCT_PACKED_START {
-   UINT16   u16SubIndex0; /**< \brief SubIndex 0*/
-   UINT32   u32VendorID; /**< \brief EtherCAT vendor ID */
-   UINT32   u32Productcode; /**< \brief Product code*/
-   UINT32   u32Revision; /**< \brief Revision number*/
-   UINT32   u32Serialnumber; /**< \brief Serial number*/
-} OBJ_STRUCT_PACKED_END
-TOBJ1018;
 
 /**
  * \brief 0x1018 (Identity) variable to handle the object data
@@ -264,7 +272,7 @@ OBJCONST TSDOINFOENTRYDESC    OBJMEM asEntryDesc0x1018[] = {
 /**
  * \brief 0x1018 (Identity) object and entry names
  */
-OBJCONST UCHAR OBJMEM aName0x1018[] = "Identity\000Vendor ID\000Product code\000Revision\000Serial number\000\377";
+OBJCONST UCHAR OBJMEM aName0x1018[] = "Identity Object\000Vendor ID\000Product Code\000Revision Number\000Serial Number\000\377";
 
 
 
@@ -279,10 +287,10 @@ OBJCONST UCHAR OBJMEM aName0x1018[] = "Identity\000Vendor ID\000Product code\000
  */
 OBJCONST TSDOINFOENTRYDESC    OBJMEM asEntryDesc0x10F1[] = {
    {DEFTYPE_UNSIGNED8, 0x8, ACCESS_READ },
-   {DEFTYPE_UNSIGNED32, 0x20, ACCESS_READWRITE}, 
-/*ECATCHANGE_START(V5.11) COE3*/
+/*ECATCHANGE_START(V5.13) COE10*/
+   {DEFTYPE_UNSIGNED32, 0x20, ACCESS_READ},
+/*ECATCHANGE_END(V5.13) COE10*/
    {DEFTYPE_UNSIGNED16, 0x10, ACCESS_READWRITE}};
-/*ECATCHANGE_END(V5.11) COE3*/
 
 /**
  * \brief 0x10F1 (Error settings) object and entry names
@@ -294,16 +302,71 @@ OBJCONST UCHAR OBJMEM aName0x10F1[] = "Error Settings\000Local Error Reaction\00
 
 
 /*---------------------------------------------
--    0x1C00
+-    0x10F8 (Timestamp object)
 -----------------------------------------------*/
 /**
- * \brief 0x1C00 (Sync manager type) object structure
- */
-typedef struct OBJ_STRUCT_PACKED_START {
-   UINT16   u16SubIndex0; /**< \brief SubIndex 0*/
-   UINT8   aEntries[4]; /**< \brief Entry buffer (one for each SyncManager)*/
-} OBJ_STRUCT_PACKED_END
-TOBJ1C00;
+* \brief 0x10F8 (Timestamp object) entry description
+*/
+OBJCONST TSDOINFOENTRYDESC    OBJMEM sEntryDesc0x10F8 = { DEFTYPE_UNSIGNED64, 0x40, ACCESS_READWRITE | OBJACCESS_TXPDOMAPPING } ;
+/**
+* \brief 0x10F8 (Timestamp object) object name
+*/
+OBJCONST UCHAR OBJMEM aName0x10F8[] = "Timestamp Object\000\377";
+
+
+//object declaration and initialization in coeappl.h
+
+/**
+\param     index                    index of the requested object.
+\param     subindex                subindex of the requested object.
+\param    dataSize                received data size of the SDO Download
+\param    pData                    Pointer to the buffer where the written data can be copied from
+\param    bCompleteAccess    Indicates if a complete write of all subindices of the
+object shall be done or not
+
+\return    result of the write operation (0 (success) or an abort code (ABORTIDX_.... defined in
+sdosrv.h))
+
+\brief    This function reads the object 0x10F8
+*/
+UINT8 Read0x10F8(UINT16 index, UINT8 subindex, UINT32 dataSize, UINT16 MBXMEM * pData, UINT8 bCompleteAccess)
+{
+
+    if (index != 0x10F8)
+    {
+        return ABORTIDX_PARAM_IS_INCOMPATIBLE;
+    }
+
+    
+    if (bCompleteAccess)
+    {
+         /* Complete Access is not supported for object 0x10F8 */
+        return ABORTIDX_UNSUPPORTED_ACCESS;
+    }
+
+    if (subindex > 0)
+    {
+        return ABORTIDX_SUBINDEX_NOT_EXISTING;
+    }
+
+    if (dataSize > 8)
+    {
+        return ABORTIDX_PARAM_LENGTH_TOO_LONG;
+    }
+
+
+
+    MEMCPY(pData, &u64Timestamp, dataSize);
+    return 0;
+}
+
+
+
+
+
+/*---------------------------------------------
+-    0x1C00
+-----------------------------------------------*/
 
 /**
  * \brief 0x1C00 (Sync manager type) variable to handle the object data
@@ -315,7 +378,9 @@ TOBJ1C00;
  * SI4 (SM3): Process data In (0x4)
  *
  */
-TOBJ1C00 sSyncmanagertype = {0x04, {0x01, 0x02, 0x03, 0x04}};
+ /*ECATCHANGE_START(V5.13)*/
+TOBJ1C00 sSyncmanagertype = {0x04, {0x0201, 0x0403}};
+/*ECATCHANGE_END(V5.13)*/
 
 
 /**
@@ -323,7 +388,7 @@ TOBJ1C00 sSyncmanagertype = {0x04, {0x01, 0x02, 0x03, 0x04}};
  *
  * The object is an array so only the first entry is described (which is used for all entries).
  */
-OBJCONST TSDOINFOENTRYDESC    OBJMEM asEntryDesc0x1C00[2] = {
+OBJCONST TSDOINFOENTRYDESC    OBJMEM asEntryDesc0x1C00[] = {
    {DEFTYPE_UNSIGNED8, 0x08, ACCESS_READ},
    {DEFTYPE_UNSIGNED8, 0x08, ACCESS_READ}};
 
@@ -355,7 +420,9 @@ OBJCONST TSDOINFOENTRYDESC    OBJMEM asEntryDesc0x1C3x[] = {
    {DEFTYPE_UNSIGNED32, 0x20, ACCESS_READWRITE}, /* SubIndex 010: Sync0 Cycle Time */
    {DEFTYPE_UNSIGNED16, 0x10, ACCESS_READ}, /* SubIndex 011: SM-Event Missed */
    {DEFTYPE_UNSIGNED16, 0x10, ACCESS_READ}, /* SubIndex 012: Cycle Time Too Small */
-   {0x0000, 0x10, 0}, /* SubIndex 013: Shift Too Short Counter (not supported)*/
+   /*ECATCHANGE_START(V5.13) COE7*/
+   {DEFTYPE_UNSIGNED16, 0x10, ACCESS_READ}, /* SubIndex 013: Shift Too Short Counter*/
+   /*ECATCHANGE_END(V5.13) COE7*/
    {0x0000, 0x10, 0}, /* Subindex 014: RxPDO Toggle Failed (not supported)*/
    {0x0000, 0x20, 0}, /* Subindex 015: Minimum Cycle Distance (not supported)*/
    {0x0000, 0x20, 0}, /* Subindex 016: Maximum Cycle Distance (not supported)*/
@@ -376,18 +443,15 @@ OBJCONST TSDOINFOENTRYDESC    OBJMEM asEntryDesc0x1C3x[] = {
    {0x0000, 0, 0}, /* Subindex 031 doesn't exist */
    {DEFTYPE_BOOLEAN, 0x01, ACCESS_READ}}; /* SubIndex 032: Sync error */
 
-/*ECATCHANGE_START(V5.11) ECAT4*/
 /**
  * \brief 0x1C32 (SyncManager 2 parameter) object and entry names
  */
-OBJCONST UCHAR OBJMEM aName0x1C32[] = "SM output parameter\000Synchronization Type\000Cycle Time\000\000Synchronization Types supported\000Minimum Cycle Time\000Calc and Copy Time\000\000Get Cycle Time\000Delay Time\000Sync0 Cycle Time\000SM-Event Missed\000Cycle Time Too Small\000Shift Time Too Short\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000Sync Error\000\377";
-/*ECATCHANGE_END(V5.11) ECAT4*/
+OBJCONST UCHAR OBJMEM aName0x1C32[] = "SM output parameter\000Synchronization Type\000Cycle Time\000\000Synchronization Types supported\000Minimum Cycle Time\000Calc and Copy Time\000\000Get Cycle Time\000Delay Time\000Sync0 Cycle Time\000SM-Event Missed\000Cycle Time Too Small\000Shift Time Too Short Counter\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000Sync Error\000\377";
 
-/*ECATCHANGE_START(V5.11) ECAT4*/
 /**
  * \brief 0x1C33 (SyncManager 3 parameter) object and entry names
  */
-OBJCONST UCHAR OBJMEM aName0x1C33[] = "SM input parameter\000Synchronization Type\000Cycle Time\000\000Synchronization Types supported\000Minimum Cycle Time\000Calc and Copy Time\000\000Get Cycle Time\000Delay Time\000Sync0 Cycle Time\000SM-Event Missed\000Cycle Time Too Small\000Shift Time Too Short\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000Sync Error\000\377";
+OBJCONST UCHAR OBJMEM aName0x1C33[] = "SM input parameter\000Synchronization Type\000Cycle Time\000\000Synchronization Types supported\000Minimum Cycle Time\000Calc and Copy Time\000\000Get Cycle Time\000Delay Time\000Sync0 Cycle Time\000SM-Event Missed\000Cycle Time Too Small\000Shift Time Too Short Counter\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000Sync Error\000\377";
 
 /******************************************************************************
 ** Object Dictionary
@@ -395,7 +459,7 @@ OBJCONST UCHAR OBJMEM aName0x1C33[] = "SM input parameter\000Synchronization Typ
 /**
  * \brief Object dictionary pointer
  */
-TOBJECT    OBJMEM * ObjDicList = NULL;
+TOBJECT OBJMEM * ObjDicList = NULL;
 
 /**
  * \brief List of generic application independent objects
@@ -415,6 +479,8 @@ TOBJECT    OBJMEM GenObjDic[] = {
    {NULL,NULL,  0x1018, {DEFTYPE_IDENTITY, 4 | (OBJCODE_REC << 8)}, asEntryDesc0x1018, aName0x1018, &sIdentity, NULL, NULL, 0x0000 },
     /* Object 0x10F1 */
    {NULL,NULL,  0x10F1, {DEFTYPE_RECORD, 2 | (OBJCODE_REC << 8)}, asEntryDesc0x10F1, aName0x10F1, &sErrorSettings, NULL, NULL, 0x0000 },
+    /* Object 0x10F8 */
+   { NULL,NULL,  0x10F8,{ DEFTYPE_UNSIGNED64, 0 | (OBJCODE_VAR << 8) }, &sEntryDesc0x10F8, aName0x10F8, &u64Timestamp, Read0x10F8, NULL , 0x0000 },
    /* Object 0x1C00 */
    {NULL,NULL, 0x1C00, {DEFTYPE_UNSIGNED8, 4 | (OBJCODE_ARR << 8)}, asEntryDesc0x1C00, aName0x1C00, &sSyncmanagertype, NULL, NULL, 0x0000 },
    /* Object 0x1C32 */
@@ -423,9 +489,7 @@ TOBJECT    OBJMEM GenObjDic[] = {
    {NULL,NULL, 0x1C33, {DEFTYPE_SMPAR, 32 | (OBJCODE_REC << 8)}, asEntryDesc0x1C3x, aName0x1C33, &sSyncManInPar, NULL, NULL, 0x0000 },
    
   /*end of entries*/
-/*ECATCHANGE_START(V5.11) COE1*/
   {NULL,NULL, 0xFFFF, {0, 0}, NULL, NULL, NULL, NULL, NULL, 0x000}};
-/*ECATCHANGE_END(V5.11) COE1*/
 
 
 /*-----------------------------------------------------------------------------------------
@@ -444,6 +508,33 @@ OBJCONST TOBJECT OBJMEM * COE_GetObjectDictionary(void)
     return (OBJCONST TOBJECT OBJMEM *) ObjDicList;
 }
 
+
+/////////////////////////////////////////////////////////////////////////////////////////
+/**
+\brief     Update the Sync Error Indication
+*////////////////////////////////////////////////////////////////////////////////////////
+void COE_UpdateSyncErrorStatus(void)
+{
+    if (sSyncManOutPar.u16CycleExceededCounter > 0 || sSyncManOutPar.u16SmEventMissedCounter > sErrorSettings.u16SyncErrorCounterLimit)
+    {
+        sSyncManOutPar.u8SyncError = 1;
+    }
+    else
+    {
+        sSyncManOutPar.u8SyncError = 0;
+    }
+
+
+    if (sSyncManInPar.u16CycleExceededCounter > 0 || sSyncManInPar.u16SmEventMissedCounter > sErrorSettings.u16SyncErrorCounterLimit)
+    {
+        sSyncManInPar.u8SyncError = 1;
+    }
+    else
+    {
+        sSyncManInPar.u8SyncError = 0;
+    }
+
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /**
@@ -471,15 +562,14 @@ void COE_ObjInit(void)
         that the slave can check if this cycle time is supported,
         in DC Mode this value will be overwritten with the DC cycle time register */
     sSyncManOutPar.u32CycleTime     = 0;
-    /* only for DC Mode important: the subindex 3 contains the time shift between the
-       SYNC0 (SYNC1) signal and when the outputs are put to the hardware to allow the
-        master a very exactly calculation of delay times*/
-    sSyncManOutPar.u32ShiftTime     = 0;
 
     /* the subindex 4 contains the supported synchronization types */
 
     sSyncManOutPar.u16SyncTypesSupported    = SYNCTYPE_FREERUNSUPP            /* ECAT FreeRun Mode is supported */
+
+#if (PD_OUTPUT_CALC_AND_COPY_TIME == 0) || (PD_INPUT_CALC_AND_COPY_TIME == 0) || (MIN_PD_CYCLE_TIME == 0)
                                               | SYNCTYPE_TIMESVARIABLE        /* the execution times depend on the connected modules */
+#endif
                                               | SYNCTYPE_SYNCHRONSUPP         /* ECAT Synchron Mode is supported */
     ;
 
@@ -500,23 +590,24 @@ void COE_ObjInit(void)
     /*subindex 9: time from start driving outputs until outputs are valid*/
     sSyncManOutPar.u32DelayTime = (PD_OUTPUT_DELAY_TIME);
 
+    /*subindex 11: reset the sm missed error counter*/
+    sSyncManOutPar.u16SmEventMissedCounter = 0;
+
+    /*subindex 12: reset the cycle exceed error counter*/
+    sSyncManOutPar.u16CycleExceededCounter = 0;
+
     /*subindex 32: indicates if a synchronisation error has occurred*/
     sSyncManOutPar.u8SyncError = 0;
 
-/*ECATCHANGE_START(V5.11) ECAT4*/
     /* initialize the Sync Manager Input parameter object 0x1C33 */
     sSyncManInPar.subindex0         = 32;
     /* default mode is ECAT Synchron Mode, if output size > 0 the inputs are updated with the SM2-event */
     sSyncManInPar.u16SyncType         = SYNCTYPE_FREERUN;
 
+    
     /* subindex 2: same as 0x1C32:02 */
     sSyncManInPar.u32CycleTime     = sSyncManOutPar.u32CycleTime;
-    /* only for DC Mode important: subindex 3 contains the time shift between the
-       SYNC0 (SYNC1) signal and when the inputs are got to the hardware to allow the
-        master a very exactly calculation of delay times,
-       will be calculated dynamically because it depends on the connected modules
-        (in this example we will make an online measurement in the ESC Interrupt Routine) */
-    sSyncManInPar.u32ShiftTime     = 0;
+
     /* subindex 4: same as 0x1C32:04 */
     sSyncManInPar.u16SyncTypesSupported    = sSyncManOutPar.u16SyncTypesSupported;
 
@@ -529,9 +620,14 @@ void COE_ObjInit(void)
     /*subindex 9: delay to prepare input latch*/
     sSyncManInPar.u32DelayTime = (PD_INPUT_DELAY_TIME);
 
+    /*subindex 11: reset the sm missed error counter*/
+    sSyncManInPar.u16SmEventMissedCounter = 0;
+
+    /*subindex 12: reset the cycle exceed error counter*/
+    sSyncManInPar.u16CycleExceededCounter = 0;
+
     /*subindex 32: incremented if a synchronisation error has occurred*/
     sSyncManInPar.u8SyncError = 0;
-/*ECATCHANGE_END(V5.11) ECAT4*/
 
     /*Indicate no user specified Sync mode*/
     bSyncSetByUser = FALSE;
@@ -554,6 +650,8 @@ void COE_ObjInit(void)
     pSdoPendFunc    = NULL;
 
     pSdoSegData = NULL;
+
+
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -641,10 +739,14 @@ void COE_RemoveDicEntry(UINT16 index)
             TOBJECT OBJMEM *pNextEntry = pDicEntry->pNext;
 
             if(pPrevEntry != NULL)
+            {
                 pPrevEntry->pNext = pNextEntry;
+            }
 
             if(pNextEntry != NULL)
+            {
                 pNextEntry->pPrev = pPrevEntry;
+            }
 
             pDicEntry->pPrev = NULL;
             pDicEntry->pNext = NULL;
@@ -690,7 +792,9 @@ UINT16 AddObjectsToObjDictionary(TOBJECT OBJMEM * pObjEntry)
         result = COE_AddObjectToDic(pEntry);
 
         if(result != 0)
+        {
             return result;
+        }
 
         pEntry++;
     }
@@ -715,11 +819,16 @@ UINT16 COE_ObjDictionaryInit(void)
     result = AddObjectsToObjDictionary((TOBJECT OBJMEM *) GenObjDic);
 
     if(result != 0)
+    {
         return result;
+    }
+    
     if(ApplicationObjDic != NULL)
     {
         result = AddObjectsToObjDictionary((TOBJECT OBJMEM *) ApplicationObjDic);
     }
+
+
 
     return result;
 }
@@ -735,6 +844,7 @@ UINT16 COE_ObjDictionaryInit(void)
 void COE_Main(void)
 {
      UINT8 abort = 0;
+     
     if(pSdoPendFunc != NULL)
     {
         abort = pSdoPendFunc(u16StoreIndex,u8StoreSubindex,u32StoreDataSize,pStoreData,bStoreCompleteAccess);

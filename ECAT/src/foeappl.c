@@ -1,3 +1,9 @@
+/*
+* This source file is part of the EtherCAT Slave Stack Code licensed by Beckhoff Automation GmbH & Co KG, 33415 Verl, Germany.
+* The corresponding license agreement applies. This hint shall not be removed.
+* https://www.beckhoff.com/media/downloads/slave-stack-code/ethercat_ssc_license.pdf
+*/
+
 /**
 \addtogroup FoE FileTransfer over EtherCAT
 @{
@@ -9,8 +15,10 @@
 \brief Implementation
 This file contains an example how to use the FoE services
 
-\version 5.11
+\version 5.12
 
+<br>Changes to version V5.11:<br>
+V5.12 FOE1: update new interface,move the FoE sample to sampleappl,add FoE application callback functions<br>
 <br>Changes to version V5.10:<br>
 V5.11 FOE2: FoE_Read() check File name buffer before store the requested file name, add string terminator<br>
 V5.11 TEST5: send a FoE busy on a FoE read request<br>
@@ -49,13 +57,15 @@ V4.10 FOE 1-14: Filetransfer over FoE: Files can be read and stored to harddisk<
 #define _FOEAPPL_ 0
 
 
+
+
+#include "applInterface.h"
+
 /*-----------------------------------------------------------------------------------------
 ------
 ------    internal Types and Defines
 ------
 -----------------------------------------------------------------------------------------*/
-
-#define    MAX_FILE_NAME_SIZE    16
 
 /*-----------------------------------------------------------------------------------------
 ------
@@ -68,9 +78,7 @@ V4.10 FOE 1-14: Filetransfer over FoE: Files can be read and stored to harddisk<
 ------    Module internal variable definitions
 ------
 -----------------------------------------------------------------------------------------*/
-UINT32             nFileSize;
-UINT32             nFileWriteOffset;
-UINT8            DataValue = 0x00; //Used to fill upload file with dummy data
+
 /*-----------------------------------------------------------------------------------------
 ------
 ------    Functions
@@ -103,26 +111,14 @@ UINT8            DataValue = 0x00; //Used to fill upload file with dummy data
 
 UINT16 FOE_Read(UINT16 MBXMEM * pName, UINT16 nameSize, UINT16 MBXMEM * pData, UINT32 password)
 {
-    UINT16 size = 0;
-    UINT16 i = 0;
-
-
-    if(nFileSize > 0)
+    
+    if (pAPPL_FoeRead != NULL)
     {
-        if ( nFileSize >= (u16SendMbxSize-SIZEOF(TFOEHEADER)-MBX_HEADER_SIZE) )
-            size = (u16SendMbxSize-SIZEOF(TFOEHEADER)-MBX_HEADER_SIZE);
-        else
-            size = (unsigned short) nFileSize;
-        
-        MBXMEMSET(pData,DataValue,size);
+        return  pAPPL_FoeRead(pName, nameSize, password, u16FoeMaxSendBlockSize, pData);
+    }
 
-        DataValue++;
-    }
-    else
-    {
-        return ECAT_FOE_ERRCODE_NOTFOUND;
-    }
-    return size;
+
+    return ECAT_FOE_ERRCODE_NOTDEFINED;
 }
 
 
@@ -152,9 +148,12 @@ UINT16 FOE_Read(UINT16 MBXMEM * pName, UINT16 nameSize, UINT16 MBXMEM * pData, U
 
 UINT16 FOE_Write(UINT16 MBXMEM * pName, UINT16 nameSize, UINT32 password)
 {
-        DataValue = 0x00;
-        nFileSize = 0;
-        return 0;
+    if (pAPPL_FoeWrite != NULL)
+    {
+        return pAPPL_FoeWrite(pName,nameSize,password);
+    }
+
+    return ECAT_FOE_ERRCODE_NOTDEFINED;
 }
 
 
@@ -182,21 +181,32 @@ UINT16 FOE_Write(UINT16 MBXMEM * pName, UINT16 nameSize, UINT32 password)
 
 UINT16 FOE_Data(UINT16 MBXMEM * pData, UINT16 Size)
 {
-        if ( Size == (u16ReceiveMbxSize - MBX_HEADER_SIZE - FOE_HEADER_SIZE) )
-        {
-            /* FoE-Data services will follow */
-            nFileWriteOffset += Size;
-            return 0;
-        }
-        else
-        {
-            /* last part of the file is written */
-            nFileSize = nFileWriteOffset + Size;
-            nFileWriteOffset = 0;
+    BOOL bDataFollowing = FALSE;
 
+    if(Size == (u16ReceiveMbxSize - MBX_HEADER_SIZE - FOE_HEADER_SIZE) )
+    {
+        bDataFollowing = TRUE;
+    }
+
+    if(pAPPL_FoeWriteData != NULL)
+    {
+        UINT16 error = 0;
+        error = pAPPL_FoeWriteData(pData, Size, bDataFollowing);
+
+        if (error > 0)
+        {
+            return error;
+        }
+        else if (bDataFollowing == FALSE)
+        {
             return FOE_ACKFINISHED;
         }
 
+        return 0;
+    }
+
+
+    return ECAT_FOE_ERRCODE_NOTDEFINED;
 
 }
 
@@ -226,33 +236,13 @@ UINT16 FOE_Data(UINT16 MBXMEM * pData, UINT16 Size)
 
 UINT16 FOE_Ack(UINT32 fileOffset, UINT16 MBXMEM * pData)
 {
-    if ( fileOffset < nFileSize )
+
+    if (pAPPL_FoeReadData != NULL)
     {
-        /* send next part of the file */
-        UINT32 size;
-        UINT32 sendSize = nFileSize-fileOffset;
-
-        if ( sendSize >= (u16SendMbxSize-SIZEOF(TFOEHEADER)-MBX_HEADER_SIZE) )
-        {
-            size = (u16SendMbxSize-SIZEOF(TFOEHEADER)-MBX_HEADER_SIZE);
-        }
-        else
-        {
-            size = sendSize;
-        }
-        MBXMEMSET(pData,DataValue,size);
-
-        DataValue++;
-        return ((UINT16) size);
+        return pAPPL_FoeReadData(fileOffset, u16FoeMaxSendBlockSize, pData);
     }
-    else if ( fileOffset == nFileSize )
-    {
-        /* file transfer is finished */
-        return 0; // size = 0
-    }
-    else
-        return ECAT_FOE_ERRCODE_ILLEGAL;
 
+    return ECAT_FOE_ERRCODE_NOTDEFINED;
 }
 
 
@@ -286,7 +276,6 @@ UINT16 FOE_Busy(UINT16 done, UINT32 fileOffset, UINT16 MBXMEM * pData)
     return FOE_Ack(fileOffset, pData);
 }
 
-
 /////////////////////////////////////////////////////////////////////////////////////////
 /**
  \param     errorCode    error code
@@ -297,13 +286,11 @@ UINT16 FOE_Busy(UINT16 done, UINT32 fileOffset, UINT16 MBXMEM * pData)
 
 void FOE_Error(UINT32 errorCode)
 {
-    if ( nFileWriteOffset )
+    if (pAPPL_FoeError != NULL)
     {
-        nFileWriteOffset = 0;
-        nFileSize = 0;
+        pAPPL_FoeError(errorCode);
     }
 }
-
 
 
 /** @} */

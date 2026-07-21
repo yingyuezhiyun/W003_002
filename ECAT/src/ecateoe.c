@@ -1,3 +1,9 @@
+/*
+* This source file is part of the EtherCAT Slave Stack Code licensed by Beckhoff Automation GmbH & Co KG, 33415 Verl, Germany.
+* The corresponding license agreement applies. This hint shall not be removed.
+* https://www.beckhoff.com/media/downloads/slave-stack-code/ethercat_ssc_license.pdf
+*/
+
 /**
 \addtogroup EoE Ethernet over EtherCAT
 @{
@@ -9,15 +15,23 @@
 \brief Implementation
 This file contains the EoE mailbox interface
 
-\version 5.11
+\version 5.13
 
+<br>Changes to version V5.12:<br>
+V5.13 EOE1: <br>
+V5.13 EOE2: set "last data" flag in set IP Parameter response<br>
+V5.13 EOE3: handle failure on continue indication<br>
+V5.13 EOE4: update discarding of too huge frames<br>
+<br>Changes to version V5.11:<br>
+V5.12 EOE4: handle 16bit only acceess, move ethernet protocol defines and structures to application header files<br>
+V5.12 EOE5: free pending buffer in EoE_Init, EoE_Init is called on startup and PI transition<br>
 <br>Changes to version V5.10:<br>
 V5.11 EOE1: update mailbox length calculation on EoE response<br>
 V5.11 EOE2: fix deadlock in case that the last EoE fragment of a frame and not be copied to the mailbox buffer directly<br>
 V5.11 MBX3: set application triggered emergency and EoE data to pending if no mailbox queue is supported and another mailbox request is currently handled, Handle only one mailbox request at a time (in case that MAILBPX_QUEUE is disabled)<br>
 <br>Changes to version V5.0:<br>
-V5.10 EOE1: Prevent memeory leaks on incomplete EoE sequences<br>
-V5.10 EOE3: Change local send frame pending indication variable to a global variable (it need to be resetted if the mailbox is stopped and a frame is pending)<br>
+V5.10 EOE1: Prevent memory leaks on incomplete EoE sequences<br>
+V5.10 EOE3: Change local send frame pending indication variable to a global variable (it need to be reset if the mailbox is stopped and a frame is pending)<br>
 V5.10 EOE4: Set frame buffer size to 1536 byte<br>
 V5.10 EOE5: Support "Get IP Parameter" (4Byte EoE requests also valid<br>
             Change setting of EoE response flag)<br>
@@ -46,6 +60,7 @@ V4.07 ECATEOE 1: For the PIC18 the size of the Ethernet frame has to be checked<
 ---------------------------------------------------------------------------------------*/
 
 #include "ecat_def.h"
+
 
 
 #include "ecatslv.h"
@@ -82,17 +97,9 @@ UINT16              u16ReceiveFrameNo;                  /**< \brief store the fr
                                                             for all fragments of the whole Ethernet frame */
 MEM_ADDR MBXMEM *   pEthernetReceiveFrame;              /**< \brief stores the buffer for actual received
                                                             Ethernet frame */
-UINT8               u8SendFragmentNo;                   /**< \brief stores the fragment number of the next fragment to be sent */
-UINT16              u16EthernetSendSize;                /**< \brief stores the size of the actual Ethernet frame to be sent */
-UINT16              u16EthernetSendOffset;              /**< \brief stores the actual offset of the Ethernet frame, which
-                                                            points to the next fragment to be sent */
-UINT16              u16SendFrameNo;                     /**< \brief stores the frame number of the actual Ethernet frame to be sent */
-MEM_ADDR MBXMEM *   pEthernetSendFrame;                 /**< \brief stores the buffer of the Ethernet frame to be sent */
-TMBX MBXMEM *       pEoeSendStored;                     /**< \brief if the mailbox service could not be sent (or stored),
-                                                            the EoE service will be stored in this variable
-                                                            and will be sent automatically from the mailbox handler
-                                                            (EOE_ContinueInd) when the send mailbox will be read
-                                                            the next time from the master */
+
+
+
 
 
 /*---------------------------------------------------------------------------------------
@@ -110,13 +117,28 @@ TMBX MBXMEM *       pEoeSendStored;                     /**< \brief if the mailb
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /**
+\param     bPowerUp      True if the function is called on power up of the slave.
 
- \brief    This function intialize the EoE Interface.
+ \brief    This function initialize the EoE Interface.
 *////////////////////////////////////////////////////////////////////////////////////////
 
-void EOE_Init(void)
+void EOE_Init(BOOL bPowerUp)
 {
+
+    if ((bPowerUp == FALSE) && (pEoeSendStored != NULL))
+    {
+        APPL_FreeMailboxBuffer(pEoeSendStored);
+    }
+
     pEoeSendStored = NULL;
+
+    if ((bPowerUp == FALSE) && (pEthernetReceiveFrame != NULL))
+    {
+        FREEMEM(pEthernetReceiveFrame);
+    }
+    pEthernetReceiveFrame = NULL;
+
+    bEoESendFramePending = FALSE;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -155,8 +177,6 @@ UINT8 EOE_ServiceInd(TMBX MBXMEM *pMbx)
                 {
                     /* expected fragmentNo was unequal 0, that means fragments of an old Ethernet frame were stored,
                        so we have to free the old buffer (because the old Ethernet frame was not received completely) */
-                    /* for the PIC18 (Eva-Board demo) there is only one buffer for an Ethernet frame available,
-                       for all other microcontroller we have to free the buffer here to dynamic memory handling */
                     if (pEthernetReceiveFrame != NULL)
                     {
                         FREEMEM((MEM_ADDR MBXMEM *) pEthernetReceiveFrame);
@@ -168,8 +188,10 @@ UINT8 EOE_ServiceInd(TMBX MBXMEM *pMbx)
 
                 /* ignore fragment if it is not the beginning of a new EoE frame */
                 if ( SWAPWORD(pEoe->Flags2) & EOEHEADER_FRAGMENT )
+                {
                     /* fragmentNo != 0 -> ignore */
                     return 0;
+                }
             }
 
             if ( u8ReceiveFragmentNo == 0 )
@@ -187,7 +209,9 @@ UINT8 EOE_ServiceInd(TMBX MBXMEM *pMbx)
 
                 pEthernetReceiveFrame = (MEM_ADDR MBXMEM *) ALLOCMEM( u16EthernetReceiveSize );
                 if ( pEthernetReceiveFrame == NULL )
+                {
                     return MBXERR_NOMOREMEMORY;
+                }
 
                 /* u16EthernetReceiveOffset stores the actual offset of the Ethernet frame,
                    where the next fragment is copied to */
@@ -233,7 +257,7 @@ UINT8 EOE_ServiceInd(TMBX MBXMEM *pMbx)
             {
                 /* fragment fits in buffer, copy fragment data */
 
-                MBXMEMCPY(&((UINT8*)pEthernetReceiveFrame)[u16EthernetReceiveOffset],&pEoe[1], mbxSize);
+                MBXMEMCPY(&((UINT16*)pEthernetReceiveFrame)[(u16EthernetReceiveOffset >> 1)], &pEoe[1], mbxSize);
 
                 /* increment the offset, where the next fragment has to be stored */
 
@@ -302,7 +326,9 @@ UINT8 EOE_ServiceInd(TMBX MBXMEM *pMbx)
                 expSize += 6;
                 /* check if enough bytes were received */
                 if ( mbxSize < expSize )
+                {
                     return MBXERR_SIZETOOSHORT;
+                }
             }
             if ( SWAPWORD(pEoeInit->Flags1) & EOEINIT_CONTAINSIPADDR )
             {
@@ -310,7 +336,9 @@ UINT8 EOE_ServiceInd(TMBX MBXMEM *pMbx)
                 expSize += 4;
                 /* check if enough bytes were received */
                 if ( mbxSize < expSize )
+                {
                     return MBXERR_SIZETOOSHORT;
+                }
             }
             if ( SWAPWORD(pEoeInit->Flags1) & EOEINIT_CONTAINSSUBNETMASK )
             {
@@ -318,7 +346,9 @@ UINT8 EOE_ServiceInd(TMBX MBXMEM *pMbx)
                 expSize += 4;
                 /* check if enough bytes were received */
                 if ( mbxSize < expSize )
+                {
                     return MBXERR_SIZETOOSHORT;
+                }
             }
             if ( SWAPWORD(pEoeInit->Flags1) & EOEINIT_CONTAINSDEFAULTGATEWAY )
             {
@@ -326,7 +356,9 @@ UINT8 EOE_ServiceInd(TMBX MBXMEM *pMbx)
                 expSize += 4;
                 /* check if enough bytes were received */
                 if ( mbxSize < expSize )
+                {
                     return MBXERR_SIZETOOSHORT;
+                }
             }
             if ( SWAPWORD(pEoeInit->Flags1) & EOEINIT_CONTAINSDNSSERVER )
             {
@@ -334,37 +366,37 @@ UINT8 EOE_ServiceInd(TMBX MBXMEM *pMbx)
                 expSize += 4;
                 /* check if enough bytes were received */
                 if ( mbxSize < expSize )
+                {
                     return MBXERR_SIZETOOSHORT;
+                }
             }
             if ( SWAPWORD(pEoeInit->Flags1) & EOEINIT_CONTAINSDNSNAME )
             {
                 /* EoE datagram contains DNS name, so the DNS name is expected (1-32 bytes) */
                 /* check if enough bytes were received */
                 if ( mbxSize < (expSize+1) )
+                {
                     return MBXERR_SIZETOOSHORT;
+                }
             }
 
             /* EoE datagram is correct, call application function to store the settings */
             result = EOEAPPL_SettingsInd(pEoeInit);
 
-/* ECATCHANGE_START(V5.11) EOE1*/
             pMbx->MbxHeader.Length = ETHERCAT_EOE_HEADER_LEN;
             pMbx->Data[1] = SWAPWORD(result);
-/* ECATCHANGE_END(V5.11) EOE1*/
 
-            /* Update EoE type flag */
-            pMbx->Data[0] = SWAPWORD(EOE_TYPE_INIT_RES);
+            /*ECATCHANGE_START(V5.13) EOE2*/
+            /* Update EoE type flag and last data indication*/
+            pMbx->Data[0] = SWAPWORD((UINT16)0x0100 | (UINT16)EOE_TYPE_INIT_RES);
+            /*ECATCHANGE_END(V5.13) EOE2*/
             break;
         case EOE_TYPE_GET_IP_PARAM_REQ:
-/* ECATCHANGE_START(V5.11) EOE1*/
             result = EOEAPPL_GetSettingsInd(((ETHERCAT_EOE_INIT MBXMEM *) &pEoe[1]),&pMbx->MbxHeader.Length);
-/* ECATCHANGE_END(V5.11) EOE1*/
 
             /* Update EoE type flag */
             pMbx->Data[0] = SWAPWORD(EOE_TYPE_GET_IP_PARAM_RES);
-/* ECATCHANGE_START(V5.11) EOE1*/
             pMbx->Data[1] = SWAPWORD(result);
-/* ECATCHANGE_END(V5.11) EOE1*/
 
             break;
         case EOE_TYPE_INIT_RES: // not needed for slave
@@ -375,15 +407,15 @@ UINT8 EOE_ServiceInd(TMBX MBXMEM *pMbx)
             /* Update EoE type flag */
             pMbx->Data[0] = SWAPWORD(EOE_TYPE_INIT_RES);
 
-/* ECATCHANGE_START(V5.11) EOE1*/
             pMbx->MbxHeader.Length = ETHERCAT_EOE_HEADER_LEN;
             pMbx->Data[1] = SWAPWORD(EOE_RESULT_UNSUPPORTED_TYPE);
-/* ECATCHANGE_END(V5.11) EOE1*/
             break;
         }
     }
     else
+    {
         return MBXERR_SIZETOOSHORT;
+    }
 
     if ( MBX_MailboxSendReq(pMbx, EOE_SERVICE) != 0 )
     {
@@ -407,24 +439,26 @@ void SendFragment(void)
 {
     /* size contains the number of bytes which still has to be sent of the Ethernet frame */
     UINT16 size = u16EthernetSendSize - u16EthernetSendOffset;
-/* ECATCHANGE_START(V5.11) EOE2*/
     UINT8 result = 0;
-/* ECATCHANGE_END(V5.11) EOE2*/
     ETHERCAT_EOE_HEADER MBXMEM * pEoe;
 
     if ( (size + ETHERCAT_EOE_HEADER_LEN + MBX_HEADER_SIZE) > u16SendMbxSize )
+    {
+        
         /* the remaining bytes cannot be sent with one mailbox service, so we have to
            send the next fragment which must be dividable by 32,
            the available mailbox size shall be rounded down to a value dividable by 32 */
         size = ((u16SendMbxSize - ETHERCAT_EOE_HEADER_LEN - MBX_HEADER_SIZE) >> 5) << 5;
-
+    }
+    
     /* get a mailbox buffer to be sent */
     psWriteMbx = (TMBX MBXMEM *) APPL_AllocMailboxBuffer((size + ETHERCAT_EOE_HEADER_LEN + MBX_HEADER_SIZE));
     if (psWriteMbx == NULL)
     {
-        /* set flag that the processing of the mailbox service will be checked in the
-            function MBX_Main (called from ECAT_Main) */
-        bReceiveMbxIsLocked = TRUE;
+/*ECATCHANGE_START(V5.13) EOE1*/
+        /* no local memory is available try to send the EoE response on the next MBX_Main loop*/
+        u8MailboxSendReqStored |= EOE_SERVICE;
+/*ECATCHANGE_END(V5.13) EOE1*/
         return;
     }
     /* size of the mailbox data */
@@ -438,9 +472,13 @@ void SendFragment(void)
     pEoe = (ETHERCAT_EOE_HEADER MBXMEM *) psWriteMbx->Data;
     /* check if it is the last fragment */
     if ( size == (u16EthernetSendSize - u16EthernetSendOffset) )
+    {
         pEoe->Flags1 = SWAPWORD(EOEHEADER_LASTFRAGMENT);
+    }
     else
+    {
         pEoe->Flags1 = 0;
+    }
 
     /* store the actual fragment number in the mailbox buffer */
     pEoe->Flags2 = SWAPWORD(u8SendFragmentNo);
@@ -464,10 +502,8 @@ void SendFragment(void)
     /* copy the actual fragment in the mailbox buffer */
     MBXMEMCPY((UINT8 *)&pEoe[1], &((UINT8 *)pEthernetSendFrame)[u16EthernetSendOffset], size);
 
-/* ECATCHANGE_START(V5.11) EOE2*/
     result = MBX_MailboxSendReq(psWriteMbx, EOE_SERVICE);
     if ( result != 0 )
-/* ECATCHANGE_END(V5.11) EOE2*/
     {
         /* if the mailbox service could not be sent (or stored), the response will be
            stored in the variable pEoeSendStored and will be sent automatically
@@ -487,7 +523,6 @@ void SendFragment(void)
         /* next frame can be sent */
         bEoESendFramePending = FALSE;
 
-/* ECATCHANGE_START(V5.11) EOE2*/
         if (result == 0)
         {
             /*clear the pending EoE flag only if the last EoE Fragment was successfully written to the mailbox buffer*/
@@ -499,7 +534,6 @@ void SendFragment(void)
             Set the EoE pending indication to copy the fragment to the mailbox buffer when the buffer was read by the master*/
             u8MailboxSendReqStored |= EOE_SERVICE;
         }
-/* ECATCHANGE_END(V5.11) EOE2*/
     }
     else
     {
@@ -513,64 +547,28 @@ void SendFragment(void)
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /**
- \param     pMbx      Pointer to the free mailbox buffer
-
  \brief    This function is called when the next mailbox fragment can be sent.
 *////////////////////////////////////////////////////////////////////////////////////////
 
-void EOE_ContinueInd(TMBX MBXMEM * pMbx)
+/*ECATCHANGE_START(V5.13) EOE1*/
+void EOE_ContinueInd(void)
+/*ECATCHANGE_END(V5.13) EOE1*/
 {
-    if ( pEoeSendStored )
+/*ECATCHANGE_START(V5.13) EOE3*/
+    if (pEoeSendStored)
     {
         /* send the stored EoE service which could not be sent before */
-        MBX_MailboxSendReq(pEoeSendStored, 0);
-        pEoeSendStored = NULL;
+        if (MBX_MailboxSendReq(pEoeSendStored, EOE_SERVICE) == 0)
+        {
+            pEoeSendStored = NULL;
+        }
+/*ECATCHANGE_END(V5.13) EOE3*/
     }
     else if ( bEoESendFramePending )
     {
         /* send the next fragment of the actual frame */
         SendFragment();
     }
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-/**
- \param     pFrame      Pointer to the Ethernet frame to be sent
- \param     frameSize  size of the Ethernet frame to be sent
-
- \return    0 = sending of frame started, 1 = frame could not be sent, try it later
-
- \brief    This function is called from the application to sent an Ethernet frame
-*////////////////////////////////////////////////////////////////////////////////////////
-
-UINT8 EOE_SendFrameReq(UINT8 MBXMEM * pFrame, UINT16 frameSize)
-{
-    if ( !bEoESendFramePending && nAlStatus != STATE_INIT
-        && (pEoeSendStored == NULL || pFrame == (UINT8 MBXMEM *)pEoeSendStored)
-        )
-    {
-        /* no Ethernet is sent yet, no datagram is currently stored and the slave is at least in PRE-OP,
-           so we could sent the requested frame */
-        DISABLE_MBX_INT;
-        /* Ethernet frame is to be sent */
-        bEoESendFramePending        = TRUE;
-        /* store the size of the Ethernet frame to be sent */
-        u16EthernetSendSize      = frameSize;
-        /* store the buffer of the Ethernet frame to be sent */
-        pEthernetSendFrame       = (MEM_ADDR MBXMEM *)pFrame;
-        /* we start with the first fragment */
-        u16EthernetSendOffset    = 0;
-        u8SendFragmentNo         = 0;
-
-        SendFragment();
-
-        ENABLE_MBX_INT;
-    }
-    else
-        /* frame could not be sent, try it later */
-        return 1;
-
-    return 0;
 }
 
 /** @} */

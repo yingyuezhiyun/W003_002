@@ -1,3 +1,9 @@
+/*
+* This source file is part of the EtherCAT Slave Stack Code licensed by Beckhoff Automation GmbH & Co KG, 33415 Verl, Germany. 
+* The corresponding license agreement applies. This hint shall not be removed.
+* https://www.beckhoff.com/media/downloads/slave-stack-code/ethercat_ssc_license.pdf
+*/
+
 /**
 \addtogroup CoE CAN Application Profile over EtherCAT
 @{
@@ -9,8 +15,11 @@
 \brief Implementation
 This file contains the CoE mailbox interface
 
-\version 5.11
+\version 5.13
 
+<br>Changes to version V5.11:<br>
+V5.13 COE8: handle failure on continue indication<br>
+V5.13 TEST4: memory leak on SDO response receive<br>
 <br>Changes to version V5.0:<br>
 V5.11 COE4: "change prototype of ""COE_ContinueInd()"" return <> 0 if a failure occurred"<br>
 V5.11 ECAT10: change PROTO handling to prevent compiler errors<br>
@@ -37,9 +46,8 @@ V4.08 MBX 1: If the switch MAILBOX_QUEUE was set, we have to put all SDO Info Re
 #define    _ECATCOE_    1
 #include "ecatcoe.h"
 #undef      _ECATCOE_
-/* ECATCHANGE_START(V5.11) ECAT10*/
 /*remove definition of _ECATCOE_ (#ifdef is used in ecatcoe.h)*/
-/* ECATCHANGE_END(V5.11) ECAT10*/
+
 
 
 
@@ -78,7 +86,7 @@ V4.08 MBX 1: If the switch MAILBOX_QUEUE was set, we have to put all SDO Info Re
 
 void COE_Init(void)
 {
-    pCoeSendStored = NULL;
+    pCoeSendStored = 0;
     nSdoInfoFragmentsLeft = 0;
 }
 
@@ -140,15 +148,17 @@ UINT8 COE_ServiceInd(TCOEMBX MBXMEM *pCoeMbx)
  \brief  be put in the send mailbox.
 *////////////////////////////////////////////////////////////////////////////////////////
 
-/*ECATCHANGE_START(V5.11) COE4*/
 UINT8 COE_ContinueInd(TMBX MBXMEM * pMbx)
-/*ECATCHANGE_END(V5.11) COE4*/
 {
     if (pCoeSendStored)
     {
         /* send the stored CoE service which could not be sent before */
-        MBX_MailboxSendReq(pCoeSendStored, 0);
-        pCoeSendStored = NULL;
+/*ECATCHANGE_START(V5.13) COE8*/
+        if (MBX_MailboxSendReq(pCoeSendStored, COE_SERVICE) == 0)
+        {
+            pCoeSendStored = 0;
+        }
+/*ECATCHANGE_END(V5.13) COE8*/
     }
     else
     {
@@ -156,13 +166,11 @@ UINT8 COE_ContinueInd(TMBX MBXMEM * pMbx)
         /* in mailbox queue mode pMbx is always 0, so a mailbox buffer shall be get */
         pMbx = (TMBX MBXMEM *) APPL_AllocMailboxBuffer(SIZEOF(TMBX));
         /* it shall be checked if a valid pointer was returned */
-/*ECATCHANGE_START(V5.11) COE4*/
         if (pMbx == NULL)
         {
             return MBXERR_NOMOREMEMORY;
         }
         else
-/*ECATCHANGE_END(V5.11) COE4*/
         {
             /* copy the stored SDO-Info-Header in the request */
             MBXMEMCPY(pMbx, aSdoInfoHeader, SDO_INFO_HEADER_BYTE_SIZE);

@@ -1,3 +1,8 @@
+/*
+* This source file is part of the EtherCAT Slave Stack Code licensed by Beckhoff Automation GmbH & Co KG, 33415 Verl, Germany.
+* The corresponding license agreement applies. This hint shall not be removed.
+*/
+
 /**
 * \addtogroup EtherCATSlave EtherCATSlave
 * @{
@@ -5,7 +10,7 @@
 
 /**
 \file EtherCATSlaveObjects
-\author ET9300Utilities.ApplicationHandler (Version 1.3.6.0) | EthercatSSC@beckhoff.com
+\author ET9300Utilities.ApplicationHandler (Version 1.6.3.0) | EthercatSSC@beckhoff.com
 
 \brief EtherCATSlave specific objects<br>
 \brief NOTE : This file will be overwritten if a new object dictionary is generated!<br>
@@ -293,15 +298,15 @@ PROTO TOBJ1C13 sTxPDOassign
 */
 OBJCONST TSDOINFOENTRYDESC    OBJMEM asEntryDesc0x6000[] = {
 { DEFTYPE_UNSIGNED8 , 0x8 , ACCESS_READ },
-{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }, /* Subindex1 - Actual_Pressure */
-{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }, /* Subindex2 - Actual_Position */
-{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }, /* Subindex3 - General_Control_Setpoint */
-{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }, /* Subindex4 - Control_Mode */
-{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }, /* Subindex5 - Pressure_Sensor_Select */
-{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }, /* Subindex6 - Pressure_Sensor1_Range */
-{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }, /* Subindex7 - Pressure_Sensor2_Range */
-{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }, /* Subindex8 - STATUS */
-{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE | OBJACCESS_RXPDOMAPPING }}; /* Subindex9 - ERROR */
+{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE }, /* Subindex1 - Actual_Pressure */
+{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE }, /* Subindex2 - Actual_Position */
+{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE }, /* Subindex3 - General_Control_Setpoint */
+{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE }, /* Subindex4 - Control_Mode */
+{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE }, /* Subindex5 - Pressure_Sensor_Select */
+{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE }, /* Subindex6 - Pressure_Sensor1_Range */
+{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE }, /* Subindex7 - Pressure_Sensor2_Range */
+{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE }, /* Subindex8 - STATUS */
+{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE }}; /* Subindex9 - ERROR */
 
 /**
 * \brief Object/Entry names
@@ -324,13 +329,13 @@ OBJCONST UCHAR OBJMEM aName0x6000[] = "TxPdo\000"
 */
 typedef struct OBJ_STRUCT_PACKED_START {
 UINT16 u16SubIndex0;
-float Actual_Pressure; /* Subindex1 - Actual Pressure */
-float Actual_Position; /* Subindex2 - Actual Position */
-float General_Control_Setpoint; /* Subindex3 - General_Control_Setpoint */
+REAL32 Actual_Pressure; /* Subindex1 - Actual_Pressure */
+REAL32 Actual_Position; /* Subindex2 - Actual_Position */
+REAL32 General_Control_Setpoint; /* Subindex3 - General_Control_Setpoint */
 UINT16 Control_Mode; /* Subindex4 - Control_Mode */
 UINT16 Pressure_Sensor_Select; /* Subindex5 - Pressure_Sensor_Select */
-float Pressure_Sensor1_Range; /* Subindex6 - Pressure_Sensor1_Range */
-float Pressure_Sensor2_Range; /* Subindex7 - Pressure_Sensor2_Range */
+REAL32 Pressure_Sensor1_Range; /* Subindex6 - Pressure_Sensor1_Range */
+REAL32 Pressure_Sensor2_Range; /* Subindex7 - Pressure_Sensor2_Range */
 UINT16 STATUS; /* Subindex8 - STATUS */
 UINT16 ERROR; /* Subindex9 - ERROR */
 } OBJ_STRUCT_PACKED_END
@@ -342,7 +347,7 @@ TOBJ6000;
 */
 PROTO TOBJ6000 TxPdo0x6000
 #if defined(_ETHER_CATSLAVE_) && (_ETHER_CATSLAVE_ == 1)
-={9,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}
+={9,0,0,0,0x0000,0x0000,0,0,0x0000,0x0000}
 #endif
 ;
 /** @}*/
@@ -372,13 +377,13 @@ PROTO TOBJ6000 TxPdo0x6000
 */
 OBJCONST TSDOINFOENTRYDESC    OBJMEM asEntryDesc0x7000[] = {
 { DEFTYPE_UNSIGNED8 , 0x8 , ACCESS_READ },
-{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE | OBJACCESS_TXPDOMAPPING }, /* Subindex1 - General_Control_Setpoint */
-{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE | OBJACCESS_TXPDOMAPPING }, /* Subindex2 - Control_Mode */
-{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE | OBJACCESS_TXPDOMAPPING }, /* Subindex3 - Pressure_Sensor_Select */
-{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE | OBJACCESS_TXPDOMAPPING }, /* Subindex4 - Pressure_Sensor1_Range */
-{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE | OBJACCESS_TXPDOMAPPING }, /* Subindex5 - Pressure_Sensor2_Range */
-{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE | OBJACCESS_TXPDOMAPPING }, /* Subindex6 - Init */
-{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE | OBJACCESS_TXPDOMAPPING }}; /* Subindex7 - REMAIN */
+{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE }, /* Subindex1 - General_Control_Setpoint */
+{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE }, /* Subindex2 - Control_Mode */
+{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE }, /* Subindex3 - Pressure_Sensor_Select */
+{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE }, /* Subindex4 - Pressure_Sensor1_Range */
+{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE }, /* Subindex5 - Pressure_Sensor2_Range */
+{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE }, /* Subindex6 - Init */
+{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READWRITE }}; /* Subindex7 - REMAIN */
 
 /**
 * \brief Object/Entry names
@@ -399,11 +404,11 @@ OBJCONST UCHAR OBJMEM aName0x7000[] = "RxPdo\000"
 */
 typedef struct OBJ_STRUCT_PACKED_START {
 UINT16 u16SubIndex0;
-float General_Control_Setpoint; /* Subindex1 - General_Control_Setpoint */
+REAL32 General_Control_Setpoint; /* Subindex1 - General_Control_Setpoint */
 UINT16 Control_Mode; /* Subindex2 - Control_Mode */
 UINT16 Pressure_Sensor_Select; /* Subindex3 - Pressure_Sensor_Select */
-float Pressure_Sensor1_Range; /* Subindex4 - Pressure_Sensor1_Range */
-float Pressure_Sensor2_Range; /* Subindex5 - Pressure_Sensor2_Range */
+REAL32 Pressure_Sensor1_Range; /* Subindex4 - Pressure_Sensor1_Range */
+REAL32 Pressure_Sensor2_Range; /* Subindex5 - Pressure_Sensor2_Range */
 UINT16 Init; /* Subindex6 - Init */
 UINT16 REMAIN; /* Subindex7 - REMAIN */
 } OBJ_STRUCT_PACKED_END
@@ -415,7 +420,113 @@ TOBJ7000;
 */
 PROTO TOBJ7000 RxPdo0x7000
 #if defined(_ETHER_CATSLAVE_) && (_ETHER_CATSLAVE_ == 1)
-={7,0x00,0x00,0x00,0x00,0x00,0x00,0x00}
+={7,0,0x0000,0x0000,0,0,0x0000,0x0000}
+#endif
+;
+/** @}*/
+
+
+
+/******************************************************************************
+*                    Object 0x8000 : CfgSdo
+******************************************************************************/
+/**
+* \addtogroup 0x8000 0x8000 | CfgSdo
+* @{
+* \brief Object 0x8000 (CfgSdo) definition
+*/
+#ifdef _OBJD_
+/**
+* \brief Object entry descriptions<br>
+* <br>
+* SubIndex 0<br>
+* SubIndex 1 - Pressure_Sensor1_Range_C<br>
+* SubIndex 2 - Pressure_Sensor2_Range_C<br>
+*/
+OBJCONST TSDOINFOENTRYDESC    OBJMEM asEntryDesc0x8000[] = {
+{ DEFTYPE_UNSIGNED8 , 0x8 , ACCESS_READ },
+{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE }, /* Subindex1 - Pressure_Sensor1_Range_C */
+{ DEFTYPE_REAL32 , 0x20 , ACCESS_READWRITE }}; /* Subindex2 - Pressure_Sensor2_Range_C */
+
+/**
+* \brief Object/Entry names
+*/
+OBJCONST UCHAR OBJMEM aName0x8000[] = "CfgSdo\000"
+"Pressure_Sensor1_Range_C\000"
+"Pressure_Sensor2_Range_C\000\377";
+#endif //#ifdef _OBJD_
+
+#ifndef _ETHER_CATSLAVE_OBJECTS_H_
+/**
+* \brief Object structure
+*/
+typedef struct OBJ_STRUCT_PACKED_START {
+UINT16 u16SubIndex0;
+REAL32 Pressure_Sensor1_Range_C; /* Subindex1 - Pressure_Sensor1_Range_C */
+REAL32 Pressure_Sensor2_Range_C; /* Subindex2 - Pressure_Sensor2_Range_C */
+} OBJ_STRUCT_PACKED_END
+TOBJ8000;
+#endif //#ifndef _ETHER_CATSLAVE_OBJECTS_H_
+
+/**
+* \brief Object variable
+*/
+PROTO TOBJ8000 CfgSdo0x8000
+#if defined(_ETHER_CATSLAVE_) && (_ETHER_CATSLAVE_ == 1)
+={2,0,0}
+#endif
+;
+/** @}*/
+
+
+
+/******************************************************************************
+*                    Object 0xF000 : Modular Device Profile
+******************************************************************************/
+/**
+* \addtogroup 0xF000 0xF000 | Modular Device Profile
+* @{
+* \brief Object 0xF000 (Modular Device Profile) definition
+*/
+#ifdef _OBJD_
+/**
+* \brief Object entry descriptions<br>
+* <br>
+* SubIndex 0<br>
+* SubIndex 1 - Index distance <br>
+* SubIndex 2 - Maximum number of modules <br>
+*/
+OBJCONST TSDOINFOENTRYDESC    OBJMEM asEntryDesc0xF000[] = {
+{ DEFTYPE_UNSIGNED8 , 0x8 , ACCESS_READ },
+{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READ }, /* Subindex1 - Index distance  */
+{ DEFTYPE_UNSIGNED16 , 0x10 , ACCESS_READ }}; /* Subindex2 - Maximum number of modules  */
+
+/**
+* \brief Object/Entry names
+*/
+OBJCONST UCHAR OBJMEM aName0xF000[] = "Modular Device Profile\000"
+"Index distance \000"
+"Maximum number of modules \000\377";
+#endif //#ifdef _OBJD_
+
+#ifndef _ETHER_CATSLAVE_OBJECTS_H_
+/**
+* \brief Object structure
+*/
+typedef struct OBJ_STRUCT_PACKED_START {
+UINT16 u16SubIndex0;
+UINT16 IndexDistance; /* Subindex1 - Index distance  */
+UINT16 MaximumNumberOfModules; /* Subindex2 - Maximum number of modules  */
+} OBJ_STRUCT_PACKED_END
+TOBJF000;
+#endif //#ifndef _ETHER_CATSLAVE_OBJECTS_H_
+
+/**
+* \brief Object variable
+*/
+PROTO TOBJF000 ModularDeviceProfile0xF000
+#if defined(_ETHER_CATSLAVE_) && (_ETHER_CATSLAVE_ == 1)
+={2,0x0010,0}
 #endif
 ;
 /** @}*/
@@ -424,24 +535,31 @@ PROTO TOBJ7000 RxPdo0x7000
 
 
 
+PROTO UINT8 COE_VAR_Read(UINT16 index, UINT8 subindex, UINT32 dataSize, UINT16 MBXMEM * pData, UINT8 bCompleteAccess);
+PROTO UINT8 COE_VAR_Write(UINT16 index, UINT8 subindex, UINT32 dataSize, UINT16 MBXMEM * pData, UINT8 bCompleteAccess);
 
 
 #ifdef _OBJD_
 TOBJECT    OBJMEM ApplicationObjDic[] = {
 /* Object 0x1600 */
-{NULL , NULL ,  0x1600 , {DEFTYPE_PDOMAPPING , 7 | (OBJCODE_REC << 8)} , asEntryDesc0x1600 , aName0x1600 , &RxPdoProcessDataMapping0x1600, NULL , NULL , 0x0000 },
+{NULL , NULL ,  0x1600 , {DEFTYPE_PDOMAPPING , 7 | (OBJCODE_REC << 8)} , asEntryDesc0x1600 , aName0x1600 , &RxPdoProcessDataMapping0x1600 , NULL , NULL , 0x0000 },
 /* Object 0x1A00 */
-{NULL , NULL ,  0x1A00 , {DEFTYPE_PDOMAPPING , 9 | (OBJCODE_REC << 8)} , asEntryDesc0x1A00 , aName0x1A00 , &TxPdoProcessDataMapping0x1A00, NULL , NULL , 0x0000 },
+{NULL , NULL ,  0x1A00 , {DEFTYPE_PDOMAPPING , 9 | (OBJCODE_REC << 8)} , asEntryDesc0x1A00 , aName0x1A00 , &TxPdoProcessDataMapping0x1A00 , NULL , NULL , 0x0000 },
 /* Object 0x1C12 */
-{NULL , NULL ,  0x1C12 , {DEFTYPE_UNSIGNED16 , 1 | (OBJCODE_ARR << 8)} , asEntryDesc0x1C12 , aName0x1C12 , &sRxPDOassign, NULL , NULL , 0x0000 },
+{NULL , NULL ,  0x1C12 , {DEFTYPE_UNSIGNED16 , 1 | (OBJCODE_ARR << 8)} , asEntryDesc0x1C12 , aName0x1C12 , &sRxPDOassign , NULL , NULL , 0x0000 },
 /* Object 0x1C13 */
-{NULL , NULL ,  0x1C13 , {DEFTYPE_UNSIGNED16 , 1 | (OBJCODE_ARR << 8)} , asEntryDesc0x1C13 , aName0x1C13 , &sTxPDOassign, NULL , NULL , 0x0000 },
+{NULL , NULL ,  0x1C13 , {DEFTYPE_UNSIGNED16 , 1 | (OBJCODE_ARR << 8)} , asEntryDesc0x1C13 , aName0x1C13 , &sTxPDOassign , NULL , NULL , 0x0000 },
 /* Object 0x6000 */
-{NULL , NULL ,  0x6000 , {DEFTYPE_RECORD , 9 | (OBJCODE_REC << 8)} , asEntryDesc0x6000 , aName0x6000 , &TxPdo0x6000, NULL , NULL , 0x0000 },
+{NULL , NULL ,  0x6000 , {DEFTYPE_RECORD , 9 | (OBJCODE_REC << 8)} , asEntryDesc0x6000 , aName0x6000 , &TxPdo0x6000 , NULL , NULL , 0x0000 },
 /* Object 0x7000 */
-{NULL , NULL ,  0x7000 , {DEFTYPE_RECORD , 7 | (OBJCODE_REC << 8)} , asEntryDesc0x7000 , aName0x7000 , &RxPdo0x7000, NULL , NULL , 0x0000 },
+{NULL , NULL ,  0x7000 , {DEFTYPE_RECORD , 7 | (OBJCODE_REC << 8)} , asEntryDesc0x7000 , aName0x7000 , &RxPdo0x7000 , NULL , NULL , 0x0000 },
+/* Object 0x8000 */
+{NULL , NULL ,  0x8000 , {DEFTYPE_RECORD , 2 | (OBJCODE_REC << 8)} , asEntryDesc0x8000 , aName0x8000 , &CfgSdo0x8000 , COE_VAR_Read , COE_VAR_Write , 0x0000 },
+/* Object 0xF000 */
+{NULL , NULL ,  0xF000 , {DEFTYPE_RECORD , 2 | (OBJCODE_REC << 8)} , asEntryDesc0xF000 , aName0xF000 , &ModularDeviceProfile0xF000 , NULL , NULL , 0x0000 },
 {NULL,NULL, 0xFFFF, {0, 0}, NULL, NULL, NULL, NULL}};
 #endif    //#ifdef _OBJD_
+
 #undef PROTO
 
 /** @}*/

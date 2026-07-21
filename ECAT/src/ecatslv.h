@@ -1,3 +1,9 @@
+/*
+* This source file is part of the EtherCAT Slave Stack Code licensed by Beckhoff Automation GmbH & Co KG, 33415 Verl, Germany.
+* The corresponding license agreement applies. This hint shall not be removed.
+* https://www.beckhoff.com/media/downloads/slave-stack-code/ethercat_ssc_license.pdf
+*/
+
 /**
  * \addtogroup ESM EtherCAT State Machine
  * @{
@@ -7,8 +13,14 @@
 \file ecatslv.h
 \author EthercatSSC@beckhoff.com
 
-\version 5.11
+\version 5.13
 
+<br>Changes to version V5.12:<br>
+V5.13 EMCY1: update emergency diagcodes for invalid sm configuration<br>
+V5.13 ESM1: local error handling update, ECAT_StateChange triggers only transitions from Op->Any or reject/accept a pending transition<br>
+<br>Changes to version V5.11:<br>
+V5.12 COE4: add timestamp object (0x10F8) and update diagnosis handling<br>
+V5.12 ECAT6: remove mailbox SyncManager if no mailbox is supported (SM0 Output, SM1 Input)<br>
 <br>Changes to version V5.10:<br>
 V5.11 ECAT10: change PROTO handling to prevent compiler errors<br>
 V5.11 ECAT4: enhance SM/Sync monitoring for input/output only slaves<br>
@@ -25,9 +37,6 @@ V5.10 ECAT13: Update Synchronisation handling (FreeRun,SM Sync, Sync0, Sync1)<br
 V5.01 : Start file change log
  */
 
-#ifndef _ECATSLV_H_
-#define _ECATSLV_H_
-
 /*-----------------------------------------------------------------------------------------
 ------
 ------    Includes
@@ -38,6 +47,9 @@ V5.01 : Start file change log
 
 #include  "esc.h"
 #include "../9252_HW.h"
+
+#ifndef _ECATSLV_H_
+#define _ECATSLV_H_
 
 
 /*-----------------------------------------------------------------------------------------
@@ -125,19 +137,19 @@ V5.01 : Start file change log
 #endif
 
 #ifndef BIT2BYTE
-    #define    BIT2BYTE(x)        (((x)+7)>>3) /**< \brief Marco to convert Bit size to Byte size (round up)*/
+    #define    BIT2BYTE(x)        (((x)+7)>>3) /**< \brief Macro to convert Bit size to Byte size (round up)*/
 #endif
 
 #ifndef BYTE2BIT
-    #define    BYTE2BIT(x)        ((x)<<3) /**< \brief Marco to convert Byte size to Bit size*/
+    #define    BYTE2BIT(x)        ((x)<<3) /**< \brief Macro to convert Byte size to Bit size*/
 #endif
 
 #ifndef BIT2WORD
-    #define    BIT2WORD(x)        (((x)+15)>>4) /**< \brief Marco to convert Bit size to Word size (round up)*/
+    #define    BIT2WORD(x)        (((x)+15)>>4) /**< \brief Macro to convert Bit size to Word size (round up)*/
 #endif
 
 #ifndef BYTE2WORD
-    #define    BYTE2WORD(x)    (((x)+1)>>1) /**< \brief Marco to convert Bytes size to Word size (round up)*/
+    #define    BYTE2WORD(x)    (((x)+1)>>1) /**< \brief Macro to convert Bytes size to Word size (round up)*/
 #endif
 
 #ifndef ROUNDUPBYTE2WORD
@@ -157,6 +169,7 @@ V5.01 : Start file change log
 #define     STATE_MASK                        ((UINT8) 0x0F) /**< \brief State mask*/
 #define     STATE_CHANGE                      ((UINT8) 0x10) /**< \brief State change (Error indication/acknowledge) mask and value*/
 #define     STATE_DEVID                       ((UINT8) 0x20) /**< \brief Request/response Explicit device ID*/
+#define     STATE_VALID(x)                    ((((x) & STATE_MASK) == STATE_INIT) || (((x) & STATE_MASK) == STATE_PREOP) || (((x) & STATE_MASK) == STATE_SAFEOP) || (((x) & STATE_MASK) == STATE_OP)) /**< \brief Check if one of the mandatory supported state values are set*/
 
 #define     BOOT_2_INIT                       ((UINT8)((STATE_BOOT) << 4) | (STATE_INIT)) /**< \brief State transition BOOT to INIT*/
 #define     BOOT_2_PREOP                      ((UINT8)((STATE_BOOT) << 4) | (STATE_PREOP)) /**< \brief State transition BOOT to INIT*/
@@ -194,16 +207,16 @@ V5.01 : Start file change log
  ESM transition error codes
 
 */
-
-#define    SYNCMANCHODDADDRESS                                     0x00 /**< \brief Emergency and Diagnosis code for an odd SyncManager address*/
+/*ECATCHANGE_START(V5.13) EMCY1*/
+#define    SYNCMANCHSIZE                                            0x00 /**< \brief Emergency and Diagnosis code for an invalid  SyncManager size*/
 #define    SYNCMANCHADDRESS                                         0x01 /**< \brief Emergency and Diagnosis code for an invalid SyncManager address*/
-#define    SYNCMANCHSIZE                                            0x02 /**< \brief Emergency and Diagnosis code for an invalid  SyncManager size*/
-#define    SYNCMANCHSETTINGS                                        0x03 /**< \brief Emergency and Diagnosis code for an invalid SyncManager settings*/
-#define    ERROR_SYNCMANCH(code, channel)                    ((code)+((channel)<<2)) /**< \brief Marco to add SyncManager channel*/
-#define    ERROR_SYNCMANCHODDADDRESS(channel)                ((SYNCMANCHODDADDRESS)+((channel)<<2)) /**< \brief Marco to add SyncManager channel*/
-#define    ERROR_SYNCMANCHADDRESS(channel)                    ((SYNCMANCHADDRESS)+((channel)<<2)) /**< \brief Marco to add SyncManager channel*/
-#define    ERROR_SYNCMANCHSIZE(channel)                          ((SYNCMANCHSIZE)+((channel)<<2)) /**< \brief Marco to add SyncManager channel*/
-#define    ERROR_SYNCMANCHSETTINGS(channel)                    ((SYNCMANCHSETTINGS)+((channel)<<2)) /**< \brief Marco to add SyncManager channel*/
+#define    SYNCMANCHSETTINGS                                        0x02 /**< \brief Emergency and Diagnosis code for an invalid SyncManager settings*/
+#define    ERROR_SYNCMANCH(code, channel)                    ((code)+((channel)<<2)) /**< \brief Macro to add SyncManager channel*/
+
+/*ECATCHANGE_END(V5.13) EMCY1*/
+#define    ERROR_SYNCMANCHADDRESS(channel)                    ((SYNCMANCHADDRESS)+((channel)<<2)) /**< \brief Macro to add SyncManager channel*/
+#define    ERROR_SYNCMANCHSIZE(channel)                          ((SYNCMANCHSIZE)+((channel)<<2)) /**< \brief Macro to add SyncManager channel*/
+#define    ERROR_SYNCMANCHSETTINGS(channel)                    ((SYNCMANCHSETTINGS)+((channel)<<2)) /**< \brief Macro to add SyncManager channel*/
 #define    ERROR_SYNCTYPES                                        0x80 /**< \brief Emergency and Diagnosis code for an invalid Sync types*/
 #define    ERROR_DCSYNCCONTROL                                    0x81 /**< \brief Emergency and Diagnosis code for an invalid DC Sync control*/
 #define    ERROR_DCSYNC0CYCLETIME                                0x82 /**< \brief Emergency and Diagnosis code for an invalid Sync0 cycle time*/
@@ -232,10 +245,9 @@ V5.01 : Start file change log
 #define    ALSTATUSCODE_NOERROR                        0x0000 /**< \brief No error*/
 #define    ALSTATUSCODE_UNSPECIFIEDERROR               0x0001 /**< \brief Unspecified error*/
 #define    ALSTATUSCODE_NOMEMORY                       0x0002 /**< \brief No Memory*/
-/* ECATCHANGE_START(V5.11) ECAT9*/
+#define    ALSTATUSCODE_INVALID_REVISION               0x0004 /**< \brief Output/Input mapping is not valid for this hardware or software revision (0x1018:03)*/
 #define    ALSTATUSCODE_FW_SII_NOT_MATCH               0x0006 /**< \brief Firmware and EEPROM do not match. Slave needs BOOT-INIT transition*/
 #define    ALSTATUSCODE_FW_UPDATE_FAILED               0x0007 /**< \brief Firmware update not successful. Old firmware still running*/
-/* ECATCHANGE_END(V5.11) ECAT9*/
 #define    ALSTATUSCODE_INVALIDALCONTROL               0x0011 /**< \brief Invalid requested state change*/
 #define    ALSTATUSCODE_UNKNOWNALCONTROL               0x0012 /**< \brief Unknown requested state*/
 #define    ALSTATUSCODE_BOOTNOTSUPP                    0x0013 /**< \brief Bootstrap not supported*/
@@ -283,7 +295,12 @@ V5.01 : Start file change log
 #define    ALSTATUSCODE_EE_NOACCESS                    0x0050 /**< \brief EEPROM no access*/
 #define    ALSTATUSCODE_EE_ERROR                       0x0051 /**< \brief EEPROM Error*/
 #define    ALSTATUSCODE_EXT_HARDWARE_NOT_READY         0x0052 /**< \brief External hardware not ready. This AL Status Code should be used if the EtherCAT-Slave refused the state transition due to an external connection to another device or signal is missing*/
+#define    ALSTATUSCODE_DEVICE_IDENT_VALUE_UPDATED     0x0061 /**< \brief In legacy identification mode (dip switch mapped to register 0x12) this error is returned if the EEPROM ID value does not match to dipswitch value*/
 #define    ALSTATUSCODE_MODULE_ID_LIST_NOT_MATCH       0x0070 /**< \brief Detected Module Ident List (0xF030) and Configured Module Ident List (0xF050) does not match*/
+#define    ALSTATUSCODE_SUPPLY_VOLTAGE_TOO_LOW         0x0080 /**< \brief The slave supply voltage is too low*/
+#define    ALSTATUSCODE_SUPPLY_VOLTAGE_TOO_HIGH        0x0081 /**< \brief The slave supply voltage is too high*/
+#define    ALSTATUSCODE_TEMPERATURE_TOO_LOW            0x0082 /**< \brief The slave temperature is too low*/
+#define    ALSTATUSCODE_TEMPERATURE_TOO_HIGH           0x0083 /**< \brief The slave temperature is too high*/
                                                               
 
                                                               
@@ -291,10 +308,8 @@ V5.01 : Start file change log
 -    Configured Sync Type (0x1C32.1 / 0x1C33.1)
 -----------------------------------------------*/
 #define     SYNCTYPE_FREERUN            0x0000 /**< \brief Sync type FreeRun*/
-/*ECATCHANGE_START(V5.11) ESM7*/
 #define     SYNCTYPE_SM_SYNCHRON        0x0001 /**< \brief SyncManager synchron (synchron to the corresponding SM, 0x1C32.1 -> SM2 ; 0x1C33.1 -> SM3)  */
 #define     SYNCTYPE_SM2_SYNCHRON       0x0022 /**< \brief SyncManager2 synchron (only used for 0x1C33.1)*/
-/*ECATCHANGE_END(V5.11) ESM7*/
 #define     SYNCTYPE_DCSYNC0            0x0002 /**< \brief Sync type Sync0 synchron*/
 #define     SYNCTYPE_DCSYNC1            0x0003 /**< \brief Sync type Sync1 synchron*/
 
@@ -312,17 +327,10 @@ V5.01 : Start file change log
 #define     PROCESS_OUTPUT_EVENT                ((UINT16) 0x0400) /**< \brief Output process data write event*/
 #define     PROCESS_INPUT_EVENT                 ((UINT16) 0x0800) /**< \brief Input process data read event*/
 
-
-#ifndef MAX_PD_SYNC_MAN_CHANNELS
-    #define    MAX_PD_SYNC_MAN_CHANNELS         2 /**< \brief maximum number of process data SyncManager channels*/
-#endif
-#define    MAX_NUMBER_OF_SYNCMAN                ((MAX_PD_SYNC_MAN_CHANNELS)+2) /**< \brief Maximum number of SyncManagers (max number of Pd SM + 2 mailbox SyncManager)*/
-
 #define    MAILBOX_WRITE                        0 /**< \brief SyncManager ID for MBoxOut (master to slave)*/
 #define    MAILBOX_READ                         1 /**< \brief SyncManager ID for MBoxIn (slave to master)*/
 #define    PROCESS_DATA_OUT                     2 /**< \brief SyncManager ID for output process data (master to slave)*/
 #define    PROCESS_DATA_IN                      3 /**< \brief SyncManager ID for input process data (slave to master)*/
-
 
 
 
@@ -357,9 +365,7 @@ V5.01 : Start file change log
 
 #endif //_ECATSLV_H_
 
-/* ECATCHANGE_START(V5.11) ECAT10*/
 #if defined(_ECATSLV_) && (_ECATSLV_ == 1)
-/* ECATCHANGE_END(V5.11) ECAT10*/
     #define PROTO
 #else
     #define PROTO extern
@@ -390,31 +396,29 @@ PROTO    INT16                          EsmTimeoutCounter; /**< \brief Counter u
 
 
 
+
 PROTO BOOL                              bEscIntEnabled; /**< \brief Indicates that the ESC interrupt is enabled (SM2/3 or SYNC0/1-event),
                                                                      will be set in StartInputHandler and reset in StopInputHandler*/
 
 PROTO BOOL                              b3BufferMode; /**< \brief Indicates that inputs and outputs are running in 3-Buffer-Mode*/
 
-PROTO VARVOLATILE UINT8                  gEcatSm2IsThreeBuffer; /**< \brief SM2 mode: 1 if 3-buffer, 0 if 1-buffer */
-PROTO VARVOLATILE UINT8                  gEcatSm3IsThreeBuffer; /**< \brief SM3 mode: 1 if 3-buffer, 0 if 1-buffer */
-
-PROTO BOOL                              bLocalErrorFlag; /**< \brief Contains the information if the application has a local error*/
+/*ECATCHANGE_START(V5.13) ESM1*/
 PROTO UINT16                            u16LocalErrorCode; /**< \brief Reason for local error*/
+PROTO UINT8                             u8LocalErrorState; /**< \brief State of the current local error (lower state could be set by the master)*/
+/*ECATCHANGE_END(V5.13) ESM1*/
 PROTO BOOL                              bApplEsmPending; /**< \brief Indicates if the local application ESM function need to be called from Al_ConntrolRes (is true if NOERR_INWORK is returned by generic ESM function)*/
 PROTO BOOL                              bEcatWaitForAlControlRes; /**< \brief Contains the information that the state machine waits for an acknowledge
                                                                              for the last AL_ControlInd from the application/generic stack*/
 
 PROTO UINT16                            nEcatStateTrans; /**< \brief Current state transition*/
 
-PROTO UINT8                             u8EcatErrorLed; /**< \brief Current value of the run LED*/
+PROTO UINT8                             u8EcatErrorLed; /**< \brief Current value of the error LED*/
 
-PROTO UINT8                             u8EcatRunLed; /**< \brief Current value of the error LED*/
-/*ECATCHANGE_START(V5.11) ECAT4*/
+PROTO UINT8                             u8EcatRunLed; /**< \brief Current value of the run LED*/
 
 PROTO UINT16                            nPdInputSize; /**< \brief Contains the input size (SM3 size)/SM2 if no outputs are supported, has to be written by the application*/
 
 PROTO UINT16                            nPdOutputSize; /**< \brief Contains the output size (SM2 size), has to be written by the application*/
-/*ECATCHANGE_END(V5.11) ECAT4*/
 
 PROTO UINT8                             nMaxSyncMan; /**< \brief Contains the maximum number of Sync Manager channels, will be initialized in ECAT_Main*/
 
@@ -424,7 +428,7 @@ PROTO UINT8                             nAlStatus; /**< \brief Contains the actu
 
 PROTO BOOL                              bExplicitDevIdRequested; /**< \brief Indicates if 0x0120.5 is set*/
 
-PROTO UINT16                            EcatWdValue; /**< \brief Contains the value of the watchdog in 100us, will be written in StartInputHandler. 
+PROTO UINT16                            EcatWdValue; /**< \brief Contains the value of the watchdog in ms, will be written in StartInputHandler. 
                                                                     In case that the ESC watchdog feature is used this variable just indicates if the watchdog is enabled or disabled*/
 PROTO    UINT16                         nEscAddrOutputData; /**< \brief Contains the SM address for the output process data*/
 PROTO    UINT16                         nEscAddrInputData; /**< \brief Contains the SM address for the input process data*/
@@ -435,11 +439,9 @@ PROTO    UINT16                         nEscAddrInputData; /**< \brief Contains 
 ------    Global Functions
 ------
 -----------------------------------------------------------------------------------------*/
-/*ECATCHANGE_START(V5.11) HW1*/
 PROTO void EnableSyncManChannel(UINT8 channel);
 PROTO void DisableSyncManChannel(UINT8 channel);
 PROTO TSYNCMAN ESCMEM *GetSyncMan(UINT8 channel);
-/*ECATCHANGE_END(V5.11) HW1*/
 PROTO void SetALStatus(UINT8 alStatus, UINT16 alStatusCode);
 PROTO void AL_ControlInd(UINT8 alControl, UINT16 alStatusCode);
 PROTO    void CheckIfEcatError(void);

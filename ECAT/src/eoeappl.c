@@ -1,3 +1,9 @@
+/*
+* This source file is part of the EtherCAT Slave Stack Code licensed by Beckhoff Automation GmbH & Co KG, 33415 Verl, Germany.
+* The corresponding license agreement applies. This hint shall not be removed.
+* https://www.beckhoff.com/media/downloads/slave-stack-code/ethercat_ssc_license.pdf
+*/
+
 /**
 \addtogroup EoE Ethernet over EtherCAT
 @{
@@ -9,8 +15,15 @@
 \brief Implementation
 This file contains an example how to use the EoE services
 
-\version 5.11
+\version 5.13
 
+<br>Changes to version V5.12:<br>
+V5.13 EOE5: update get EoE settings if MBX_16BIT_ACCESS is false<br>
+<br>Changes to version V5.11:<br>
+V5.12 ECAT2: big endian changes<br>
+V5.12 EOE1: move icmp sample to the sampleappl,add EoE application interface functions<br>
+V5.12 EOE4: handle 16bit only acceess, move ethernet protocol defines and structures to application header files<br>
+V5.12 MBX2: do not set the pending indication in case of a EoE request, application triggered eoe datagram update<br>
 <br>Changes to version V5.10:<br>
 V5.11 ECAT10: change PROTO handling to prevent compiler errors<br>
 V5.11 EOE1: update mailbox length calculation on EoE response<br>
@@ -39,12 +52,14 @@ V4.07 EOEAPPL 2: The pointer pARP was not needed<br>
 
 #include "ecatslv.h"
 
+
 #define    _EOEAPPL_    1
 #include "eoeappl.h"
 #undef      _EOEAPPL_
-/* ECATCHANGE_START(V5.11) ECAT10*/
+
+#include "applInterface.h"
+
 /*remove definition of _EOEAPPL_ (#ifdef is used in eoeappl.h)*/
-/* ECATCHANGE_END(V5.11) ECAT10*/
 /*---------------------------------------------------------------------------------------
 ------
 ------    internal Types and Defines
@@ -60,11 +75,7 @@ V4.07 EOEAPPL 2: The pointer pARP was not needed<br>
 ------
 ---------------------------------------------------------------------------------------*/
 
-/*Create broadcast Ethernet address*/
-const    UINT8    BroadcastEthernetAddress[6]={0xff,0xff,0xff,0xff,0xff,0xff};
 
-UINT8 aIpAdd[4];
-UINT8 aMacAdd[6];
 
 
 /*---------------------------------------------------------------------------------------
@@ -83,56 +94,6 @@ UINT8 aMacAdd[6];
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /**
-
- \brief    This function intialize the EoE application Interface.
-*////////////////////////////////////////////////////////////////////////////////////////
-
-void EOEAPPL_Init(void)
-{
-}
-
-
-/////////////////////////////////////////////////////////////////////////////////////////
-/**
-
- \brief    This function calculates a checksum (only for an even number of bytes).
- \brief Note that if you are going to checksum a checksummed packet that includes the checksum,
- \brief you have to compliment the output.
-
-*////////////////////////////////////////////////////////////////////////////////////////
-
-UINT16 EOEAPPL_CalcCheckSum (UINT16 MBXMEM *pWord, UINT16 nLen)
-{
-    UINT32 crc;
-    UINT32 CrcLo;
-    UINT32 CrcHi;
-    UINT16 RetCrc;
-
-    crc = 0;
-    while (nLen > 1)
-    {
-        crc += SWAPWORD(*pWord);
-          pWord++;
-          nLen -= 2;
-    }
-    if ( nLen == 1 )                          // if nLen odd
-            crc += (UINT32)((UINT8)(*pWord & 0x00FFU));
-    CrcLo = LOWORD(crc);
-    CrcHi = HIWORD(crc);
-    crc = CrcLo + CrcHi;
-
-    CrcHi = HIWORD(crc);
-    crc += CrcHi;
-    if (crc == 0xFFFF)                     // remove the -0 ambiguity
-          crc = 0;
-
-    RetCrc = (UINT16)crc;
-    RetCrc = ~RetCrc;
-    return(RetCrc);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-/**
  \param     pFrame      Pointer to the received Ethernet frame (must be returned with
                             FREEMEM)
  \param     frameSize   Size of the received Ethernet frame
@@ -142,94 +103,12 @@ UINT16 EOEAPPL_CalcCheckSum (UINT16 MBXMEM *pWord, UINT16 nLen)
 
 void EOEAPPL_ReceiveFrameInd(UINT8 MBXMEM * pFrame, UINT16 frameSize)
 {
-    switch ( ((ETHERNET_FRAME *) pFrame)->FrameType )
+    if (pAPPL_EoeReceive != NULL)
     {
-    case ETHERNET_FRAME_TYPE_ARP1_SW:
-        {
-            ETHERNET_FRAME MBXMEM * pSendFrame = (ETHERNET_FRAME MBXMEM *) ALLOCMEM(frameSize);
-            ARP_IP_HEADER MBXMEM    * pArpIp = (ARP_IP_HEADER MBXMEM    *) &pSendFrame[1];
-
-            /*Copy Receive Frame to create ARP Reply*/
-            MBXMEMCPY(pSendFrame,pFrame,frameSize);
-            if ( ( MBXMEMCMP(BroadcastEthernetAddress, pSendFrame->Destination.b, 4) == 0 )
-                &&( pArpIp->hwAddrSpace == SWAPWORD(ARP_HW_ADDR_SPACE_ETHERNET_SW) )
-                &&( pArpIp->lengthHwAddr == ETHERNET_ADDRESS_LEN )
-                &&( pArpIp->protAddrSpace == SWAPWORD(ETHERNET_FRAME_TYPE_IP_SW) )
-                &&( pArpIp->lengthProtAddr == SIZEOF(UINT32) )
-                &&( pArpIp->opcode == SWAPWORD(ARP_OPCODE_REQUEST_SW) )
-                )
-            {
-                MBXMEMCPY(pSendFrame->Destination.b, pSendFrame->Source.b, 6);
-                MBXMEMCPY(pSendFrame->Source.b, &aMacAdd[0], 6);
-
-                MBXMEMCPY(pArpIp->macDest.b, pArpIp->macSource.b, 6);
-                MBXMEMCPY(pArpIp->macSource.b, &aMacAdd[0], 6);
-
-                MBXMEMCPY( &pArpIp->ipDest, &pArpIp->ipSource, 4);
-                MBXMEMCPY( &pArpIp->ipSource, &aIpAdd[0], 4);
-
-                pArpIp->opcode = SWAPWORD(ARP_OPCODE_REPLY_SW);
-
-                EOE_SendFrameReq((UINT8 MBXMEM *) pSendFrame, ARP_IP_HEADER_LEN + ETHERNET_FRAME_LEN);
-            }
-        }
-        break;
-    case ETHERNET_FRAME_TYPE_IP_SW:
-        {
-            ETHERNET_IP_MAX_FRAME MBXMEM * pIPHeader = (ETHERNET_IP_MAX_FRAME MBXMEM *) ALLOCMEM(frameSize);			
-
-            /*Copy Receive Frame to create ICMP Reply*/
-            MBXMEMCPY(pIPHeader,pFrame,frameSize);
-
-            if (  ( pIPHeader->Ip.protocol == IP_PROTOCOL_ICMP )
-                &&( pIPHeader->IpData.Icmp.type == ICMP_TYPE_ECHO )
-                &&( MBXMEMCMP(&pIPHeader->Ip.dest, aIpAdd, 4) == 0 )
-                )
-            {
-                // ping requested
-                UINT16 length;
-                UINT16 lo = 0;
-                UINT16 hi = 0;
-                UINT32 tmp;
-
-                // length is in BigEndian format -> swap bytes
-                lo = (( pIPHeader->Ip.length) & 0xff) << 8;
-                hi = pIPHeader->Ip.length >> 8;
-                length = hi + lo;
-                // swap src and dest ip address
-                tmp = pIPHeader->Ip.src;
-                pIPHeader->Ip.src = pIPHeader->Ip.dest;
-                pIPHeader->Ip.dest = tmp;
-
-                // set ping reply command
-                pIPHeader->IpData.Icmp.type = ICMP_TYPE_ECHO_REPLY;
-
-                // swap src and dest mac address
-                MBXMEMCPY(pIPHeader->Ether.Destination.b, pIPHeader->Ether.Source.b, 6);
-                MBXMEMCPY(pIPHeader->Ether.Source.b, aMacAdd, 6);
-
-                // calculate ip checksum
-                pIPHeader->Ip.cksum = 0;
-                pIPHeader->Ip.cksum = SWAPWORD(EOEAPPL_CalcCheckSum((UINT16 MBXMEM *) &pIPHeader->Ip, IP_HEADER_MINIMUM_LEN));
-                // calculate icmp checksum
-                pIPHeader->IpData.Icmp.checksum = 0;
-                /* type cast because of warning was added */
-                pIPHeader->IpData.Icmp.checksum = SWAPWORD(EOEAPPL_CalcCheckSum((UINT16 MBXMEM *) &pIPHeader->IpData.Icmp, (UINT16) (length - 20)));
-                /* type cast because of warning was added */
-                EOE_SendFrameReq((UINT8 MBXMEM *) pIPHeader, (UINT16) (ETHERNET_FRAME_LEN + length));
-            }
-            else
-            {
-                //protocol not supported => free allocated buffer
-                if(pIPHeader != NULL)
-                {
-                    FREEMEM(pIPHeader);
-                    pIPHeader = NULL;
-                }
-            }
-        }
-        break;
+        /* call the application specific ethernet stack*/
+        pAPPL_EoeReceive((UINT16 *)pFrame, frameSize);
     }
+    /* the EOE sample is moved to the application files (enable SAMPLE_APPLICATION to get the ) */
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -241,7 +120,6 @@ void EOEAPPL_ReceiveFrameInd(UINT8 MBXMEM * pFrame, UINT16 frameSize)
 
  \brief    This function is called when the IP get settings were received over EoE
 *////////////////////////////////////////////////////////////////////////////////////////
-/* ECATCHANGE_START(V5.11) EOE1*/
 UINT16 EOEAPPL_GetSettingsInd(ETHERCAT_EOE_INIT MBXMEM *pEoeInit,UINT16 *pMbxLength)
 {
     /* Clear include Flags */
@@ -257,10 +135,11 @@ UINT16 EOEAPPL_GetSettingsInd(ETHERCAT_EOE_INIT MBXMEM *pEoeInit,UINT16 *pMbxLen
     *pMbxLength += 6;
 
     // set IP Address
-    pEoeInit->IpAddr = (((UINT32)aIpAdd[0] & 0xFFUL) << 24)
-                     | (((UINT32)aIpAdd[1] & 0xFFUL) << 16)
-                     | (((UINT32)aIpAdd[2] & 0xFFUL) << 8)
-                     | (((UINT32)aIpAdd[3] & 0xFFUL));
+/*ECATCHANGE_START(V5.13) EOE5*/
+    pEoeInit->IpAddr[0] = ((aIpAdd[1] & 0xFF) << 8) | ((aIpAdd[1] & 0xFF00) >> 8);
+    pEoeInit->IpAddr[1] = ((aIpAdd[0] & 0xFF) << 8) | ((aIpAdd[0] & 0xFF00) >> 8);
+/*ECATCHANGE_END(V5.13) EOE5*/
+
     pEoeInit->Flags1 |= EOEINIT_CONTAINSIPADDR;
     *pMbxLength += 4;
 
@@ -268,7 +147,6 @@ UINT16 EOEAPPL_GetSettingsInd(ETHERCAT_EOE_INIT MBXMEM *pEoeInit,UINT16 *pMbxLen
     
     return 0;
 }
-/* ECATCHANGE_END(V5.11) EOE1*/
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /**
@@ -278,34 +156,117 @@ UINT16 EOEAPPL_GetSettingsInd(ETHERCAT_EOE_INIT MBXMEM *pEoeInit,UINT16 *pMbxLen
 
  \brief    This function is called when the IP settings were received over EoE
 *////////////////////////////////////////////////////////////////////////////////////////
-
 UINT16 EOEAPPL_SettingsInd(ETHERCAT_EOE_INIT MBXMEM *pEoeInit)
 {
     UINT16 result = 0;
+    UINT16 u16eoeFlag = SWAPWORD(pEoeInit->Flags1);
 
-    if ( SWAPWORD(pEoeInit->Flags1) & EOEINIT_CONTAINSMACADDR )
+    if (u16eoeFlag & EOEINIT_CONTAINSMACADDR )
     {
         // set MAC Address
         MBXMEMCPY(aMacAdd, &pEoeInit->MacAddr, 6);
     }
-    if(!(pEoeInit->Flags1 & EOEINIT_CONTAINSIPADDR)
-        ||((pEoeInit->Flags1 & EOEINIT_CONTAINSIPADDR) && (pEoeInit->IpAddr == 0)))
+    else
     {
-        /*no IP defined (IP is assigned via DHCP) => not supported yet*/
-        result = EOE_RESULT_NO_DHCP_SUPPORT;
+        HMEMSET(aMacAdd, 0x00, SIZEOF(aMacAdd));
+    }
+
+    if(u16eoeFlag & EOEINIT_CONTAINSIPADDR)
+    {
+        // set IP Address
+        aIpAdd[0] = ((pEoeInit->IpAddr[1] & 0xFF) << 8) | ((pEoeInit->IpAddr[1] & 0xFF00) >> 8);
+        aIpAdd[1] = ((pEoeInit->IpAddr[0] & 0xFF) << 8) | ((pEoeInit->IpAddr[0] & 0xFF00) >> 8);
     }
     else
     {
-        // set IP Address
-        aIpAdd[0] = (UINT8)((pEoeInit->IpAddr >> 24) & 0xFFUL);
-        aIpAdd[1] = (UINT8)((pEoeInit->IpAddr >> 16) & 0xFFUL);
-        aIpAdd[2] = (UINT8)((pEoeInit->IpAddr >> 8) & 0xFFUL);
-        aIpAdd[3] = (UINT8)(pEoeInit->IpAddr & 0xFFUL);
+        HMEMSET(aIpAdd, 0x00, SIZEOF(aIpAdd));
     }
+
+    if (u16eoeFlag & EOEINIT_CONTAINSSUBNETMASK)
+    {
+        // set Subnet mask
+        aSubNetMask[0] = ((pEoeInit->SubnetMask[1] & 0xFF) << 8) | ((pEoeInit->SubnetMask[1] & 0xFF00) >> 8);
+        aSubNetMask[1] = ((pEoeInit->SubnetMask[0] & 0xFF) << 8) | ((pEoeInit->SubnetMask[0] & 0xFF00) >> 8);
+    }
+    else
+    {
+        HMEMSET(aSubNetMask, 0x00, SIZEOF(aSubNetMask));
+    }
+
+    if (u16eoeFlag & EOEINIT_CONTAINSDEFAULTGATEWAY)
+    {
+        // set default gateway
+        // set IP Address
+        aDefaultGateway[0] = ((pEoeInit->DefaultGateway[1] & 0xFF) << 8) | ((pEoeInit->DefaultGateway[1] & 0xFF00) >> 8);
+        aDefaultGateway[1] = ((pEoeInit->DefaultGateway[0] & 0xFF) << 8) | ((pEoeInit->DefaultGateway[0] & 0xFF00) >> 8);
+    }
+    else
+    {
+        HMEMSET(aDefaultGateway, 0x00, SIZEOF(aDefaultGateway));
+    }
+
+    if (u16eoeFlag & EOEINIT_CONTAINSDNSSERVER)
+    {
+            // set DNS ip
+            // set IP Address
+        aDnsIp[0] = ((pEoeInit->DnsServer[1] & 0xFF) << 8) | ((pEoeInit->DnsServer[1] & 0xFF00) >> 8);
+        aDnsIp[1] = ((pEoeInit->DnsServer[0] & 0xFF) << 8) | ((pEoeInit->DnsServer[0] & 0xFF00) >> 8);
+    }
+    else
+    {
+        HMEMSET(aDnsIp, 0x00, SIZEOF(aDnsIp));
+    }
+
+    if (pAPPL_EoeSettingInd != NULL)
+    {
+        /* call the application specific ethernet stack*/
+        pAPPL_EoeSettingInd((UINT16 *)aMacAdd, (UINT16 *)aIpAdd, (UINT16 *)aSubNetMask, (UINT16 *)aDefaultGateway, (UINT16 *)aDnsIp);
+    }
+    /* the EOE sample is moved to the application files (enable SAMPLE_APPLICATION to get the ) */
 
     return result;
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////
+/**
+\return   0 = sending of frame started, 1 = frame could not be sent, try it later
+
+\param    pData    pointer to the Ethernet frame to be send (in case that STATIC_ETHERNET_BUFFER is 0 the memory will be freed after the last fragment was send)
+\param    length   length of the Ethernet frame
+
+\brief    Application interface function.
+\brief    This function sends an Ethernet frame via EoE to the master
+*////////////////////////////////////////////////////////////////////////////////////////
+UINT16 EOE_SendFrameRequest(UINT16 *pData, UINT16 length)
+{
+    
+    if (((!bEoESendFramePending && (nAlStatus != STATE_INIT))
+        && (pEoeSendStored == NULL || pData == (UINT16 MBXMEM *)pEoeSendStored))
+        )
+    {
+            /* no Ethernet is sent yet, no datagram is currently stored and the slave is at least in PRE-OP,
+            so we could sent the requested frame */
+
+        /* Ethernet frame is to be sent */
+        bEoESendFramePending = TRUE;
+        /* store the size of the Ethernet frame to be sent */
+        u16EthernetSendSize = length;
+        /* store the buffer of the Ethernet frame to be sent */
+        pEthernetSendFrame = (MEM_ADDR MBXMEM *)pData;
+        /* we start with the first fragment */
+        u16EthernetSendOffset = 0;
+        u8SendFragmentNo = 0;
+
+        SendFragment();
+    }
+    else
+    {
+        /* frame could not be sent, try it later */
+        return 1;
+    }
+
+    return 0;
+}
 
 /** @} */
 

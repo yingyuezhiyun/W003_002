@@ -11,8 +11,8 @@
 /**
 \file EtherCATSlave.c
 \brief Implementation
-
-\version 1.0.0.11
+ Created with SSC Tool application parser 1.6.3.0
+\version 0.0.0.1
 */
 
 
@@ -112,8 +112,8 @@ UINT16 APPL_StopMailboxHandler(void)
 /////////////////////////////////////////////////////////////////////////////////////////
 /**
  \param    pIntMask    pointer to the AL Event Mask which will be written to the AL event Mask
-                        register (0x204) when this function is succeeded. The event mask can be adapted
-                        in this function
+                       register (0x204) when this function is succeeded. The event mask can be adapted
+                       in this function
  \return    AL Status Code (see ecatslv.h ALSTATUSCODE_....)
 
  \brief    The function is called in the state transition from PREOP to SAFEOP when
@@ -229,6 +229,7 @@ UINT16 APPL_GenerateMapping(UINT16 *pInputSize,UINT16 *pOutputSize)
     UINT16 PDOSubindex0 = 0;
     UINT16 PDOEntryCnt = 0;
    
+#if MAX_PD_OUTPUT_SIZE > 0
     /*Scan object 0x1C12 RXPDO assign*/
     for(PDOAssignEntryCnt = 0; PDOAssignEntryCnt < sRxPDOassign.u16SubIndex0; PDOAssignEntryCnt++)
     {
@@ -254,7 +255,9 @@ UINT16 APPL_GenerateMapping(UINT16 *pInputSize,UINT16 *pOutputSize)
     }
 
     OutputSize = (OutputSize + 7) >> 3;
+#endif
 
+#if MAX_PD_INPUT_SIZE > 0
     if(result == 0)
     {
         /*Scan Object 0x1C13 TXPDO assign*/
@@ -282,6 +285,7 @@ UINT16 APPL_GenerateMapping(UINT16 *pInputSize,UINT16 *pOutputSize)
         }
     }
     InputSize = (InputSize + 7) >> 3;
+#endif
 
 #else
 #if _WIN32
@@ -470,7 +474,7 @@ void APPL_Application(void)
 /**
  \return    The Explicit Device ID of the EtherCAT slave
 
- \brief     Calculate the Explicit Device ID
+ \brief     Read the Explicit Device ID (from an external ID switch)
 *////////////////////////////////////////////////////////////////////////////////////////
 UINT16 APPL_GetDeviceID()
 {
@@ -479,6 +483,50 @@ UINT16 APPL_GetDeviceID()
 }
 #endif
 
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
+/**
+\param     index               index of the requested object.
+\param     subindex            subindex of the requested object.
+\param     objSize             size of the requested object data, calculated with OBJ_GetObjectLength
+\param     pData               Pointer to the buffer where the data can be copied to
+\param     bCompleteAccess     Indicates if a complete read of all subindices of the
+                               object shall be done or not
+
+ \return    result of the read operation (0 (success) or an abort code (ABORTIDX_.... defined in
+            sdosrv.h))
+ *////////////////////////////////////////////////////////////////////////////////////////
+UINT8 COE_VAR_Read(UINT16 index, UINT8 subindex, UINT32 dataSize, UINT16 MBXMEM * pData, UINT8 bCompleteAccess) {
+#if _WIN32
+#pragma message ("Warning: Implement CoE read callback")
+#else
+ #warning "Implement CoE read callback"
+#endif
+ return 0;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
+/**
+\param     index               index of the requested object.
+\param     subindex            subindex of the requested object.
+\param     objSize             size of the requested object data, calculated with OBJ_GetObjectLength
+\param     pData               Pointer to the buffer where the data can be copied to
+\param     bCompleteAccess     Indicates if a complete read of all subindices of the
+                               object shall be done or not
+
+ \return    result of the read operation (0 (success) or an abort code (ABORTIDX_.... defined in
+            sdosrv.h))
+ *////////////////////////////////////////////////////////////////////////////////////////
+UINT8 COE_VAR_Write(UINT16 index, UINT8 subindex, UINT32 dataSize, UINT16 MBXMEM * pData, UINT8 bCompleteAccess) {
+#if _WIN32
+#pragma message ("Warning: Implement CoE write callback")
+#else
+ #warning "Implement CoE write callback"
+#endif
+ return 0;
+}
 
 
 

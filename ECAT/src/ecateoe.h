@@ -1,3 +1,9 @@
+/*
+* This source file is part of the EtherCAT Slave Stack Code licensed by Beckhoff Automation GmbH & Co KG, 33415 Verl, Germany.
+* The corresponding license agreement applies. This hint shall not be removed.
+* https://www.beckhoff.com/media/downloads/slave-stack-code/ethercat_ssc_license.pdf
+*/
+
 /**
  * \addtogroup EoE Ethernet over EtherCAT
  * @{
@@ -8,8 +14,13 @@
 \author EthercatSSC@beckhoff.com
 \brief Sample header brief info
 
-\version 5.10
+\version 5.13
 
+<br>Changes to version V5.12:<br>
+V5.13 EOE1: <br>
+<br>Changes to version V5.10:<br>
+V5.12 EOE1: move icmp sample to the sampleappl,add EoE application interface functions<br>
+V5.12 EOE4: handle 16bit only acceess, move ethernet protocol defines and structures to application header files<br>
 <br>Changes to version V5.01:<br>
 V5.10 EOE2: Add new EoE service identifier (6-9)<br>
 V5.10 EOE3: Change local send frame pending indication variable to a global variable (it need to be resetted if the mailbox is stopped and a frame is pending)<br>
@@ -17,10 +28,6 @@ V5.10 EOE3: Change local send frame pending indication variable to a global vari
 V5.01 : Start file change log
  */
 
-
-#ifndef _ECATEOE_H_
-
-#define _ECATEOE_H_
 
 /*-----------------------------------------------------------------------------------------
 ------
@@ -30,11 +37,17 @@ V5.01 : Start file change log
 #include "mailbox.h"
 
 
+#ifndef _ECATEOE_H_
+#define _ECATEOE_H_
+
 /*-----------------------------------------------------------------------------------------
 ------
 ------    Defines and Types
 ------
 -----------------------------------------------------------------------------------------*/
+
+#define    ETHERNET_MAX_FRAME_LEN         1514 /**< \brief Max Ethernet frame length*/
+#define    ETHERNET_MAX_FRAMEBUF_LEN      1536 /**< \brief Max Ethernet frame buffer size*/
 
 #define    ETHERNET_FRAGMENT_GRANULAR           32 /**< \brief length of each fragment (except the last fragment) must be dividable by 32*/
 #define    ETHERNET_FRAGMENT_MASK               0xFFFFFFE0 /**< \brief EoE Fragment mask*/
@@ -67,7 +80,7 @@ V5.01 : Start file change log
 /** \brief MAC address*/
 typedef struct MBX_STRUCT_PACKED_START
 {
-    UINT8 b[6];
+    UINT16 w[3];
 }MBX_STRUCT_PACKED_END
 ETHERNET_ADDRESS;
 
@@ -90,10 +103,10 @@ typedef struct MBX_STRUCT_PACKED_START
     UINT16                  Flags2; /**< \brief Second 16Bit Flags*/
         #define    EOEINIT_APPENDTIMESTAMP           0x0001 /**< \brief Includes time stamp*/
     ETHERNET_ADDRESS        MacAddr; /**< \brief MAC address buffer*/
-    UINT32                  IpAddr; /**< \brief IP address buffer*/
-    UINT32                  SubnetMask; /**< \brief SubNetMask buffer*/
-    UINT32                  DefaultGateway; /**< \brief default gateway buffer*/
-    UINT32                  DnsServer; /**< \brief DNS server buffer*/
+    UINT16                  IpAddr[2]; /**< \brief IP address buffer*/
+    UINT16                  SubnetMask[2]; /**< \brief SubNetMask buffer*/
+    UINT16                  DefaultGateway[2]; /**< \brief default gateway buffer*/
+    UINT16                  DnsServer[2]; /**< \brief DNS server buffer*/
     CHAR                    DnsName[32]; /**< \brief DNS name buffer*/
 }MBX_STRUCT_PACKED_END
 ETHERCAT_EOE_INIT;
@@ -172,21 +185,37 @@ ETHERCAT_EOE_HEADER;
 ------
 -----------------------------------------------------------------------------------------*/
 
-PROTO BOOL                bEoESendFramePending;                  /**< \brief is set while an Ethernet frame is sent
+PROTO BOOL                bEoESendFramePending;             /**< \brief is set while an Ethernet frame is sent
                                                             with several fragments, the next Ethernet frame
                                                             could not be sent before the actual frame
                                                             is sent completely (EOE_SendFrameReq returns 1 in that case) */
+PROTO TMBX MBXMEM *       pEoeSendStored;                   /**< \brief if the mailbox service could not be sent (or stored),
+                                                            the EoE service will be stored in this variable
+                                                            and will be sent automatically from the mailbox handler
+                                                            (EOE_ContinueInd) when the send mailbox will be read
+                                                            the next time from the master */
 
+PROTO MEM_ADDR MBXMEM *   pEthernetSendFrame;               /**< \brief stores the buffer of the Ethernet frame to be sent */
+
+PROTO UINT16              u16EthernetSendSize;              /**< \brief stores the size of the actual Ethernet frame to be sent */
+
+PROTO UINT8               u8SendFragmentNo;                 /**< \brief stores the fragment number of the next fragment to be sent */
+
+PROTO UINT16              u16EthernetSendOffset;            /**< \brief stores the actual offset of the Ethernet frame, which
+                                                            points to the next fragment to be sent */
+
+PROTO UINT16              u16SendFrameNo;                   /**< \brief stores the frame number of the actual Ethernet frame to be sent */
 /*-----------------------------------------------------------------------------------------
 ------
 ------    Global Functions
 ------
 -----------------------------------------------------------------------------------------*/
 
-PROTO    void     EOE_Init(void);
-PROTO    UINT8 EOE_ServiceInd(TMBX MBXMEM * pMbx);
-PROTO    void     EOE_ContinueInd(TMBX MBXMEM * pMbx);
-PROTO    UINT8 EOE_SendFrameReq(UINT8 MBXMEM * pFrame, UINT16 frameSize);
-
+PROTO    void   EOE_Init(BOOL bPowerUp);
+PROTO    UINT8  EOE_ServiceInd(TMBX MBXMEM * pMbx);
+/*ECATCHANGE_START(V5.13) EOE1*/
+PROTO    void   EOE_ContinueInd(void);
+/*ECATCHANGE_END(V5.13) EOE1*/
+PROTO    void   SendFragment(void);
 #undef PROTO
 /** @}*/

@@ -4,13 +4,13 @@
 */
 
 /**
- * \addtogroup EtherCAT_Slave EtherCAT_Slave
+ * \addtogroup EtherCATSlave EtherCATSlave
  * @{
  */
 
 /**
-\file EtherCAT_Slave.h
-\brief EtherCAT_Slave function prototypes and defines
+\file EtherCATSlave.h
+\brief EtherCATSlave function prototypes and defines
 
 \version 1.0.0.11
  */
@@ -50,7 +50,7 @@
 
 PROTO void APPL_Application(void);
 #if EXPLICIT_DEVICE_ID
-PROTO UINT16 APPL_GetDeviceID();
+PROTO UINT16 APPL_GetDeviceID(void);
 #endif
 
 PROTO void   APPL_AckErrorInd(UINT16 stateTrans);

@@ -1,3 +1,9 @@
+/*
+* This source file is part of the EtherCAT Slave Stack Code licensed by Beckhoff Automation GmbH & Co KG, 33415 Verl, Germany.
+* The corresponding license agreement applies. This hint shall not be removed.
+* https://www.beckhoff.com/media/downloads/slave-stack-code/ethercat_ssc_license.pdf
+*/
+
 /**
  * \addtogroup ESCRegister  ESC Register
  * @{
@@ -17,17 +23,16 @@ V5.10 ESC3: Handle DC cControl register values in case of 32Bit ESC access (a Sy
 <br>Changes to version - :<br>
 V5.01 : Start file change log
  */
-#ifndef _ESC_H_
-#define _ESC_H_
 
 /*-----------------------------------------------------------------------------------------
 ------
 ------    Includes
 ------
 -----------------------------------------------------------------------------------------*/
-
 #include "ecat_def.h"
 
+#ifndef _ESC_H_
+#define _ESC_H_
 
 /*-----------------------------------------------------------------------------------------
 ------
@@ -41,7 +46,7 @@ V5.01 : Start file change log
 #define    BL_PAGE_SIZE        512
 
 /*---------------------------------------------
--    ESC Offsets (Detailed Information about the registers are located in the ESC Datasheets e.g. ET1100 Datasheet www.beckhoff.com/english.asp?download/ethercat_development_products.htm?id=71003127100387)
+-    ESC Offsets (Detailed Information about the registers are located in the ESC Datasheets e.g. ET1100 Datasheet http://www.beckhoff.com/english.asp?download/ethercat_development_products.htm?id=71003127100387)
 -----------------------------------------------*/
 #define ESC_INFO_OFFSET                         0x0000                               /**< \brief ESC information registers startoffset*/
 
@@ -51,6 +56,9 @@ V5.01 : Start file change log
 #define ESC_SM_CHANNELS_SHIFT                   8                                    /**< \brief Bit shift based on ESC offset "ESC_COMM_INFO_OFFSET"*/
 #define ESC_DPRAM_SIZE_MASK                     0x00FF0000                          /**< \brief Mask based on ESC offset "ESC_COMM_INFO_OFFSET"*/
 #define ESC_DPRAM_SIZE_SHIFT                    16                                   /**< \brief Bit shift based on ESC offset "ESC_COMM_INFO_OFFSET"*/
+
+#define ESC_FEATURES_OFFSET                     0x0008                              /**< \brief Register indicating ESC features*/
+#define ESC_DC_32BIT_MASK                       0x00000008                          /**< \brief register 0x0008.3 indicates if the DC Unit supports 32Bit/64Bit DC*/
 
 #define ESC_SLAVE_ADDRESS_MASK                  0x0000FFFF                          /**< \brief Slave address mask (based on 0x0010)*/
 
@@ -66,6 +74,12 @@ V5.01 : Start file change log
 #define ESC_ERROR_LED_OVERRIDE                  0x0139                              /**< \brief Register Description: Set Ecat Error indication via ESC. (not all ESC types support this feature)*/
 
 #define ESC_PDI_CONTROL_OFFSET                  0x0140                              /**< \brief Register Description: Specifies the process data interface*/
+#define ESC_DEVICE_EMULATION                    0x00000100                          /**< \brief Device emulation bit*/
+
+#define ESC_PDI_CONFIGURATION					0x0150								/**< \brief Register Description: PDI configuration register (values defined by the ESC configuration data)*/
+#define ESC_SYNC0_MAPPED_TO_ALEVENT				0x0800								/**< \brief bit indicating if the Sync0 event is mapped to the AL Event register*/
+#define ESC_SYNC1_MAPPED_TO_ALEVENT				0x8000								/**< \brief bit indicating if the Sync1 event is mapped to the AL Event register*/
+
 
 #define ESC_AL_EVENTMASK_OFFSET                 0x0204                              /**< \brief Register Description: AL Event masking of the AL Event Request register Events for mapping to PDI IRQ signal*/
 #define ESC_AL_EVENT_OFFSET                     0x0220                              /**< \brief Register Description: "Mirror" register for ESC events*/
@@ -112,6 +126,8 @@ V5.01 : Start file change log
 #define ESC_DC_SYNC_UNIT_AUTO_ACTIVE_MASK       0x00000800                          /**< \brief Description (0x980.11): Sync Out Unit is activated automatic when System time was written*/
 #define ESC_DC_SYNC_ACTIVATION_MASK             0x0000FFFF
 
+#define    ESC_DC_SYNC_STATUS		            0x098C                              /**< \brief Register Description: register 0x98E and 0x98F reflecting the status of Sync0 and Sync1*/
+
 #define ESC_DC_SYNC0_CYCLETIME_OFFSET           0x09A0                              /**< \brief Register Description: 32Bit Time between two consecutive SYNC0 pulses in ns*/
 #define ESC_DC_SYNC1_CYCLETIME_OFFSET           0x09A4                              /**< \brief Register Description: 32Bit Time between two consecutive SYNC1 pulses in ns*/
 
@@ -121,7 +137,7 @@ V5.01 : Start file change log
 /*---------------------------------------------
 -    Sync Manager
 -----------------------------------------------*/
-/** \brief SyncManager Register struture*/
+/** \brief SyncManager register structure*/
 typedef struct STRUCT_PACKED_START
 {
   UINT32                        AddressLength; /**< \brief Address and Length*/
@@ -159,6 +175,7 @@ typedef struct STRUCT_PACKED_START
 #define SM_SETTING_ENABLE_SHIFT             16  /**< \brief SyncManager enable shift*/
 #define SM_SETTING_REPAET_REQ_MASK          0x00020000 /**< \brief SyncManager repeat request mask*/
 #define SM_SETTING_REPEAT_REQ_SHIFT         16 /**< \brief SyncManager repeat request shift*/
+
 
 /*SyncManger PDI Control (0x0807) access*/
 #define SM_SETTING_PDI_DISABLE              0x01000000            /**< \brief Bit0 of register 0x0807 (if 1 SM is disabled from PDI)*/

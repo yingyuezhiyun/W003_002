@@ -55,6 +55,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 #include "glob_cfg.h"
 #include "glob_value.h"
 
+#define USE_SPI
 
 // #include "F28x_Project.h"
 // #include "F2837xD_input_xbar.h"

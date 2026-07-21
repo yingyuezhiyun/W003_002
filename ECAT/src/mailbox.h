@@ -1,3 +1,9 @@
+/*
+* This source file is part of the EtherCAT Slave Stack Code licensed by Beckhoff Automation GmbH & Co KG, 33415 Verl, Germany.
+* The corresponding license agreement applies. This hint shall not be removed.
+* https://www.beckhoff.com/media/downloads/slave-stack-code/ethercat_ssc_license.pdf
+*/
+
 /**
  * \addtogroup Mailbox Mailbox Functions
  * @{
@@ -7,8 +13,11 @@
 \file mailbox.h
 \author EthercatSSC@beckhoff.com
 
-\version 5.11
+\version 5.12
 
+<br>Changes to version V5.11:<br>
+V5.12 ECAT2: big endian changes<br>
+V5.12 MBX3: handle incomplete mailbox communication<br>
 <br>Changes to version V5.01:<br>
 V5.11 ECAT10: change PROTO handling to prevent compiler errors<br>
 V5.11 MBX1: "return value of ""MBX_StartMailboxHandler()"" changed to UINT16"<br>
@@ -17,9 +26,6 @@ V5.11 MBX3: set application triggered emergency and EoE data to pending if no ma
 V5.01 : Start file change log
  */
 
-#ifndef _MAILBOX_H_
-#define _MAILBOX_H_
-
 /*-----------------------------------------------------------------------------------------
 ------
 ------    Includes
@@ -27,6 +33,9 @@ V5.01 : Start file change log
 -----------------------------------------------------------------------------------------*/
 #include "ecat_def.h"
 
+
+#ifndef _MAILBOX_H_
+#define _MAILBOX_H_
 
 /*-----------------------------------------------------------------------------------------
 ------
@@ -48,13 +57,6 @@ V5.01 : Start file change log
 #define     VOE_SERVICE                         ((UINT8) 0x0020) /**< \brief VoE service*/
 #define     FOE_SERVICE                         ((UINT8) 0x0040) /**< \brief FoE service*/
 #define     FRAGMENTS_FOLLOW                    ((UINT8) 0x0080) /**< \brief Fragments follow service*/
-
-#ifndef DISABLE_MBX_INT
-    #define    DISABLE_MBX_INT /**< \brief Disable mailbox interrupt*/
-#endif
-#ifndef ENABLE_MBX_INT
-    #define    ENABLE_MBX_INT /**< \brief Enable mailbox interrupt*/
-#endif
 
 #ifndef    ENTER_MBX_CRITICAL
     #define    ENTER_MBX_CRITICAL /**< \brief Enter mailbox critical section*/
@@ -108,7 +110,7 @@ typedef struct MBX_STRUCT_PACKED_START
 TMBXHEADER;
 
 
-#define     MBX_HEADER_SIZE         SIZEOF(TMBXHEADER) /**< \brief Mailbox header size*/
+#define     MBX_HEADER_SIZE         6 /**< \brief Mailbox header size*/
 
 
 #define     MAX_MBX_DATA_SIZE       (MAX_MBX_SIZE - MBX_HEADER_SIZE) /**< \brief Mailbox data size*/
@@ -145,9 +147,7 @@ typedef struct
 ------    Global Variables
 ------
 -----------------------------------------------------------------------------------------*/
-/* ECATCHANGE_START(V5.11) ECAT10*/
 #if defined(_MAILBOX_) && (_MAILBOX_ == 1)
-/* ECATCHANGE_END(V5.11) ECAT10*/
     #define PROTO
 #else
     #define PROTO extern
@@ -163,7 +163,6 @@ PROTO UINT16                  u16EscAddrReceiveMbx; /**< \brief Receive mailbox 
 PROTO UINT16                  u16EscAddrSendMbx; /**< \brief Send mailbox address (default SM1)*/
 PROTO UINT8                   u8MbxWriteCounter; /**< \brief Write mailbox counter*/
 PROTO UINT8                   u8MbxReadCounter; /**< \brief Read mailbox counter*/
-PROTO TMBX MBXMEM             asMbx[2]; /**< \brief Mailbox buffer (for repeat service)*/
 PROTO UINT8                   u8MailboxSendReqStored; /**< \brief Mailbox send request stored*/
 PROTO TMBX MBXMEM *           psWriteMbx; /**< \brief Pointer to write mailbox buffer*/
 PROTO TMBX MBXMEM *           psReadMbx; /**< \brief Pointer to read mailbox buffer*/
@@ -180,9 +179,7 @@ PROTO TMBXQUEUE MBXMEM        sMbxReceiveQueue; /**< \brief Receive mailbox queu
 -----------------------------------------------------------------------------------------*/
 
 PROTO   void     MBX_Init(void);
-/* ECATCHANGE_START(V5.11) MBX1*/
 PROTO   UINT16    MBX_StartMailboxHandler(void);
-/* ECATCHANGE_END(V5.11) MBX1*/
 PROTO   void     MBX_StopMailboxHandler(void);
 PROTO   void     MBX_MailboxWriteInd(TMBX MBXMEM *pMbx);
 PROTO   void     MBX_MailboxReadInd(void);

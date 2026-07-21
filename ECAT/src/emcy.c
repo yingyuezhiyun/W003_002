@@ -1,3 +1,9 @@
+/*
+* This source file is part of the EtherCAT Slave Stack Code licensed by Beckhoff Automation GmbH & Co KG, 33415 Verl, Germany.
+* The corresponding license agreement applies. This hint shall not be removed.
+* https://www.beckhoff.com/media/downloads/slave-stack-code/ethercat_ssc_license.pdf
+*/
+
 /**
 \addtogroup EMCY Emergency Messages	
 @{
@@ -35,12 +41,11 @@ V4.10 EMCY 1: AlStatus comparison fixed
 #include "ecatslv.h"
 
 
+
 #define    _EMCY_    1
 #include "emcy.h"
 #undef      _EMCY_
-/* ECATCHANGE_START(V5.11) ECAT10*/
 /*remove definition of _EMCY_ (#ifdef is used in emcy.h)*/
-/* ECATCHANGE_END(V5.11) ECAT10*/
 #include "ecatcoe.h"
 
 /*---------------------------------------------------------------------------------------
@@ -92,7 +97,8 @@ TEMCYMESSAGE EMCYMEM * GetOutOfEmptyEmcyQueue(void)
 {
     TEMCYMESSAGE EMCYMEM * pEmcy;
 
-    DISABLE_EMCY_INT;
+
+        ENTER_EMCY_CRITICAL;
     if (sEmptyEmcyQueue.FirstInQueue != sEmptyEmcyQueue.LastInQueue)
     {
         UINT16 firstInQueue = sEmptyEmcyQueue.FirstInQueue;
@@ -106,8 +112,10 @@ TEMCYMESSAGE EMCYMEM * GetOutOfEmptyEmcyQueue(void)
         }
     }
     else
-        pEmcy = NULL;
-    ENABLE_EMCY_INT;
+    {
+        pEmcy = 0;
+    }
+    LEAVE_EMCY_CRITICAL;
 
     return pEmcy;
 }
@@ -126,7 +134,8 @@ void PutInSendEmcyQueue(TEMCYMESSAGE EMCYMEM * pEmcy)
 {
     UINT16 lastInQueue;
 
-    DISABLE_EMCY_INT;
+    
+    ENTER_EMCY_CRITICAL;
     lastInQueue = sSendEmcyQueue.LastInQueue+1;
 
     if (lastInQueue == sSendEmcyQueue.MaxQueueSize)
@@ -136,7 +145,7 @@ void PutInSendEmcyQueue(TEMCYMESSAGE EMCYMEM * pEmcy)
 
     sSendEmcyQueue.pQueue[sSendEmcyQueue.LastInQueue] = pEmcy;
     sSendEmcyQueue.LastInQueue = lastInQueue;
-    ENABLE_EMCY_INT;
+    LEAVE_EMCY_CRITICAL;
 }
 
 
@@ -151,7 +160,8 @@ TEMCYMESSAGE EMCYMEM * GetOutOfSendEmcyQueue(void)
 {
     TEMCYMESSAGE EMCYMEM * pEmcy;
 
-    DISABLE_EMCY_INT;
+    
+    ENTER_EMCY_CRITICAL;
     if (sSendEmcyQueue.FirstInQueue != sSendEmcyQueue.LastInQueue)
     {
         UINT16 firstInQueue = sSendEmcyQueue.FirstInQueue;
@@ -165,8 +175,10 @@ TEMCYMESSAGE EMCYMEM * GetOutOfSendEmcyQueue(void)
         }
     }
     else
-        pEmcy = NULL;
-    ENABLE_EMCY_INT;
+    {
+        pEmcy = 0;
+    }
+    LEAVE_EMCY_CRITICAL;
 
     return pEmcy;
 }
@@ -190,7 +202,7 @@ void EMCY_Init(void)
     sSendEmcyQueue.MaxQueueSize                    = MAX_EMERGENCIES+1;
     for (i = 0; i < MAX_EMERGENCIES; i++)
     {
-        sSendEmcyQueue.pQueue[i] = NULL;
+        sSendEmcyQueue.pQueue[i] = 0;
     }
 
     /* initialize empty queue */
@@ -201,7 +213,7 @@ void EMCY_Init(void)
     sEmptyEmcyQueue.MaxQueueSize                    = MAX_EMERGENCIES+1;
     for (i = 0; i < MAX_EMERGENCIES; i++)
     {
-        sEmptyEmcyQueue.pQueue[i] = NULL;
+        sEmptyEmcyQueue.pQueue[i] = 0;
     }
 
     /* put all buffers in empty queue */
@@ -235,6 +247,7 @@ UINT8 EMCY_IsQueueEmpty(void)
 void EMCY_ContinueInd(TMBX MBXMEM * pMbx)
 {
     TEMCYMESSAGE EMCYMEM *pEmcy = GetOutOfSendEmcyQueue();
+    
     if (pEmcy != NULL)
     {
         /* send next emergency message */
@@ -252,13 +265,10 @@ void EMCY_ContinueInd(TMBX MBXMEM * pMbx)
 
 TEMCYMESSAGE EMCYMEM * EMCY_GetEmcyBuffer(void)
 {
-    TEMCYMESSAGE EMCYMEM * pEmcy;
+    TEMCYMESSAGE EMCYMEM* pEmcy = GetOutOfEmptyEmcyQueue();
 
-    // HBu 02.05.06: when using the mailbox event in an ISR it should be disabled here
-    DISABLE_MBX_INT;
-    pEmcy = GetOutOfEmptyEmcyQueue();
-    // HBu 02.05.06: when using the mailbox event in an ISR it should be enabled here
-    ENABLE_MBX_INT;
+
+
     return pEmcy;
 }
 
@@ -272,8 +282,9 @@ TEMCYMESSAGE EMCYMEM * EMCY_GetEmcyBuffer(void)
 
 UINT8 EMCY_SendEmergency( TEMCYMESSAGE EMCYMEM *pEmcy )
 {
-    // HBu 02.05.06: when using the mailbox event in an ISR it should be disabled here
-    DISABLE_MBX_INT;
+
+    ENTER_MBX_CRITICAL;
+
     if ( bSendMbxIsFull || ((nAlStatus & STATE_MASK) == STATE_INIT)
         )
     {
@@ -281,8 +292,9 @@ UINT8 EMCY_SendEmergency( TEMCYMESSAGE EMCYMEM *pEmcy )
         PutInSendEmcyQueue( pEmcy );
 
         u8MailboxSendReqStored |= EMCY_SERVICE;
-    // HBu 02.05.06: when using the mailbox event in an ISR it should be enabled here
-    ENABLE_MBX_INT;
+    
+
+        LEAVE_MBX_CRITICAL;
         return 0;
     }
 
@@ -291,7 +303,8 @@ UINT8 EMCY_SendEmergency( TEMCYMESSAGE EMCYMEM *pEmcy )
     /* it shall be checked if a valid pointer was returned */
     if ( psWriteMbx == NULL )
     {
-        ENABLE_MBX_INT;
+
+        LEAVE_MBX_CRITICAL;
         return ALSTATUSCODE_NOMEMORY;
     }
 
@@ -301,10 +314,12 @@ UINT8 EMCY_SendEmergency( TEMCYMESSAGE EMCYMEM *pEmcy )
     // HBu 02.05.06: emergency buffer has to be put in the empty queue only
     //               if the sending was successful
     if (MBX_MailboxSendReq(psWriteMbx, EMCY_SERVICE) == 0)
+    {
         /* put emergency buffer back in the empty queue */
         PutInEmptyEmcyQueue( pEmcy );
-    // HBu 02.05.06: when using the mailbox event in an ISR it should be enabled here
-    ENABLE_MBX_INT;
+    }
+    
+    LEAVE_MBX_CRITICAL;
 
     return 0;
 }

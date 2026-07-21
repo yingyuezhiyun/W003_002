@@ -1,3 +1,9 @@
+/*
+* This source file is part of the EtherCAT Slave Stack Code licensed by Beckhoff Automation GmbH & Co KG, 33415 Verl, Germany.
+* The corresponding license agreement applies. This hint shall not be removed.
+* https://www.beckhoff.com/media/downloads/slave-stack-code/ethercat_ssc_license.pdf
+*/
+
 /**
  * \addtogroup EMCY Emergency Messages
  * @{
@@ -15,8 +21,6 @@ V5.11 ECAT10: change PROTO handling to prevent compiler errors<br>
 <br>Changes to version - :<br>
 V5.01 : Start file change log
  */
-#ifndef _EMCY_H_
-#define _EMCY_H_
 
 /*-----------------------------------------------------------------------------------------
 ------
@@ -27,13 +31,14 @@ V5.01 : Start file change log
 
 #include "ecatcoe.h"
 
+#ifndef _EMCY_H_
+#define _EMCY_H_
+
 /*-----------------------------------------------------------------------------------------
 ------
 ------    Defines and Types
 ------
 -----------------------------------------------------------------------------------------*/
-#define    DISABLE_EMCY_INT /**< \brief Disable sources which may generate an emergency*/
-#define    ENABLE_EMCY_INT /**< \brief Enable sources which may generate an emergency*/
 
 
 /*---------------------------------------------
@@ -85,9 +90,7 @@ typedef struct
 
 #endif //_EMCY_H_
 
-/* ECATCHANGE_START(V5.11) ECAT10*/
 #if defined(_EMCY_) && (_EMCY_ == 1)
-/* ECATCHANGE_END(V5.11) ECAT10*/
     #define PROTO
 #else
     #define PROTO extern

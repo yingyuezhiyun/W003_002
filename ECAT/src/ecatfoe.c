@@ -1,3 +1,9 @@
+/*
+* This source file is part of the EtherCAT Slave Stack Code licensed by Beckhoff Automation GmbH & Co KG, 33415 Verl, Germany.
+* The corresponding license agreement applies. This hint shall not be removed.
+* https://www.beckhoff.com/media/downloads/slave-stack-code/ethercat_ssc_license.pdf
+*/
+
 /**
 \addtogroup FoE FileTransfer over EtherCAT
 @{
@@ -9,8 +15,14 @@
 \brief Implementation
 This file contains the FoE mailbox interface
 
-\version 5.11
+\version 5.13
 
+<br>Changes to version V5.12:<br>
+V5.13 EOE1: <br>
+V5.13 FOE1: handle failure on continue indication<br>
+<br>Changes to version V5.11:<br>
+V5.12 FOE2: handle 16bit only access<br>
+V5.12 MBX4: in case of a disable mailbox queue and two consecutive foe uploads the mailbox receive handler is blocked<br>
 <br>Changes to version V5.10:<br>
 V5.11 FOE1: handle busy on a read request, change OPMode to OPCode (same terms as in the spec)<br>
 <br>Changes to version V5.0:<br>
@@ -45,6 +57,7 @@ V4.00 FOE 2 - if a FoE service response could not be sent because the mailbox is
 #include "ecat_def.h"
 
 
+
 #include "ecatslv.h"
 
 #define    _ECATFOE_ 1
@@ -62,7 +75,7 @@ V4.00 FOE 2 - if a FoE service response could not be sent because the mailbox is
 /////////////////////////////////////////////////////////////////////////////////////////
 /**
 
- \brief    This function intialize the FoE Interface.
+ \brief    This function initialize the FoE Interface.
 *////////////////////////////////////////////////////////////////////////////////////////
 
 void FOE_Init(void)
@@ -97,7 +110,9 @@ UINT8 FOE_ServiceInd(TFOEMBX MBXMEM * pFoeInd)
     /* it has to be checked if the mailbox protocol is correct, the sent mailbox data length has to
        great enough for the service header of the FoE service */
     if ( SWAPWORD(pFoeInd->MbxHeader.Length) < FOE_HEADER_SIZE )
+    {
         return MBXERR_SIZETOOSHORT;
+    }
 
     switch ( SWAPWORD(pFoeInd->FoeHeader.OpCode) )
     {
@@ -105,11 +120,10 @@ UINT8 FOE_ServiceInd(TFOEMBX MBXMEM * pFoeInd)
         /* file read is requested */
         if ( u16FileAccessState == FOE_READY )
         {
-            UINT32 u32Password = SWAPDWORD(pFoeInd->FoeHeader.Cmd.Password);
+            UINT32 u32Password = SWAPDWORD((((UINT32)pFoeInd->FoeHeader.Cmd.Password[FOE_COMMAND_LOWWORD]) | ((UINT32)pFoeInd->FoeHeader.Cmd.Password[FOE_COMMAND_HIGHWORD]) << 16));
             /* last FoE sequence was finished, call application function */
-            nextState = FOE_Read(pFoeInd->Data, dataSize, pFoeInd->Data, SWAPDWORD(u32Password));
+            nextState = FOE_Read((UINT16 MBXMEM *)pFoeInd->Data, dataSize, (UINT16*)pFoeInd->Data, u32Password);
 
-/* ECATCHANGE_START(V5.11) FOE1*/
             /* u32LastFileOffset contains the offset of the file which is sent now */
             u32LastFileOffset = 0;
 
@@ -126,7 +140,6 @@ UINT8 FOE_ServiceInd(TFOEMBX MBXMEM * pFoeInd)
                 u32FileOffset = 0;
                 u16FileAccessState = FOE_WAIT_FOR_ACK;
             }
-/* ECATCHANGE_END(V5.11) FOE1*/
         }
         break;
 
@@ -134,9 +147,9 @@ UINT8 FOE_ServiceInd(TFOEMBX MBXMEM * pFoeInd)
         /* file write is requested */
         if ( u16FileAccessState == FOE_READY )
         {
-            UINT32 u32Password = SWAPDWORD(pFoeInd->FoeHeader.Cmd.Password);
+            UINT32 u32Password = SWAPDWORD((((UINT32)pFoeInd->FoeHeader.Cmd.Password[FOE_COMMAND_LOWWORD]) | ((UINT32)pFoeInd->FoeHeader.Cmd.Password[FOE_COMMAND_HIGHWORD]) << 16));
             /* last FoE sequence was finished, call application function */
-            nextState = FOE_Write(pFoeInd->Data, dataSize, SWAPDWORD(u32Password));
+            nextState = FOE_Write((UINT16 MBXMEM *)pFoeInd->Data, dataSize, u32Password);
             if ( nextState == 0 )
             {
                 /* checking was successful, sent a FoE Ack service */
@@ -152,12 +165,13 @@ UINT8 FOE_ServiceInd(TFOEMBX MBXMEM * pFoeInd)
         if ( u16FileAccessState == FOE_WAIT_FOR_DATA
           || u16FileAccessState == FOE_WAIT_FOR_LAST_DATA )
         {
-            UINT32 u32CmdPacketNo = SWAPDWORD(pFoeInd->FoeHeader.Cmd.PacketNo);
+            UINT32 u32CmdPacketNo = SWAPDWORD((((UINT32)pFoeInd->FoeHeader.Cmd.PacketNo[FOE_COMMAND_LOWWORD]) | ((UINT32)pFoeInd->FoeHeader.Cmd.PacketNo[FOE_COMMAND_HIGHWORD]) << 16));
+
             /* we are waiting for file data, service is correct */
             if ( u32CmdPacketNo == u32PacketNo )
             {
                 /* the packet number is correct, call application function to store the file data */
-                nextState = FOE_Data(pFoeInd->Data, dataSize);
+                nextState = FOE_Data((UINT16 MBXMEM *)pFoeInd->Data, dataSize);
                 if ( nextState == 0 )
                 {
                     /* checking was successful, sent a FoE Ack service */
@@ -165,7 +179,9 @@ UINT8 FOE_ServiceInd(TFOEMBX MBXMEM * pFoeInd)
                 }
             }
             else
+            {
                 nextState = ECAT_FOE_ERRCODE_PACKENO;
+            }
         }
         break;
 
@@ -175,11 +191,10 @@ UINT8 FOE_ServiceInd(TFOEMBX MBXMEM * pFoeInd)
         {
             /* we are waiting for an acknowledge, service is correct, call the application function
                to get the next part of the file */
-            nextState = FOE_Ack( u32FileOffset, pFoeInd->Data );
+            nextState = FOE_Ack( u32FileOffset, (UINT16 MBXMEM *)pFoeInd->Data );
             /* u32LastFileOffset contains the offset of the file which is sent now */
             u32LastFileOffset = u32FileOffset;
 
-/* ECATCHANGE_START(V5.11) FOE1*/
             if (nextState <= FOE_MAXDATA) 
             {
                 /* u32FileOffset contains the offset of the file which shall be sent when the next FoE ACK is received */
@@ -187,7 +202,6 @@ UINT8 FOE_ServiceInd(TFOEMBX MBXMEM * pFoeInd)
                 /* increment the packet number */
                 u32PacketNo++;
             }
-/* ECATCHANGE_END(V5.11) FOE1*/  
         }
         else if ( u16FileAccessState == FOE_WAIT_FOR_LAST_ACK )
         {
@@ -200,10 +214,12 @@ UINT8 FOE_ServiceInd(TFOEMBX MBXMEM * pFoeInd)
         /* a FoE Error service is received */
         if ( u16FileAccessState != FOE_READY )
         {
-            UINT32 u32CmdErrorCode = SWAPDWORD(pFoeInd->FoeHeader.Cmd.ErrorCode);
+            UINT32 u32CmdErrorCode = SWAPDWORD((((UINT32)pFoeInd->FoeHeader.Cmd.ErrorCode[FOE_COMMAND_LOWWORD]) | ((UINT32)pFoeInd->FoeHeader.Cmd.ErrorCode[FOE_COMMAND_HIGHWORD]) << 16));
+
             /* a file transmission sequence is active, inform the application, that this sequence
                was stopped */
             FOE_Error( u32CmdErrorCode );
+
             nextState = FOE_FINISHED;
         }
         break;
@@ -215,7 +231,7 @@ UINT8 FOE_ServiceInd(TFOEMBX MBXMEM * pFoeInd)
         {
             /* we are waiting for an acknowledge, service is correct, call the application function
                to resend the last part of the file */
-            nextState = FOE_Busy( SWAPWORD(pFoeInd->FoeHeader.Cmd.Busy.Done), u32LastFileOffset, pFoeInd->Data );
+            nextState = FOE_Busy( SWAPWORD(pFoeInd->FoeHeader.Cmd.Busy.Done), u32LastFileOffset, (UINT16 MBXMEM *)pFoeInd->Data );
         }
         break;
 
@@ -229,7 +245,8 @@ UINT8 FOE_ServiceInd(TFOEMBX MBXMEM * pFoeInd)
         /* store the OpCode in the mailbox buffer */
         pFoeInd->FoeHeader.OpCode           = SWAPWORD(ECAT_FOE_OPCODE_DATA);
         /* store the packet number in the mailbox buffer */
-        pFoeInd->FoeHeader.Cmd.PacketNo     = d;
+        pFoeInd->FoeHeader.Cmd.PacketNo[FOE_COMMAND_LOWWORD] = ((d & 0x0000FFFF));
+        pFoeInd->FoeHeader.Cmd.PacketNo[FOE_COMMAND_HIGHWORD] = ((d & 0xFFFF0000) >> 16);
      
         /* store the size of the mailbox data in the mailbox buffer */
         pFoeInd->MbxHeader.Length           = FOE_HEADER_SIZE + nextState;
@@ -252,9 +269,7 @@ UINT8 FOE_ServiceInd(TFOEMBX MBXMEM * pFoeInd)
         /* store the OpCode in the mailbox buffer */
         pFoeInd->FoeHeader.OpCode                   = SWAPWORD(ECAT_FOE_OPCODE_BUSY);
         /* store the information how much progress we made until we can receive file data again */
-/* ECATCHANGE_START(V5.11) FOE1*/
         pFoeInd->FoeHeader.Cmd.Busy.Done            = SWAPWORD(nextState-FOE_MAXBUSY_ZERO);
-/* ECATCHANGE_END(V5.11) FOE1*/
 
         pFoeInd->FoeHeader.Cmd.Busy.Entire          = 0;
         /* store the size of the mailbox data in the mailbox buffer */
@@ -268,20 +283,27 @@ UINT8 FOE_ServiceInd(TFOEMBX MBXMEM * pFoeInd)
             we have to acknowledge the old packet first */
         UINT32 d = SWAPDWORD(u32PacketNo);
         u32PacketNo++;
+        
         /* store the OpCode in the mailbox buffer */
         pFoeInd->FoeHeader.OpCode                   = SWAPWORD(ECAT_FOE_OPCODE_ACK);
         /* store the packet number in the mailbox buffer */
-        pFoeInd->FoeHeader.Cmd.PacketNo             = d;
+        pFoeInd->FoeHeader.Cmd.PacketNo[FOE_COMMAND_LOWWORD] = ((d & 0x0000FFFF));
+        pFoeInd->FoeHeader.Cmd.PacketNo[FOE_COMMAND_HIGHWORD] = ((d & 0xFFFF0000) >> 16);
+
         /* store the size of the mailbox data in the mailbox buffer */
         pFoeInd->MbxHeader.Length                   = SIZEOF(TFOEHEADER);
 
         /* we wait for the next data part */
         if ( nextState == FOE_ACK )
+        {
             /* we wait for the next data part */
             u16FileAccessState = FOE_WAIT_FOR_DATA;
+        }
         else
+        {
             /* the last data part was received */
             u16FileAccessState = FOE_READY;
+        }
     }
     else if ( nextState < FOE_ERROR )
     {
@@ -298,7 +320,9 @@ UINT8 FOE_ServiceInd(TFOEMBX MBXMEM * pFoeInd)
         /* store the OpCode in the mailbox buffer */
         pFoeInd->FoeHeader.OpCode                    = SWAPWORD(ECAT_FOE_OPCODE_ERR);
         /* store the ErrorCode in the mailbox buffer */
-        pFoeInd->FoeHeader.Cmd.ErrorCode            = d;
+        pFoeInd->FoeHeader.Cmd.ErrorCode[FOE_COMMAND_LOWWORD] = ((d & 0x0000FFFF));
+        pFoeInd->FoeHeader.Cmd.ErrorCode[FOE_COMMAND_HIGHWORD] = ((d & 0xFFFF0000) >> 16);
+
         /* store the size of the mailbox data in the mailbox buffer */
         pFoeInd->MbxHeader.Length                   = SIZEOF(TFOEHEADER);
 
@@ -308,11 +332,15 @@ UINT8 FOE_ServiceInd(TFOEMBX MBXMEM * pFoeInd)
             UINT16 data = ((UINT16 MBXMEM *) pFoeInd->Data)[(b >> 1)];
 
             if ((data & 0x00FF) == 0)
+            {
                 break;
+            }
             b++;
         
             if ((data & 0xFF00) == 0)
+            {
                 break;
+            }
             b++;
         }
         if ( b < 32 )
@@ -351,9 +379,13 @@ void FOE_ContinueInd(TMBX MBXMEM * pMbx)
     if ( pFoeSendStored )
     {
         /* send the stored FoE service which could not be sent before */
-        MBX_MailboxSendReq(pFoeSendStored, 0);
-        pFoeSendStored = NULL;
+/*ECATCHANGE_START(V5.13) FOE1*/
+        if (MBX_MailboxSendReq(pFoeSendStored, FOE_SERVICE) == 0)
+        {
+            pFoeSendStored = 0;
+        }
     }
+/*ECATCHANGE_END(V5.13) EOE1*/
 }
 
 /** @} */
