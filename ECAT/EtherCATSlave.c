@@ -26,6 +26,7 @@
 #include "src/applInterface.h"
 #include "glob_cfg.h"
 #include "glob_value.h"
+
 #define _ETHER_CATSLAVE_ 1
 #include "EtherCATSlave.h"
 #undef _ETHER_CATSLAVE_
@@ -484,6 +485,49 @@ UINT16 APPL_GetDeviceID()
 #endif
 
 
+/////////////////////////////////////////////////////////////////////////////////////////
+/**
+\param     index               index of the requested object.
+\param     subindex            subindex of the requested object.
+\param     objSize             size of the requested object data, calculated with OBJ_GetObjectLength
+\param     pData               Pointer to the buffer where the data can be copied to
+\param     bCompleteAccess     Indicates if a complete read of all subindices of the
+                               object shall be done or not
+
+ \return    result of the read operation (0 (success) or an abort code (ABORTIDX_.... defined in
+            sdosrv.h))
+ *////////////////////////////////////////////////////////////////////////////////////////
+UINT8 COE_VAR_Read(UINT16 index, UINT8 subindex, UINT32 dataSize, UINT16 MBXMEM *pData, UINT8 bCompleteAccess)
+{
+    union
+    {
+        float f32;
+        UINT16 u16[2];
+    } conv;
+    Param_Config_t *cfg = &glob_value.paramCfg;
+    if (index == 0x8000)
+    {
+        switch (subindex)
+        {
+        case 0:
+            pData[0] = 2;
+            break;
+        case 1:
+            conv.f32 = cfg->CDG_cfg.CDG1_Range;
+            pData[0] = conv.u16[0];
+            pData[1] = conv.u16[1];
+            break;
+        case 2:
+            conv.f32 = cfg->CDG_cfg.CDG2_Range;
+            pData[0] = conv.u16[0];
+            pData[1] = conv.u16[1];
+            break;
+        default:
+            break;
+        }
+    }
+    return 0;
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /**
@@ -497,36 +541,29 @@ UINT16 APPL_GetDeviceID()
  \return    result of the read operation (0 (success) or an abort code (ABORTIDX_.... defined in
             sdosrv.h))
  *////////////////////////////////////////////////////////////////////////////////////////
-UINT8 COE_VAR_Read(UINT16 index, UINT8 subindex, UINT32 dataSize, UINT16 MBXMEM * pData, UINT8 bCompleteAccess) {
-#if _WIN32
-#pragma message ("Warning: Implement CoE read callback")
-#else
- #warning "Implement CoE read callback"
-#endif
- return 0;
+UINT8 COE_VAR_Write(UINT16 index, UINT8 subindex, UINT32 dataSize, UINT16 MBXMEM *pData, UINT8 bCompleteAccess)
+{
+    union
+    {
+        float f32;
+        UINT16 u16[2];
+    } conv;
+    Param_Config_t *cfg = &glob_value.paramCfg;
+    switch (subindex)
+    {
+    case 1:
+        conv.u16[0] = pData[0];
+        conv.u16[1] = pData[1];
+        cfg->CDG_cfg.CDG1_Range = conv.f32;
+        break;
+    case 2:
+        conv.u16[0] = pData[0];
+        conv.u16[1] = pData[1];
+        cfg->CDG_cfg.CDG2_Range = conv.f32;
+        break;
+    default:
+        break;
+    }
+
+    return 0;
 }
-
-
-/////////////////////////////////////////////////////////////////////////////////////////
-/**
-\param     index               index of the requested object.
-\param     subindex            subindex of the requested object.
-\param     objSize             size of the requested object data, calculated with OBJ_GetObjectLength
-\param     pData               Pointer to the buffer where the data can be copied to
-\param     bCompleteAccess     Indicates if a complete read of all subindices of the
-                               object shall be done or not
-
- \return    result of the read operation (0 (success) or an abort code (ABORTIDX_.... defined in
-            sdosrv.h))
- *////////////////////////////////////////////////////////////////////////////////////////
-UINT8 COE_VAR_Write(UINT16 index, UINT8 subindex, UINT32 dataSize, UINT16 MBXMEM * pData, UINT8 bCompleteAccess) {
-#if _WIN32
-#pragma message ("Warning: Implement CoE write callback")
-#else
- #warning "Implement CoE write callback"
-#endif
- return 0;
-}
-
-
-
