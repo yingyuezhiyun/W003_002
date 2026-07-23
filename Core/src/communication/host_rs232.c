@@ -14,6 +14,7 @@
 #include "glob_cfg.h"
 #include "glob_value.h"
 #include "LibCtrl/PressCtrlAPI.h"
+#include "valve_test.h"
 
 #include "commu_core.h"
 
@@ -219,9 +220,18 @@ static uint8_t reset_func(const char *arg, printf_t pprintf)
 	hostResetDevice();
 	return ok;
 }
+static uint8_t valve_test_func(const char *arg, printf_t pprintf)
+{
+    uint8_t ok = Mode_HSM_Request_CMD(MODE_CMD_VALVE_TEST, 0.0f);
+    return ok == 1U ? RC_SUCCESS : RC_BUSY;
+}
 
 SET_PRESSCTRL_PARAMS(set_pressctrl_kp_param, g_lKp)
 SET_PRESSCTRL_PARAMS(set_pressctrl_ki_param, g_lKi)
+
+SET_OBJECT_PARAMS(set_valve_test_Amp_param, valve_test_param.Amp)
+SET_OBJECT_PARAMS(set_valve_test_Freq_param, valve_test_param.Freq)
+SET_OBJECT_PARAMS(set_valve_test_Pos_param, valve_test_param.pos)
 
 static uint8_t save_params_func(const char *arg, printf_t pprintf)
 {
@@ -263,6 +273,10 @@ static Command_t commands[] = {
 	CMD_PARAM_ENTRY("PI", set_pressctrl_ki_param),							 // 设置压力控制 KI 参数
 	CMD_READ_INT32("QS", "SV%ld", g_dwPosSV),								 // 查询压力控制中间量
 	CMD_READ_INT32("QP", "PV%ld", g_dwPosPV),								 // 读取压力控制中间量
+	CMD_FUNC_ENTRY("TVALVE", valve_test_func),                                               // 阀门测试
+	CMD_PARAM_ENTRY("TVA", set_valve_test_Amp_param),                                        // 设置阀门测试幅值
+    CMD_PARAM_ENTRY("TVF", set_valve_test_Freq_param),                                       // 设置阀门测试频率
+    CMD_PARAM_ENTRY("TVP", set_valve_test_Pos_param),                                        // 设置阀门测试位置
 
 	CMD_FUNC_ENTRY("SA", save_params_func),
 	{NULL, CMD_NONE, NULL, NULL, DT_NONE},
