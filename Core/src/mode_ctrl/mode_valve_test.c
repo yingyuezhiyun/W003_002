@@ -10,7 +10,7 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-static uint32_t lastPressLoopTick = 0U;
+static uint32_t lastLoopTick = 0U;
 
 static MODE_EXEC_t Mode_Valve_test_Enter(Mode_Ctx_t *ctx);
 static MODE_EXEC_t Mode_Valve_test_ISR_Execute(Mode_Ctx_t *ctx);
@@ -41,7 +41,7 @@ static MODE_EXEC_t Mode_Valve_test_Enter(Mode_Ctx_t *ctx)
         // delay_ms(5);
     }
     valve_test_param.time = 0.0f;
-    lastPressLoopTick = glob_value.tick0p1ms;
+    lastLoopTick = glob_value.tick0p1ms;
     return MODE_EXEC_DONE;
 }
 
@@ -51,12 +51,16 @@ static MODE_EXEC_t Mode_Valve_test_ISR_Execute(Mode_Ctx_t *ctx)
     middle_data_t *middleData = &glob_value.middleData;
     setparam_t *set = &glob_value.set;
     Press_Ctrl *pressCtrl = &set->PressCtrl;
-    if (glob_value.tick0p1ms - lastPressLoopTick < paramCfg->Press_Ctrl.period * TICK_PER_MS)
+    if (glob_value.tick0p1ms - lastLoopTick < paramCfg->Press_Ctrl.period * TICK_PER_MS)
     {
         return MODE_EXEC_IGNORED;
     }
-    lastPressLoopTick = glob_value.tick0p1ms;
+    lastLoopTick = glob_value.tick0p1ms;
     valve_test_param.time += paramCfg->Press_Ctrl.period / 1000.0f;
+    if (valve_test_param.time > 2.0f / valve_test_param.Freq)
+    {
+        valve_test_param.time -= 2.0f / valve_test_param.Freq;
+    }
     float sine_value = valve_test_param.Amp * sinf(2.0f * M_PI * valve_test_param.Freq * valve_test_param.time);
     Set_Position_Percent_Isr(valve_test_param.pos + sine_value); // 将正弦波幅值映射到 指定位置
     return MODE_EXEC_DONE;
