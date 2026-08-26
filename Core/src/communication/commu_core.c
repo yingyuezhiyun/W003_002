@@ -278,6 +278,20 @@ void SCI_Parse(SCI_RX_t *sci)
 		sci->isConnected = false;
 	}
 
+	uint16_t rxStatus = SCI_getRxStatus(sci->sci_base);
+	if ((rxStatus & SCI_RXSTATUS_ERROR) != 0U)
+	{
+		if (SCI_getOverflowStatus(sci->sci_base))
+		{
+			SCI_clearOverflowStatus(sci->sci_base);
+		}	
+		SCI_resetRxFIFO(sci->sci_base);
+		SCI_performSoftwareReset(sci->sci_base);	
+		sci->rxLen = 0U;
+		sci->rxOverflow = false;
+		return;
+	}
+
 	/* 先把串口 FIFO 中的所有数据读取到 sci->rxBuf 中 */
 	while (SCI_getRxFIFOStatus(sci->sci_base) != SCI_FIFO_RX0)
 	{

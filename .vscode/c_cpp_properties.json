@@ -3,8 +3,7 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/**",
-                "${workspaceFolder}/*",
+                "${workspaceFolder}/**",                
                 "${workspaceFolder}/device/**",
                 "D:\\Software\\ti\\ccs1281\\ccs\\tools\\compiler\\ti-cgt-c2000_22.6.1.LTS\\include",
                 "D:\\Software\\ti\\ccs1281\\ccs\\tools\\compiler\\ti-cgt-c2000_22.6.1.LTS\\include\\*"
